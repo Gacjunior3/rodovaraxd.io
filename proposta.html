@@ -1,0 +1,886 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Proposta de Frete</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #000;
+      margin: 0;
+      padding: 20px;
+      font-size: 12px;
+    }
+    .container {
+      max-width: 794px;
+      margin: auto;
+      background: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    .linha {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    .coluna {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+    input, select, textarea {
+      padding: 4px;
+      font-size: 12px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      width: 100%;
+    }
+    .descricao-longa {
+      width: 100%;
+      min-width: 200px;
+      max-width: 100%;
+    }
+    .cabecalho {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      border-bottom: 2px solid #003366;
+      padding-bottom: 15px;
+    }
+    .logo-container {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+    .dados-empresa {
+      font-size: 11px;
+      line-height: 1.5;
+      max-width: 300px;
+      color: #555;
+    }
+    .info-adicional {
+      font-size: 11px;
+      background-color: #f5f5f5;
+      padding: 8px;
+      border-radius: 4px;
+      text-align: right;
+    }
+    .seletor-empresa {
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      padding: 4px;
+      font-size: 11px;
+      background-color: #f9f9f9;
+      color: #333;
+    }
+    .seletor-proposta {
+      margin-top: 5px;
+      padding: 4px;
+      width: 100%;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 11px;
+    }
+    #erro-cep, #erro-cnpj {
+      color: red;
+      display: none;
+      font-size: 10px;
+      margin-top: 2px;
+    }
+    .assinatura {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 30px;
+    }
+    .assinatura .coluna {
+      flex: 1;
+      text-align: center;
+    }
+    .rodape {
+      margin-top: 30px;
+      font-size: 10px;
+      text-align: center;
+      border-top: 1px solid #ccc;
+      padding-top: 10px;
+      color: #555;
+    }
+    .botoes {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 20px;
+      margin-bottom: 20px;
+    }
+    .botoes button {
+      padding: 8px 15px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .btn-imprimir-pdf {
+      background-color: #4CAF50;
+      color: white;
+    }
+    .btn-limpar {
+      background-color: #2196F3;
+      color: white;
+    }
+    .btn-salvar {
+      background-color: #9C27B0;
+      color: white;
+    }
+    .btn-gerenciar {
+      background-color: #607D8B;
+      color: white;
+    }
+    .btn-exportar {
+      background-color: #FF9800;
+      color: white;
+    }
+    .btn-importar {
+      background-color: #4CAF50;
+      color: white;
+    }
+    .btn-limpar-antigas {
+      background-color: #F44336;
+      color: white;
+    }
+    .valor-frete-destaque {
+      background-color: #f8f8f8;
+      border: 2px solid #003366;
+      padding: 10px;
+      border-radius: 5px;
+      margin-top: 10px;
+      text-align: center;
+      font-weight: bold;
+    }
+    .valor-frete-destaque input {
+      font-size: 14px;
+      font-weight: bold;
+      text-align: center;
+      background-color: #fff;
+    }
+    .btn-gerar-numero, .btn-consultar-cnpj {
+      background-color: #ff9800;
+      color: white;
+      padding: 4px 8px;
+      font-size: 10px;
+      margin-left: 5px;
+      border-radius: 3px;
+      cursor: pointer;
+      border: none;
+    }
+    .loading {
+      display: none;
+      font-size: 10px;
+      color: #555;
+      margin-left: 5px;
+    }
+    .painel-gerenciamento {
+      background-color: #f8f9fa;
+      border: 1px solid #dee2e6;
+      border-radius: 5px;
+      padding: 15px;
+      margin-top: 20px;
+      display: none;
+    }
+    .info-armazenamento {
+      font-size: 12px;
+      color: #6c757d;
+      margin-bottom: 10px;
+      padding: 10px;
+      background-color: #e9ecef;
+      border-radius: 4px;
+    }
+    @media print {
+      .botoes, .painel-gerenciamento {
+        display: none;
+      }
+      body {
+        background-color: white;
+      }
+      .container {
+        box-shadow: none;
+      }
+      textarea {
+        border: none;
+        resize: none;
+        overflow: visible;
+        white-space: pre-wrap;
+      }
+      .observacoes textarea {
+        height: auto !important;
+      }
+    }
+  </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/imask/6.4.2/imask.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+</head>
+<body>
+  <div class="container">
+    <div class="cabecalho">
+      <div class="logo-container">
+        <img id="logo" src="img/logo_axdlog.png" alt="Logo" style="height: 60px;">
+        <div class="dados-empresa" id="dados-empresa">
+          CNPJ: 59.352.973/0001-32<br>
+          Rua Jubiabá, 292<br>
+          Luis Eduardo Magalhães, Simões Filho - BA
+        </div>
+      </div>
+      <div class="info-adicional">
+        <select id="empresa" class="seletor-empresa" onchange="trocarLogoEmpresa(this.value)">
+          <option value="AXD">AXD Log</option>
+          <option value="Rodovar">Rodovar</option>
+        </select><br>
+        Nº da Proposta: 
+        <div style="display: flex; align-items: center;">
+          <input type="text" id="numero-proposta" style="width: 120px;">
+          <button class="btn-gerar-numero" onclick="gerarNovoNumero()" title="Gerar novo número">🔢</button>
+        </div>
+        <select id="seletor-proposta" class="seletor-proposta" onchange="carregarPropostaSelecionada()">
+          <option value="">Carregar proposta salva...</option>
+        </select>
+        Data e Hora: <span id="datahora"></span><br>
+        Validade: <span id="validade"></span>
+      </div>
+    </div>
+
+    <div class="linha">
+      <div class="coluna">
+        Solicitante:<br>
+        <input type="text" id="solicitante" placeholder="Nome do solicitante">
+      </div>
+      <div class="coluna">
+        Enviada por:<br>
+        <input type="text" id="enviada-por" placeholder="Nome de quem enviou">
+      </div>
+    </div>
+
+    <div class="linha">
+      <div class="coluna">
+        Cliente:<br>
+        <input type="text" id="cliente" placeholder="Nome do cliente">
+      </div>
+      <div class="coluna">
+        CNPJ:<br>
+        <div style="display: flex; align-items: center;">
+          <input type="text" id="cnpj" placeholder="00.000.000/0000-00">
+          <button class="btn-consultar-cnpj" onclick="consultarCNPJ(true)" title="Consultar CNPJ">🔍</button>
+          <span id="loading-cnpj" class="loading">Consultando...</span>
+        </div>
+        <small id="erro-cnpj">CNPJ não encontrado</small>
+      </div>
+    </div>
+
+    <div class="linha">
+      <div class="coluna">
+        CEP:<br>
+        <input type="text" id="cep" placeholder="Digite o CEP" onblur="buscarEnderecoPorCEP()">
+        <small id="erro-cep">CEP não encontrado</small>
+      </div>
+      <div class="coluna">
+        Endereço do Cliente:<br>
+        <input type="text" id="endereco" placeholder="Endereço completo">
+      </div>
+    </div>
+
+    <div class="linha">
+      <div class="coluna">
+        UF Origem:<br>
+        <select id="uf-origem"></select>
+      </div>
+      <div class="coluna">
+        Cidade Origem:<br>
+        <select id="cidade-origem"></select>
+      </div>
+      <div class="coluna">
+        UF Destino:<br>
+        <select id="uf-destino"></select>
+      </div>
+      <div class="coluna">
+        Cidade Destino:<br>
+        <select id="cidade-destino"></select>
+      </div>
+    </div>
+
+    <div class="linha">
+      <div class="coluna">
+        <label>Dados da Carga:</label><br>
+        <select id="dados-carga">
+          <option value="exclusiva">Exclusiva</option>
+          <option value="complemento">Complemento</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="linha">
+      <div class="coluna">
+        Descrição da Carga:<br>
+        <textarea id="descricao-carga" class="descricao-longa" placeholder="Descrição da carga..." rows="3">LIVRE DE CARGA E DESCARGA</textarea>
+      </div>
+    </div>
+
+    <div class="linha">
+      <div class="coluna">
+        Valor NF:<br>
+        <input type="text" id="valor-nf" placeholder="R$ 0,00">
+      </div>
+      <div class="coluna">
+        Peso:<br>
+        <input type="text" id="peso" placeholder="Ex: 1000">
+      </div>
+      <div class="coluna">
+        Veículo:<br>
+       <select id="veiculo">
+          <option value="">Selecione</option>
+          <option>Toco</option>
+          <option>Carreta</option>
+          <option>Carreta LS</option>
+          <option>Caminhonete</option>
+          <option>Caminhão Baú</option>
+          <option>Carreta Baú</option>
+          <option>Caminhão Munck</option>
+          <option>Bitrem</option>
+          <option>Rodotrem</option>
+          <option>Van</option>
+          <option>Truck</option>
+          <option>Bitruck</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="valor-frete-destaque">
+      VALOR DO FRETE:<br>
+      <input type="text" id="valor-frete" placeholder="R$ 0,00" style="width: 200px;">
+    </div>
+
+    <div class="linha">
+      <div class="coluna observacoes">
+        Observações:<br>
+        <textarea id="observacoes" class="descricao-longa" placeholder="Observações..." rows="6" style="min-height: 150px;">
+Carga 100% assegurada – averbação conforme valor de nota fiscal; - KORV
+● Prazo para entrega: 03 dias após carregamento;
+● Forma de pagamento: Boleto Bancário (Não aceitamos depósito sem autorização prévia);
+● Prazo para pagamentos: 21 dias;
+● Atenção, proposta válida por 10 dias;
+● Checagem de risco: vérttice;
+● Pedágios e demais encargos inclusos no valor do frete;
+● Em caso de acréscimo de local de coleta ou entrega, proposta de frete sofrerá alteração;
+● Cobrança de diária será calculada com base na Lei do Motorista Profissional (n° 13.103)
+        </textarea>
+      </div>
+    </div>
+
+    <div class="assinatura">
+      <div class="coluna">
+        _______________________________________<br>
+        Aprovação do Cliente
+      </div>
+      <div class="coluna">
+        _______/_______/_________<br>
+        Data
+      </div>
+    </div>
+
+    <div class="rodape" id="rodape">
+      CNPJ: 59.352.973/0001-32 | AXD LOG TRANSPORTES LTDA - Rua Jubiabá, 292 - Simões Filho - BA
+    </div>
+  </div>
+
+  <div class="botoes">
+    <button class="btn-imprimir-pdf" onclick="imprimirOuPDF()">🖨️📄 Imprimir/Salvar PDF</button>
+    <button class="btn-limpar" onclick="limparDados()">🧹 Limpar Dados</button>
+    <button class="btn-salvar" onclick="salvarProposta()">💾 Salvar Proposta</button>
+    <button class="btn-gerenciar" onclick="mostrarPainelGerenciamento()">⚙️ Gerenciar Propostas</button>
+  </div>
+
+  <div class="painel-gerenciamento" id="painel-gerenciamento">
+    <h3>Gerenciamento de Propostas</h3>
+    <div class="info-armazenamento" id="info-armazenamento"></div>
+    <div class="botoes">
+      <button class="btn-exportar" onclick="exportarPropostas()">📤 Exportar Todas como JSON</button>
+      <button class="btn-importar" onclick="document.getElementById('importar-input').click()">📥 Importar Propostas (JSON)</button>
+      <input type="file" id="importar-input" accept=".json" style="display: none;" onchange="importarPropostas(this)">
+      <button class="btn-limpar-antigas" onclick="limparPropostasAntigas()">🗑️ Limpar Propostas Antigas</button>
+      <button class="btn-limpar" onclick="limparTodasPropostas()">⚠️ Limpar TODAS as Propostas</button>
+      <button class="btn-limpar" onclick="fecharPainelGerenciamento()">❌ Fechar</button>
+    </div>
+  </div>
+
+  <script>
+    // Configurações do sistema
+    const PROPOSTAS_KEY = 'propostasSalvas';
+    const NUMEROS_KEY = 'numerosPropostasUsados';
+    const LIMITE_MAXIMO = 500;
+    const NUMERO_INICIAL = 160;
+    const NUMERO_FINAL = 9999;
+
+    // Sistema de geração de números únicos
+    let numerosUsados = JSON.parse(localStorage.getItem(NUMEROS_KEY)) || [];
+
+    function gerarNumeroPropostaUnico() {
+      if (numerosUsados.length >= (NUMERO_FINAL - NUMERO_INICIAL + 1)) {
+        localStorage.removeItem(NUMEROS_KEY);
+        numerosUsados = [];
+        alert('Todos os números de proposta foram utilizados. O sistema reiniciou a contagem.');
+      }
+
+      let numero;
+      do {
+        numero = Math.floor(Math.random() * (NUMERO_FINAL - NUMERO_INICIAL + 1)) + NUMERO_INICIAL;
+      } while (numerosUsados.includes(numero));
+
+      numerosUsados.push(numero);
+      localStorage.setItem(NUMEROS_KEY, JSON.stringify(numerosUsados));
+
+      return numero.toString().padStart(4, '0');
+    }
+
+    // Funções principais do formulário
+    function trocarLogoEmpresa(empresa) {
+      const logo = document.getElementById('logo');
+      const dadosEmpresa = document.getElementById('dados-empresa');
+      const rodape = document.getElementById('rodape');
+
+      if (empresa === 'Rodovar') {
+        logo.src = 'img/logo_rodovar.png';
+        dadosEmpresa.innerHTML = `CNPJ: 49.908.710/0001-03<br>Endereço: Travessa Acalanto, 84<br>Jardim das Margaridas, Salvador-BA`;
+        rodape.innerHTML = `CNPJ: 49.908.710/0001-03 | RODOVAR TRANSPORTES LTDA - Travessa Acalanto, 84 - Salvador - BA`;
+      } else {
+        logo.src = 'img/logo_axdlog.png';
+        dadosEmpresa.innerHTML = `CNPJ: 59.352.973/0001-32<br>Rua Jubiabá, 292<br>Luis Eduardo Magalhães, Simões Filho - BA`;
+        rodape.innerHTML = `CNPJ: 59.352.973/0001-32 | AXD LOG TRANSPORTES LTDA - Rua Jubiabá, 292 - Simões Filho - BA`;
+      }
+      document.body.style.backgroundColor = '#000';
+      document.querySelector('.container').style.borderColor = '#000';
+    }
+
+    async function carregarEstados() {
+      try {
+        const response = await fetch('https://servicodados.ibge.gov.br/api/v1/localidades/estados');
+        const estados = await response.json();
+        estados.sort((a, b) => a.sigla.localeCompare(b.sigla));
+        
+        const ufOrigem = document.getElementById('uf-origem');
+        const ufDestino = document.getElementById('uf-destino');
+        
+        ufOrigem.innerHTML = '<option value="">Selecione UF</option>';
+        ufDestino.innerHTML = '<option value="">Selecione UF</option>';
+        
+        estados.forEach(estado => {
+          ufOrigem.innerHTML += `<option value="${estado.id}">${estado.sigla}</option>`;
+          ufDestino.innerHTML += `<option value="${estado.id}">${estado.sigla}</option>`;
+        });
+      } catch (error) {
+        console.error('Erro ao carregar estados:', error);
+      }
+    }
+
+    async function carregarCidades(estadoId, destino) {
+      if (!estadoId) return;
+      
+      try {
+        const response = await fetch(`https://servicodados.ibge.gov.br/api/v1/localidades/estados/${estadoId}/municipios`);
+        const cidades = await response.json();
+        const select = document.getElementById(destino);
+        
+        select.innerHTML = '<option value="">Selecione a cidade</option>';
+        cidades.forEach(cidade => {
+          select.innerHTML += `<option value="${cidade.nome}">${cidade.nome}</option>`;
+        });
+      } catch (error) {
+        console.error('Erro ao carregar cidades:', error);
+      }
+    }
+
+    function preencherDataHora() {
+      const now = new Date();
+      const formatar = (n) => n.toString().padStart(2, '0');
+      
+      const dia = formatar(now.getDate());
+      const mes = formatar(now.getMonth() + 1);
+      const ano = now.getFullYear();
+      const horas = formatar(now.getHours());
+      const minutos = formatar(now.getMinutes());
+      
+      document.getElementById('datahora').textContent = `${dia}/${mes}/${ano} ${horas}:${minutos}`;
+      
+      const validade = new Date(now.getTime() + (10 * 24 * 60 * 60 * 1000));
+      document.getElementById('validade').textContent = `${formatar(validade.getDate())}/${formatar(validade.getMonth() + 1)}/${validade.getFullYear()}`;
+
+      // Configura máscaras
+      IMask(document.getElementById('cep'), { mask: '00000-000' });
+      IMask(document.getElementById('cnpj'), { mask: '00.000.000/0000-00' });
+    }
+
+    function buscarEnderecoPorCEP() {
+      const cep = document.getElementById('cep').value.replace(/\D/g, '');
+      if (cep.length !== 8) return;
+
+      document.getElementById('erro-cep').style.display = 'none';
+      
+      fetch(`https://viacep.com.br/ws/${cep}/json/`)
+        .then(response => response.json())
+        .then(data => {
+          if (!data.erro) {
+            document.getElementById('endereco').value = 
+              `${data.logradouro || ''}, ${data.bairro || ''}, ${data.localidade || ''} - ${data.uf || ''}`;
+          } else {
+            throw new Error('CEP não encontrado');
+          }
+        })
+        .catch(() => {
+          document.getElementById('erro-cep').style.display = 'inline';
+          document.getElementById('endereco').value = '';
+        });
+    }
+
+    function consultarCNPJ(manual = false) {
+      const cnpjInput = document.getElementById('cnpj');
+      const cnpj = cnpjInput.value.replace(/\D/g, '');
+      
+      if (cnpj.length !== 14) {
+        document.getElementById('erro-cnpj').style.display = 'inline';
+        document.getElementById('erro-cnpj').textContent = 'CNPJ inválido (deve ter 14 dígitos)';
+        return;
+      }
+
+      document.getElementById('loading-cnpj').style.display = 'inline';
+      if (manual) cnpjInput.disabled = true;
+
+      fetch(`https://brasilapi.com.br/api/cnpj/v1/${cnpj}`)
+        .then(response => {
+          if (!response.ok) throw new Error('CNPJ não encontrado');
+          return response.json();
+        })
+        .then(data => {
+          document.getElementById('cliente').value = data.razao_social || '';
+          document.getElementById('endereco').value = 
+            `${data.logradouro || ''}, ${data.numero || ''} - ${data.bairro || ''}, ${data.municipio || ''} - ${data.uf || ''}`;
+          document.getElementById('erro-cnpj').style.display = 'none';
+        })
+        .catch(error => {
+          document.getElementById('erro-cnpj').style.display = 'inline';
+          document.getElementById('erro-cnpj').textContent = error.message || 'Erro na consulta. Preencha manualmente.';
+        })
+        .finally(() => {
+          document.getElementById('loading-cnpj').style.display = 'none';
+          cnpjInput.disabled = false;
+        });
+    }
+
+    function limparDados() {
+      if (confirm('Tem certeza que deseja limpar todos os dados do formulário?')) {
+        document.querySelectorAll('input[type="text"], textarea').forEach(el => el.value = '');
+        document.querySelectorAll('select').forEach(el => el.selectedIndex = 0);
+        document.getElementById('descricao-carga').value = 'LIVRE DE CARGA E DESCARGA';
+        document.getElementById('empresa').selectedIndex = 0;
+        trocarLogoEmpresa('AXD');
+        document.getElementById('numero-proposta').value = gerarNumeroPropostaUnico();
+        document.getElementById('erro-cnpj').style.display = 'none';
+        preencherDataHora();
+      }
+    }
+
+    function gerarPDF() {
+      const element = document.querySelector('.container');
+      const opt = {
+        margin: 10,
+        filename: `proposta_frete_${document.getElementById('numero-proposta').value}.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2 },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+      };
+      html2pdf().set(opt).from(element).save();
+    }
+
+    function imprimirOuPDF() {
+      if (confirm('Deseja imprimir ou salvar como PDF?')) {
+        window.print();
+      } else {
+        gerarPDF();
+      }
+    }
+
+    function gerarNovoNumero() {
+      document.getElementById('numero-proposta').value = gerarNumeroPropostaUnico();
+    }
+
+    // Sistema de armazenamento e gerenciamento de propostas
+    function salvarProposta() {
+      const proposta = {
+        numero: document.getElementById('numero-proposta').value,
+        data: document.getElementById('datahora').textContent,
+        empresa: document.getElementById('empresa').value,
+        timestamp: new Date().getTime(),
+        campos: {}
+      };
+
+      // Captura todos os campos
+      document.querySelectorAll('input, select, textarea').forEach(el => {
+        if (el.id) proposta.campos[el.id] = el.value;
+      });
+
+      let propostasSalvas = JSON.parse(localStorage.getItem(PROPOSTAS_KEY)) || [];
+      
+      // Remove proposta existente com mesmo número
+      propostasSalvas = propostasSalvas.filter(p => p.numero !== proposta.numero);
+      
+      // Adiciona nova proposta
+      propostasSalvas.push(proposta);
+      
+      // Ordena por timestamp (mais recente primeiro)
+      propostasSalvas.sort((a, b) => b.timestamp - a.timestamp);
+      
+      // Mantém apenas as LIMITE_MAXIMO mais recentes
+      if (propostasSalvas.length > LIMITE_MAXIMO) {
+        propostasSalvas = propostasSalvas.slice(0, LIMITE_MAXIMO);
+        alert(`Atenção: Limite de ${LIMITE_MAXIMO} propostas atingido. As mais antigas foram removidas automaticamente.`);
+      }
+      
+      localStorage.setItem(PROPOSTAS_KEY, JSON.stringify(propostasSalvas));
+      alert(`Proposta ${proposta.numero} salva com sucesso!`);
+      atualizarSeletorPropostas();
+      atualizarInfoArmazenamento();
+    }
+
+    function carregarPropostaSelecionada() {
+      const select = document.getElementById('seletor-proposta');
+      const numeroProposta = select.value;
+      if (!numeroProposta) return;
+
+      const propostas = JSON.parse(localStorage.getItem(PROPOSTAS_KEY)) || [];
+      const proposta = propostas.find(p => p.numero === numeroProposta);
+
+      if (!proposta) {
+        alert('Proposta não encontrada!');
+        return;
+      }
+
+      if (!confirm(`Carregar proposta ${proposta.numero} (${new Date(proposta.timestamp).toLocaleDateString()})?`)) {
+        select.value = '';
+        return;
+      }
+
+      // Preenche campos básicos
+      document.getElementById('empresa').value = proposta.empresa;
+      trocarLogoEmpresa(proposta.empresa);
+      document.getElementById('numero-proposta').value = proposta.numero;
+      document.getElementById('datahora').textContent = proposta.data;
+
+      // Preenche outros campos
+      for (const [id, valor] of Object.entries(proposta.campos)) {
+        const element = document.getElementById(id);
+        if (element) element.value = valor;
+      }
+
+      // Carrega cidades para UFs selecionadas
+      const carregarCidadesParaProposta = async () => {
+        const ufOrigem = proposta.campos['uf-origem'];
+        const ufDestino = proposta.campos['uf-destino'];
+        
+        if (ufOrigem) {
+          await carregarCidades(ufOrigem, 'cidade-origem');
+          document.getElementById('cidade-origem').value = proposta.campos['cidade-origem'] || '';
+        }
+        
+        if (ufDestino) {
+          await carregarCidades(ufDestino, 'cidade-destino');
+          document.getElementById('cidade-destino').value = proposta.campos['cidade-destino'] || '';
+        }
+      };
+
+      carregarCidadesParaProposta();
+      select.value = '';
+    }
+
+    function atualizarSeletorPropostas() {
+      const select = document.getElementById('seletor-proposta');
+      const propostas = JSON.parse(localStorage.getItem(PROPOSTAS_KEY)) || [];
+      
+      // Limpa opções exceto a primeira
+      while (select.options.length > 1) select.remove(1);
+
+      // Ordena por timestamp (mais recente primeiro)
+      propostas.sort((a, b) => b.timestamp - a.timestamp);
+
+      // Adiciona novas opções
+      propostas.forEach(proposta => {
+        const option = document.createElement('option');
+        option.value = proposta.numero;
+        option.textContent = `Proposta ${proposta.numero} (${new Date(proposta.timestamp).toLocaleDateString()})`;
+        select.appendChild(option);
+      });
+    }
+
+    // Função para importar propostas
+    function importarPropostas(input) {
+      const file = input.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const propostasImportadas = JSON.parse(e.target.result);
+          
+          if (!Array.isArray(propostasImportadas)) {
+            throw new Error('Formato inválido - deve ser um array de propostas');
+          }
+
+          // Validação básica da estrutura
+          if (propostasImportadas.length > 0 && !propostasImportadas[0].numero) {
+            throw new Error('Formato inválido - cada proposta deve ter um número');
+          }
+
+          const propostasAtuais = JSON.parse(localStorage.getItem(PROPOSTAS_KEY)) || [];
+          const numerosAtuais = propostasAtuais.map(p => p.numero);
+          
+          // Filtra propostas que já existem (mesmo número)
+          const novasPropostas = propostasImportadas.filter(
+            p => !numerosAtuais.includes(p.numero)
+          );
+
+          if (novasPropostas.length === 0) {
+            alert('Nenhuma nova proposta para importar (todas já existem).');
+            return;
+          }
+
+          if (confirm(`Deseja importar ${novasPropostas.length} proposta(s)?`)) {
+            const todasPropostas = [...novasPropostas, ...propostasAtuais]
+              .sort((a, b) => b.timestamp - a.timestamp)
+              .slice(0, LIMITE_MAXIMO); // Mantém dentro do limite
+
+            localStorage.setItem(PROPOSTAS_KEY, JSON.stringify(todasPropostas));
+            atualizarSeletorPropostas();
+            atualizarInfoArmazenamento();
+            alert(`${novasPropostas.length} proposta(s) importada(s) com sucesso!`);
+          }
+        } catch (error) {
+          alert(`Erro ao importar propostas: ${error.message}`);
+          console.error(error);
+        }
+        
+        // Limpa o input para permitir nova seleção do mesmo arquivo
+        input.value = '';
+      };
+      
+      reader.onerror = function() {
+        alert('Erro ao ler o arquivo');
+        input.value = '';
+      };
+      
+      reader.readAsText(file);
+    }
+
+    // Funções de gerenciamento
+    function mostrarPainelGerenciamento() {
+      document.getElementById('painel-gerenciamento').style.display = 'block';
+      atualizarInfoArmazenamento();
+    }
+
+    function fecharPainelGerenciamento() {
+      document.getElementById('painel-gerenciamento').style.display = 'none';
+    }
+
+    function atualizarInfoArmazenamento() {
+      const propostas = JSON.parse(localStorage.getItem(PROPOSTAS_KEY)) || [];
+      const tamanhoKB = (JSON.stringify(propostas).length * 2 / 1024).toFixed(2);
+      const porcentagem = ((tamanhoKB / 5000) * 100).toFixed(1);
+      
+      const info = `
+        <strong>Propostas armazenadas:</strong> ${propostas.length}/${LIMITE_MAXIMO}<br>
+        <strong>Espaço utilizado:</strong> ${tamanhoKB} KB (${porcentagem}% do limite)<br>
+        <strong>Mais recente:</strong> ${propostas.length > 0 ? new Date(propostas[0].timestamp).toLocaleString() : 'Nenhuma'}<br>
+        <strong>Mais antiga:</strong> ${propostas.length > 0 ? new Date(propostas[propostas.length-1].timestamp).toLocaleString() : 'Nenhuma'}
+      `;
+      
+      document.getElementById('info-armazenamento').innerHTML = info;
+    }
+
+    function exportarPropostas() {
+      const propostas = JSON.parse(localStorage.getItem(PROPOSTAS_KEY)) || [];
+      if (propostas.length === 0) {
+        alert('Nenhuma proposta para exportar!');
+        return;
+      }
+
+      const blob = new Blob([JSON.stringify(propostas, null, 2)], {type: 'application/json'});
+      const url = URL.createObjectURL(blob);
+      
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `backup_propostas_${new Date().toISOString().split('T')[0]}.json`;
+      a.click();
+      
+      URL.revokeObjectURL(url);
+      alert(`Exportadas ${propostas.length} propostas com sucesso!`);
+    }
+
+    function limparPropostasAntigas() {
+      const propostas = JSON.parse(localStorage.getItem(PROPOSTAS_KEY)) || [];
+      if (propostas.length === 0) {
+        alert('Nenhuma proposta para limpar!');
+        return;
+      }
+
+      const novoLimite = Math.floor(LIMITE_MAXIMO / 2);
+      if (propostas.length <= novoLimite) {
+        alert(`Já há menos de ${novoLimite} propostas armazenadas.`);
+        return;
+      }
+
+      if (confirm(`Manter apenas as ${novoLimite} propostas mais recentes? (${propostas.length - novoLimite} serão removidas)`)) {
+        const novasPropostas = propostas.slice(0, novoLimite);
+        localStorage.setItem(PROPOSTAS_KEY, JSON.stringify(novasPropostas));
+        atualizarSeletorPropostas();
+        atualizarInfoArmazenamento();
+        alert(`Agora há ${novasPropostas.length} propostas armazenadas.`);
+      }
+    }
+
+    function limparTodasPropostas() {
+      if (!confirm('ATENÇÃO: Isso apagará TODAS as propostas salvas. Continuar?')) return;
+      
+      localStorage.removeItem(PROPOSTAS_KEY);
+      atualizarSeletorPropostas();
+      atualizarInfoArmazenamento();
+      alert('Todas as propostas foram removidas.');
+    }
+
+    // Inicialização
+    window.onload = function() {
+      document.getElementById('numero-proposta').value = gerarNumeroPropostaUnico();
+      preencherDataHora();
+      carregarEstados();
+      
+      // Event listeners para carregar cidades
+      document.getElementById('uf-origem').addEventListener('change', (e) => 
+        carregarCidades(e.target.value, 'cidade-origem'));
+      document.getElementById('uf-destino').addEventListener('change', (e) => 
+        carregarCidades(e.target.value, 'cidade-destino'));
+      
+      trocarLogoEmpresa('AXD');
+      document.getElementById('numero-proposta').removeAttribute('readonly');
+
+      // Configura máscara e eventos do CNPJ
+      IMask(document.getElementById('cnpj'), { 
+        mask: '00.000.000/0000-00',
+        onComplete: function() {
+          setTimeout(() => consultarCNPJ(), 500);
+        }
+      });
+
+      // Carrega propostas salvas
+      atualizarSeletorPropostas();
+      atualizarInfoArmazenamento();
+    };
+  </script>
+</body>
+</html>

@@ -1,0 +1,1725 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Ordem de Coleta</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      font-size: 12px;
+      margin: 0;
+      padding: 20px;
+      background-color: #000000;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    .container {
+      border: 2px solid #000;
+      padding: 15px;
+      background: white;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      position: relative;
+      width: 210mm;
+      min-height: 297mm;
+      box-sizing: border-box;
+      margin-top: 20px;
+    }
+
+    .header-qr-container {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    
+    #headerQrCode {
+      width: 70px;
+      height: 70px;
+      background: white;
+      padding: 5px;
+      border: 2px solid #000;
+    }
+
+    .logo-cell {
+      width: 20%;
+      height: 120px;
+      padding: 5px;
+      position: relative;
+    }
+    
+    .logo-container {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: white;
+      border: 2px solid #000;
+    }
+    
+    .logo {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+      padding: 5px;
+      box-sizing: border-box;
+    }
+
+    .empresa-selector {
+      position: relative;
+      margin-bottom: 15px;
+      width: 210mm;
+      text-align: right;
+    }
+    
+    .empresa-select {
+      padding: 8px 12px;
+      border-radius: 4px;
+      border: 2px solid #000;
+      background: #f8f8f8;
+      font-size: 14px;
+      font-weight: bold;
+    }
+
+    input, select, textarea {
+      width: 100%;
+      border: none;
+      background: none;
+      font-size: 12px;
+    }
+
+    #dataEmissao {
+      font-size: 14px;
+      padding: 5px;
+      width: 100%;
+    }
+
+    #dataAssinatura {
+      font-size: 14px;
+      padding: 5px;
+      width: 100%;
+    }
+
+    table tr:nth-child(2) td {
+      padding-bottom: 15px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 10px 0;
+    }
+
+    td, th {
+      border: 2px solid #000;
+      padding: 6px;
+      vertical-align: top;
+    }
+
+    .local-destino {
+      display: flex;
+      gap: 15px;
+      margin: 15px 0;
+    }
+
+    .bloco {
+      flex: 1;
+      border: 2px solid #000;
+      padding: 10px;
+    }
+
+    .action-buttons {
+      margin: 20px 0;
+      text-align: center;
+    }
+    
+    .action-buttons button {
+      padding: 12px 25px;
+      margin: 0 10px;
+      cursor: pointer;
+      border: none;
+      border-radius: 4px;
+      font-weight: bold;
+      font-size: 14px;
+      transition: all 0.3s ease;
+    }
+    
+    #btnImprimir {
+      background: #2196F3;
+      color: white;
+    }
+    
+    #btnImprimir:hover {
+      background: #0b7dda;
+    }
+    
+    #btnLimpar {
+      background: #f44336;
+      color: white;
+    }
+
+    #btnLimpar:hover {
+      background: #da190b;
+    }
+
+    .btn-buscar {
+      padding: 3px 10px;
+      margin-left: 5px;
+      font-size: 11px;
+      background: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 3px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .btn-buscar:hover {
+      background: #3e8e41;
+    }
+
+    .btn-consultar-cnpj {
+      background: #FF9800;
+      color: white;
+      padding: 3px 10px;
+      margin-left: 5px;
+      font-size: 11px;
+      border: none;
+      border-radius: 3px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .btn-consultar-cnpj:hover {
+      background: #e68a00;
+    }
+
+    .loading-cnpj {
+      display: inline-block;
+      font-size: 10px;
+      color: #555;
+      margin-left: 5px;
+      animation: pulse 1.5s infinite;
+    }
+
+    @keyframes pulse {
+      0% { opacity: 1; }
+      50% { opacity: 0.5; }
+      100% { opacity: 1; }
+    }
+
+    .no-print {
+      display: inline-block;
+    }
+
+    .footer {
+      margin-top: 30px;
+      text-align: center;
+      font-size: 10px;
+      color: #666;
+      border-top: 2px solid #000;
+      padding-top: 10px;
+      width: 100%;
+      page-break-inside: avoid;
+    }
+
+    @media print {
+      body, html {
+        width: 210mm;
+        height: 297mm;
+        margin: 0 !important;
+        padding: 0 !important;
+        background: white;
+      }
+      .no-print, .action-buttons, .empresa-selector, .btn-buscar, .btn-consultar-cnpj {
+        display: none !important;
+      }
+      .logo-container {
+        border: none !important;
+      }
+      .container {
+        border: none;
+        box-shadow: none;
+        padding: 5mm;
+        margin: 0;
+        width: 100%;
+        min-height: 100%;
+      }
+      .footer {
+        position: static;
+        width: 100%;
+      }
+    }
+
+    /* Estilos para o gerenciamento de ordens */
+    .storage-buttons {
+      margin: 15px 0;
+      text-align: center;
+    }
+    
+    .storage-buttons button {
+      padding: 10px 15px;
+      margin: 0 5px;
+      cursor: pointer;
+      border: none;
+      border-radius: 4px;
+      font-weight: bold;
+      font-size: 13px;
+      transition: all 0.3s ease;
+    }
+    
+    #btnSalvar {
+      background: #4CAF50;
+      color: white;
+    }
+    
+    #btnSalvar:hover {
+      background: #3e8e41;
+    }
+    
+    #btnExportar {
+      background: #2196F3;
+      color: white;
+    }
+    
+    #btnExportar:hover {
+      background: #0b7dda;
+    }
+    
+    #btnExportarBackup {
+      background: #673AB7;
+      color: white;
+    }
+    
+    #btnExportarBackup:hover {
+      background: #5E35B1;
+    }
+
+    #btnImportarBackup {
+      background: #FF9800;
+      color: white;
+    }
+
+    #btnImportarBackup:hover {
+      background: #e68a00;
+    }
+
+    #btnCarregar {
+      background: #9C27B0;
+      color: white;
+    }
+
+    #btnCarregar:hover {
+      background: #7B1FA2;
+    }
+
+    #btnLimparTudo {
+      background: #f44336;
+      color: white;
+    }
+
+    #btnLimparTudo:hover {
+      background: #d32f2f;
+    }
+
+    #fileInput, #fileBackupInput {
+      display: none;
+    }
+
+    .ordens-salvas {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%); 
+      width: 80%;
+      max-width: 800px;
+      max-height: 80vh;
+      background: white;
+      border: 2px solid #000;
+      padding: 20px;
+      z-index: 1000;
+      overflow-y: auto;
+      box-shadow: 0 0 20px rgba(0,0,0,0.5);
+      display: none;
+    }
+
+    .ordens-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #ddd;
+    }
+
+    .ordens-search {
+      display: flex;
+      gap: 10px;
+    }
+
+    .ordens-search input {
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      width: 300px;
+    }
+
+    .ordens-search button {
+      padding: 8px 15px;
+      background: #f44336;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .ordens-list {
+      margin-top: 10px;
+    }
+
+    .ordem-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px;
+      border-bottom: 1px solid #eee;
+      cursor: pointer;
+    }
+
+    .ordem-item:hover {
+      background-color: #f5f5f5;
+    }
+
+    .ordem-info {
+      flex: 1;
+    }
+
+    .ordem-numero {
+      font-weight: bold;
+      color: #2196F3;
+    }
+
+    .ordem-data {
+      color: #666;
+      font-size: 11px;
+      margin-left: 10px;
+    }
+
+    .ordem-cliente {
+      display: block;
+      margin-top: 5px;
+      font-size: 12px;
+      color: #555;
+    }
+
+    .ordem-actions button {
+      padding: 5px 10px;
+      background: #f44336;
+      color: white;
+      border: none;
+      border-radius: 3px;
+      cursor: pointer;
+    }
+
+    .ordem-actions button:hover {
+      background: #d32f2f;
+    }
+
+    .ordem-vazia {
+      padding: 20px;
+      text-align: center;
+      color: #666;
+    }
+
+    /* Campo de observação maior */
+    #observacao {
+      height: 80px;
+      resize: vertical;
+    }
+    
+    /* Tabela de produto com mais espaço para descrição e menos para os outros campos */
+    .tabela-produto th:nth-child(1) {
+      width: 60%;
+    }
+    
+    .tabela-produto th:nth-child(2),
+    .tabela-produto th:nth-child(3),
+    .tabela-produto th:nth-child(4) {
+      width: 13.33%;
+    }
+    
+    .tabela-produto input,
+    .tabela-produto select {
+      max-width: 100%;
+    }
+    
+    /* Ajuste para campos numéricos menores */
+    #volumes, #pesoBruto {
+      text-align: center;
+      max-width: 60px;
+      margin: 0 auto;
+      display: block;
+    }
+    
+    /* Estilo para o campo de pedido manual */
+    #inputNumeroPedido {
+      font-weight: bold;
+      text-align: center;
+    }
+    
+    /* Estilos para as alterações solicitadas */
+    .header-title-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
+    
+    .header-data-container {
+      margin-bottom: 5px;
+      text-align: center;
+    }
+    
+    .cliente-cnpj-container {
+      margin-top: 10px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    
+    .cliente-info {
+      margin-top: 10px;
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      background-color: #f9f9f9;
+    }
+    
+    /* NOVO ESTILO PARA O CAMPO CLIENTE */
+    .cliente-field {
+      margin-top: 10px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    
+    .cliente-field label {
+      font-weight: bold;
+      white-space: nowrap;
+    }
+
+    /* NOVOS ESTILOS PARA SELEÇÃO DE MOTORISTA COM SETA */
+    .motorista-select-container {
+      position: relative;
+      width: 100%;
+    }
+    
+    .motorista-select-trigger {
+      position: absolute;
+      right: 5px;
+      top: 50%;
+      transform: translateY(-50%);
+      cursor: pointer;
+      font-size: 14px;
+      background: none;
+      border: none;
+      z-index: 10;
+    }
+    
+    .motorista-dropdown {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      background: white;
+      border: 1px solid #ddd;
+      border-top: none;
+      max-height: 200px;
+      overflow-y: auto;
+      z-index: 1000;
+      display: none;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    
+    .motorista-dropdown-item {
+      padding: 8px;
+      cursor: pointer;
+      border-bottom: 1px solid #eee;
+      font-size: 12px;
+      display: flex;
+      justify-content: space-between;
+    }
+    
+    .motorista-dropdown-item:hover {
+      background-color: #f5f5f5;
+    }
+    
+    .motorista-name {
+      font-weight: bold;
+    }
+    
+    .motorista-cpf {
+      color: #666;
+      font-size: 11px;
+    }
+    
+    /* ESTILOS PARA SELEÇÃO DE VEÍCULOS COM SETA */
+    .veiculo-select-container {
+      position: relative;
+      width: 100%;
+    }
+    
+    .veiculo-select-trigger {
+      position: absolute;
+      right: 5px;
+      top: 50%;
+      transform: translateY(-50%);
+      cursor: pointer;
+      font-size: 14px;
+      background: none;
+      border: none;
+      z-index: 10;
+    }
+    
+    .veiculo-dropdown {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      background: white;
+      border: 1px solid #ddd;
+      border-top: none;
+      max-height: 200px;
+      overflow-y: auto;
+      z-index: 1000;
+      display: none;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    
+    .veiculo-dropdown-item {
+      padding: 8px;
+      cursor: pointer;
+      border-bottom: 1px solid #eee;
+      font-size: 12px;
+      display: flex;
+      justify-content: space-between;
+    }
+    
+    .veiculo-dropdown-item:hover {
+      background-color: #f5f5f5;
+    }
+    
+    .veiculo-modelo {
+      font-weight: bold;
+    }
+    
+    .veiculo-placa {
+      color: #666;
+      font-size: 11px;
+    }
+  </style>
+</head>
+<body>
+  <div class="empresa-selector no-print">
+    <select id="empresa-select" class="empresa-select" onchange="trocarEmpresa()">
+      <option value="RODOVAR">RODOVAR</option>
+      <option value="AXD">AXD</option>
+    </select>
+  </div>
+
+  <div class="container" id="containerPDF">
+    <input type="hidden" id="ordemId">
+    
+    <table>
+      <tr>
+        <td class="logo-cell" rowspan="3">
+          <div class="logo-container">
+            <!-- ALTERAÇÃO AQUI: Logotipo igual ao do código fornecido -->
+            <img id="logotipo" class="logo" src="logo_rodovar.png" alt="Logotipo RODOVAR" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNTAiIGhlaWdodD0iMTAwIiB2aWV3Qm94PSIwIDAgMTUwIDEwMCI+PHJlY3Qgd2lkdGg9IjE1MCIgaGVpZ2h0PSIxMDAiIGZpbGw9IiNlZWVlZWUiLz48dGV4dCB4PSI3NSIgeT0iNTAiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxMiIgZmlsbD0iIzY2NiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZG9taW5hbnQtYmFzZWxpbmU9Im1pZGRsZSI+TG9nb3RpcG8gbmFvIGVuY29udHJhZG88L3RleHQ+PC9zdmc+'">
+          </div>
+        </td>
+        <td colspan="2" id="empresa-info">
+          RODOVAR TRANSPORTES E SERVIÇOS LTDA<br>
+          CNPJ: 49.908.710/0001-03<br>
+          Insc. Estadual: 228.253.729 ME<br>
+          Travessa Acalanto, 84 - Jardim das Margaridas<br>
+          Salvador - BA
+        </td>
+        <td colspan="2">
+          <div class="header-qr-container">
+            <div id="headerQrCode"></div>
+            <div class="header-title-container">
+              <div class="header-data-container">
+                Data emissão:<br><input type="datetime-local" id="dataEmissao">
+              </div>
+              <h2 style="margin: 0; font-size: 18px;">Ordem de Coleta</h2>
+              <div id="numeroOrdem" style="font-weight: bold; font-size: 16px;"></div>
+            </div>
+          </div>
+          
+          <div class="cliente-field">
+            <label for="clienteNomeInput">Cliente:</label>
+            <input type="text" id="clienteNomeInput" placeholder="Nome do Cliente" style="flex: 1;">
+          </div>
+          
+          <div class="cliente-cnpj-container">
+            <input type="text" id="clienteCNPJ" placeholder="CNPJ do Cliente" style="flex: 1;">
+            <button class="btn-consultar-cnpj no-print" onclick="consultarCNPJCliente()">🔍 Buscar</button>
+          </div>
+          
+          <div id="clienteInfo" class="cliente-info" style="display: none;">
+            <div id="clienteNome"></div>
+            <div id="clienteEndereco"></div>
+            <div id="clienteCidadeUF"></div>
+          </div>
+        </td>
+      </tr>
+      <tr>
+        <td colspan="2"></td>
+        <td colspan="2"></td>
+      </tr>
+      <tr>
+        <td>Comercial:<br><input type="text" id="operador" placeholder="Nome do Comercial"></td>
+        <td>Pedido:<br><input type="text" id="inputNumeroPedido" placeholder="Número do Pedido (opcional)"></td>
+        <td>N° Nota Fiscal:<br><input type="text" id="notaFiscal" placeholder="Número da NF"></td>
+        <td>Valor de NF:<br><input type="text" id="valorNF" placeholder="R$ 0,00"></td>
+      </tr>
+    </table>
+
+    <div class="local-destino">
+      <div class="bloco">
+        <h3 style="margin: 0 0 10px 0; text-align: center;">Local de Coleta</h3>
+        <input type="text" id="localColetaNome" placeholder="Nome do Local de Coleta">
+        <div style="display: flex; align-items: center;">
+          <input type="text" id="localColetaCNPJ" placeholder="CNPJ/CPF" style="flex: 1;">
+          <button class="btn-consultar-cnpj no-print" onclick="consultarCNPJ('localColetaCNPJ', 'localColeta')">🔍</button>
+        </div>
+        
+        <div style="margin-top: 10px;">
+          <input type="text" id="localColetaCEP" placeholder="CEP" style="width: 100px; display: inline-block;">
+          <button class="btn-buscar no-print" onclick="buscarCEP('localColeta')">Buscar</button>
+        </div>
+        
+        <div id="localColetaEndereco" style="margin-top: 5px;"></div>
+        <div style="margin-top: 5px;">
+          <input type="text" id="localColetaCidade" placeholder="Cidade" style="width: 70%; display: inline-block;">
+          <select id="localColetaUF" style="width: 25%;">
+            <option value="BA">BA</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="bloco">
+        <h3 style="margin: 0 0 10px 0; text-align: center;">Destino</h3>
+        <input type="text" id="destinoNome" placeholder="Nome do Destino">
+        <div style="display: flex; align-items: center;">
+          <input type="text" id="destinoCNPJ" placeholder="CNPJ/CPF" style="flex: 1;">
+          <button class="btn-consultar-cnpj no-print" onclick="consultarCNPJ('destinoCNPJ', 'destino')">🔍</button>
+        </div>
+        
+        <div style="margin-top: 10px;">
+          <input type="text" id="destinoCEP" placeholder="CEP" style="width: 100px; display: inline-block;">
+          <button class="btn-buscar no-print" onclick="buscarCEP('destino')">Buscar</button>
+        </div>
+        
+        <div id="destinoEndereco" style="margin-top: 5px;"></div>
+        <div style="margin-top: 5px;">
+          <input type="text" id="destinoCidade" placeholder="Cidade" style="width: 70%; display: inline-block;">
+          <select id="destinoUF" style="width: 25%;">
+            <option value="BA">BA</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <table class="tabela-produto">
+      <tr>
+        <th colspan="6">Produto</th>
+        <th>Espécie</th>
+        <th>Volumes</th>
+        <th>Peso Bruto</th>
+      </tr>
+      <tr>
+        <td colspan="6"><input type="text" id="produtoDescricao" placeholder="Descrição do Produto"></td>
+        <td>
+          <select id="especie">
+            <option value="">Selecione</option>
+            <option value="Palete">Palete</option>
+            <option value="Caixaria">Caixaria</option>
+            <option value="Tambor">Tambor</option>
+            <option value="Unidade">Unidade</option>
+            <option value="Sacaria">Sacaria</option>
+            <option value="Pacote">Pacote</option>
+            <option value="Mobília">Mobília</option>
+            <option value="Container">Container</option>
+            <option value="Bobina">Bobina</option>
+            <option value="Granel">Granel</option>
+            <option value="Outros">Outros</option>
+          </select>
+        </td>
+        <td><input type="text" id="volumes" value="0"></td>
+        <td><input type="text" id="pesoBruto" value="0,00"></td>
+      </tr>
+    </table>
+
+    <table style="margin-top: 10px;">
+      <tr>
+        <th>Observações</th>
+      </tr>
+      <tr>
+        <td><textarea id="observacao" placeholder="Digite aqui as observações necessárias"></textarea></td>
+      </tr>
+    </table>
+
+    <table>
+      <tr>
+        <td style="width: 45%;">
+          <div class="motorista-select-container">
+            Motorista: 
+            <input type="text" id="motoristaNome" placeholder="Nome do Motorista" style="width: 85%;">
+            <button class="motorista-select-trigger no-print" onclick="toggleMotoristaDropdown()">▼</button>
+            <div id="motoristaDropdown" class="motorista-dropdown"></div>
+          </div>
+        </td>
+        <td style="width: 18%;">CPF: <input type="text" id="motoristaCPF" placeholder="000.000.000-00"></td>
+        <td style="width: 18%;">RG: <input type="text" id="motoristaRG" placeholder="Número do RG"></td>
+        <td style="width: 19%;">CNH: <input type="text" id="motoristaCNH" placeholder="Número da CNH"></td>
+      </tr>
+      <tr>
+        <td>
+          <div class="veiculo-select-container">
+            Veículo: 
+            <input type="text" id="veiculo" placeholder="Modelo do Veículo" style="width: 85%;">
+            <button class="veiculo-select-trigger no-print" onclick="toggleVeiculoDropdown()">▼</button>
+            <div id="veiculoDropdown" class="veiculo-dropdown"></div>
+          </div>
+        </td>
+        <td>
+          Placa: <input type="text" id="veiculoPlaca" placeholder="AAA0A00" style="width: 85%;">
+        </td>
+        <td>Carreta: <input type="text" id="veiculoCarreta" placeholder="Placa da Carreta"></td>
+        <td>Carreta 2: <input type="text" id="veiculo2Carreta" placeholder="Placa da Carreta 2"></td>
+      </tr>
+    </table>
+
+    <table>
+      <tr>
+        <td style="height: 50px;">Assinatura do Motorista</td>
+        <td>Data:<br><input type="date" id="dataAssinatura"></td>
+        <td>Responsável pela Operação</td>
+      </tr>
+    </table>
+
+    <div class="footer" id="footer-empresa">
+      RODOVAR TRANSPORTES E SERVIÇOS LTDA - CNPJ: 49.908.710/0001-03 - Insc. Estadual: 228.253.729 ME<br>
+      Travessa Acalanto, 84 - Jardim das Margaridas - Salvador/BA<br>
+      Documento gerado em: <span id="dataGeracao"></span>
+    </div>
+  </div>
+
+  <div class="action-buttons no-print">
+    <button id="btnImprimir" onclick="window.print()">
+      <i class="fas fa-print"></i> Imprimir
+    </button>
+    <button id="btnLimpar" onclick="limparFormulario()">
+      <i class="fas fa-trash-alt"></i> Limpar Formulário
+    </button>
+  </div>
+
+  <div class="storage-buttons no-print">
+    <button id="btnSalvar" onclick="salvarOrdem()">
+      <i class="fas fa-save"></i> Salvar Ordem
+    </button>
+    <button id="btnExportar" onclick="exportarOrdem()">
+      <i class="fas fa-file-export"></i> Exportar Esta Ordem
+    </button>
+    <button id="btnExportarBackup" onclick="exportarBackup()">
+      <i class="fas fa-database"></i> Exportar Backup
+    </button>
+    <button id="btnImportarBackup" onclick="document.getElementById('fileBackupInput').click()">
+      <i class="fas fa-file-import"></i> Importar Backup
+    </button>
+    <button id="btnCarregar" onclick="toggleOrdensSalvas()">
+      <i class="fas fa-folder-open"></i> Gerenciar Ordens
+    </button>
+    <button id="btnLimparTudo" onclick="limparTodasOrdens()">
+      <i class="fas fa-trash-alt"></i> Limpar Tudo
+    </button>
+    <input type="file" id="fileInput" accept=".json" onchange="importarOrdem(event)">
+    <input type="file" id="fileBackupInput" accept=".json" onchange="importarBackup(event)">
+  </div>
+
+  <div id="ordensSalvas" class="ordens-salvas no-print">
+    <div class="ordens-header">
+      <h3>Ordens Salvas</h3>
+      <div class="ordens-search">
+        <input type="text" id="buscaOrdens" placeholder="Buscar ordens..." oninput="listarOrdensSalvas(this.value)">
+        <button onclick="toggleOrdensSalvas()">Fechar</button>
+      </div>
+    </div>
+    <div class="ordens-list" id="ordensListContainer"></div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/imask/6.4.2/imask.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+  <script>
+    // =============================================
+    // DADOS DAS EMPRESAS CORRIGIDOS
+    // =============================================
+    const empresas = {
+      AXD: {
+        nome: "AXD TRANSPORTES E SERVIÇOS",
+        cnpj: "59.352.973/0001-32",
+        ie: "228.253.729",
+        endereco: "RUA Jubiabá, 292 - Bairro: Luis Eduardo Magalhães",
+        cidade: "Simões Filho",
+        uf: "BA",
+        // ALTERAÇÃO AQUI: Logo da AXD igual ao código fornecido
+        logo: "logo_axd.png",
+        footer: "AXD TRANSPORTES E SERVIÇOS - CNPJ: 59.352.973/0001-32 - Insc. Estadual: 228.253.729<br>RUA Jubiabá, 292 - Bairro: Luis Eduardo Magalhães - Simões Filho/BA"
+      },
+      RODOVAR: {
+        nome: "RODOVAR TRANSPORTES E SERVIÇOS LTDA",
+        cnpj: "49.908.710/0001-03",
+        ie: "228.253.729 ME",
+        endereco: "Travessa Acalanto, 84 - Jardim das Margaridas",
+        cidade: "Salvador",
+        uf: "BA",
+        // ALTERAÇÃO AQUI: Logo da RODOVAR igual ao código fornecido
+        logo: "logo_rodovar.png",
+        footer: "RODOVAR TRANSPORTES E SERVIÇOS LTDA - CNPJ: 49.908.710/0001-03 - Insc. Estadual: 228.253.729 ME<br>Travessa Acalanto, 84 - Jardim das Margaridas - Salvador/BA"
+      }
+    };
+
+    // =============================================
+    // FUNÇÃO TROCAREMPRESA CORRIGIDA
+    // =============================================
+    function trocarEmpresa() {
+      const empresaSelecionada = document.getElementById('empresa-select').value;
+      const empresa = empresas[empresaSelecionada];
+      const empresaInfo = document.getElementById('empresa-info');
+      const logotipo = document.getElementById('logotipo');
+      const footerEmpresa = document.getElementById('footer-empresa');
+
+      // Atualiza as informações da empresa
+      empresaInfo.innerHTML = `
+        ${empresa.nome}<br>
+        CNPJ: ${empresa.cnpj}<br>
+        Insc. Estadual: ${empresa.ie}<br>
+        ${empresa.endereco}<br>
+        ${empresa.cidade} - ${empresa.uf}
+      `;
+      
+      // Atualiza o logotipo
+      logotipo.src = empresa.logo;
+      logotipo.alt = `Logotipo ${empresa.nome}`;
+      
+      // Atualiza o footer
+      footerEmpresa.innerHTML = `
+        ${empresa.footer}<br>
+        Documento gerado em: <span id="dataGeracao"></span>
+      `;
+      
+      // Atualiza a data de geração no footer
+      document.getElementById('dataGeracao').textContent = new Date().toLocaleString('pt-BR');
+      
+      // Gera o QR Code
+      gerarQRCode();
+    }
+
+    // =============================================
+    // RESTANTE DO CÓDIGO (todas as outras funções permanecem iguais)
+    // =============================================
+
+    // Dados dos motoristas
+    const motoristas = [
+      {nome: "YAGO REZENDE RIBEIRO", cpf: "077.067.175-69", cnh: "07567666291", rg: "2036612814"},
+      {nome: "JOSE AUGUSTO DA SILRA SANTOS", cpf: "014.660.965-43", cnh: "02429919260", rg: "843999454"},
+      {nome: "FRANCISCO EUDES DE FREITAS", cpf: "824.606.713-34", cnh: "506470404", rg: "506470404"},
+      {nome: "MARCOS ANTONIO DA ANUNCIACAO COSTA", cpf: "459.105.295-87", cnh: "01408541442", rg: "350451320"},
+      {nome: "RAFAEL ARAUJO DE LIMA", cpf: "045.385.313-75", cnh: "06757993225", rg: "3597268"},
+      {nome: "WESLEY CAIQUE DOS SANTOS BARBOSA", cpf: "104.615.225-43", cnh: "08700954074", rg: "2077683740"},
+      {nome: "DERMEVAL REIS BOMFIM", cpf: "882.529.905-25", cnh: "01816052640", rg: "485589826"}
+    ];
+
+    // Dados dos veículos
+    const veiculos = [
+      {modelo: "STRADA", placa: "SHD8H83"},
+      {modelo: "IVECO", placa: "NTR8D64"},
+      {modelo: "TRUCK", placa: "KIS3B61"},
+      {modelo: "HYUNDAI", placa: "SJY8F42"},
+      {modelo: "VW15.180", placa: "JQR7F07"},
+      {modelo: "HR", placa: "PLB4B47"}
+    ];
+
+    // Variáveis globais
+    let qrCodeInstance = null;
+    let debounceTimer = null;
+
+    // Função para gerar número de ordem aleatório
+    function gerarNumeroOrdem() {
+      const numeroAleatorio = Math.floor(Math.random() * 90000) + 10000;
+      const numeroFormatado = numeroAleatorio.toString();
+      document.getElementById('numeroOrdem').textContent = numeroFormatado;
+      return numeroFormatado;
+    }
+
+    // Função para consultar CNPJ do cliente
+    async function consultarCNPJCliente() {
+      const cnpjInput = document.getElementById('clienteCNPJ');
+      const cnpj = cnpjInput.value.replace(/\D/g, '');
+      
+      if (cnpj.length !== 14) {
+        alert('CNPJ inválido! Deve conter 14 dígitos.');
+        return;
+      }
+
+      const loadingSpan = document.createElement('span');
+      loadingSpan.className = 'loading-cnpj';
+      loadingSpan.textContent = 'Consultando...';
+      cnpjInput.parentNode.appendChild(loadingSpan);
+      cnpjInput.disabled = true;
+
+      try {
+        const response = await fetch(`https://brasilapi.com.br/api/cnpj/v1/${cnpj}`);
+        
+        if (!response.ok) {
+          throw new Error('CNPJ não encontrado');
+        }
+
+        const data = await response.json();
+
+        document.getElementById('clienteNomeInput').value = data.razao_social || '';
+        document.getElementById('clienteNome').textContent = data.razao_social || '';
+        document.getElementById('clienteEndereco').textContent = 
+          `${data.logradouro || ''} ${data.numero ? ', ' + data.numero : ''} - ${data.bairro || ''}`;
+        document.getElementById('clienteCidadeUF').textContent = 
+          `${data.municipio || ''} - ${data.uf || ''}`;
+        
+        document.getElementById('clienteInfo').style.display = 'block';
+
+      } catch (error) {
+        alert('Erro ao consultar CNPJ: ' + error.message);
+      } finally {
+        const loading = cnpjInput.parentNode.querySelector('.loading-cnpj');
+        if (loading) loading.remove();
+        cnpjInput.disabled = false;
+      }
+    }
+
+    // Função para consultar CNPJ
+    async function consultarCNPJ(cnpjInputId, tipo) {
+      const cnpjInput = document.getElementById(cnpjInputId);
+      const cnpj = cnpjInput.value.replace(/\D/g, '');
+      
+      if (cnpj.length !== 14) {
+        alert('CNPJ inválido! Deve conter 14 dígitos.');
+        return;
+      }
+
+      const loadingSpan = document.createElement('span');
+      loadingSpan.className = 'loading-cnpj';
+      loadingSpan.textContent = 'Consultando...';
+      cnpjInput.parentNode.appendChild(loadingSpan);
+      cnpjInput.disabled = true;
+
+      try {
+        const response = await fetch(`https://brasilapi.com.br/api/cnpj/v1/${cnpj}`);
+        
+        if (!response.ok) {
+          throw new Error('CNPJ não encontrado');
+        }
+
+        const data = await response.json();
+
+        if (tipo === 'localColeta') {
+          document.getElementById('localColetaNome').value = data.razao_social || '';
+          document.getElementById('localColetaEndereco').textContent = 
+            `${data.logradouro || ''} ${data.numero ? ', ' + data.numero : ''} - ${data.bairro || ''}`;
+          document.getElementById('localColetaCidade').value = data.municipio || '';
+          document.getElementById('localColetaUF').value = data.uf || '';
+        } else {
+          document.getElementById('destinoNome').value = data.razao_social || '';
+          document.getElementById('destinoEndereco').textContent = 
+            `${data.logradouro || ''} ${data.numero ? ', ' + data.numero : ''} - ${data.bairro || ''}`;
+          document.getElementById('destinoCidade').value = data.municipio || '';
+          document.getElementById('destinoUF').value = data.uf || '';
+        }
+
+      } catch (error) {
+        alert('Erro ao consultar CNPJ: ' + error.message);
+      } finally {
+        const loading = cnpjInput.parentNode.querySelector('.loading-cnpj');
+        if (loading) loading.remove();
+        cnpjInput.disabled = false;
+      }
+    }
+
+    // Configura máscaras para CNPJ
+    function configurarMascarasCNPJ() {
+      IMask(document.getElementById('clienteCNPJ'), {mask: '00.000.000/0000-00'});
+      IMask(document.getElementById('localColetaCNPJ'), {
+        mask: '00.000.000/0000-00',
+        onComplete: function() {
+          setTimeout(() => consultarCNPJ('localColetaCNPJ', 'localColeta'), 500);
+        }
+      });
+      IMask(document.getElementById('destinoCNPJ'), {
+        mask: '00.000.000/0000-00',
+        onComplete: function() {
+          setTimeout(() => consultarCNPJ('destinoCNPJ', 'destino'), 500);
+        }
+      });
+    }
+
+    function gerarDadosQRCode() {
+      return {
+        numeroOrdem: document.getElementById('numeroOrdem').textContent,
+        dataHora: document.getElementById('dataEmissao').value,
+        operador: document.getElementById('operador').value,
+      };
+    }
+
+    function gerarQRCode() {
+      const dados = gerarDadosQRCode();
+      const dadosString = JSON.stringify(dados);
+      const qrCodeElement = document.getElementById('headerQrCode');
+      
+      qrCodeElement.innerHTML = '';
+      
+      try {
+        if (qrCodeInstance) {
+          qrCodeInstance.clear();
+        }
+        qrCodeInstance = new QRCode(qrCodeElement, {
+          text: dadosString,
+          width: 70,
+          height: 70,
+          colorDark: "#000000",
+          colorLight: "#ffffff",
+          correctLevel: QRCode.CorrectLevel.H
+        });
+      } catch (e) {
+        console.error("Erro ao gerar QRCode:", e);
+        qrCodeElement.innerHTML = "Erro no QRCode";
+      }
+    }
+
+    function limparFormulario() {
+      if (confirm('Tem certeza que deseja limpar TODOS os dados?')) {
+        document.getElementById('ordemId').value = '';
+        document.getElementById('numeroOrdem').textContent = '';
+        
+        const camposParaLimpar = [
+          'inputNumeroPedido', 'operador', 'valorNF', 'notaFiscal', 'localColetaNome', 'localColetaCNPJ', 'localColetaCEP', 'localColetaCidade',
+          'destinoNome', 'destinoCNPJ', 'destinoCEP', 'destinoCidade',
+          'produtoDescricao', 'volumes', 'pesoBruto', 
+          'observacao',
+          'motoristaNome', 'motoristaCPF', 'motoristaRG', 'motoristaCNH',
+          'veiculo', 'veiculoPlaca', 'veiculoCarreta', 'veiculo2Carreta',
+          'clienteCNPJ', 'clienteNomeInput'
+        ];
+        
+        camposParaLimpar.forEach(id => {
+          const element = document.getElementById(id);
+          if (element) element.value = '';
+        });
+        
+        document.getElementById('destinoEndereco').textContent = '';
+        document.getElementById('localColetaEndereco').textContent = '';
+        document.getElementById('clienteInfo').style.display = 'none';
+        document.getElementById('motoristaDropdown').style.display = 'none';
+        document.getElementById('veiculoDropdown').style.display = 'none';
+        
+        document.getElementById('especie').selectedIndex = 0;
+        document.getElementById('localColetaUF').value = 'BA';
+        document.getElementById('destinoUF').value = 'BA';
+        
+        document.getElementById('dataEmissao').value = getDateTimeNow();
+        document.getElementById('dataAssinatura').value = getDateNow();
+        
+        gerarNumeroOrdem();
+        gerarQRCode();
+      }
+    }
+
+    async function buscarCEP(tipo) {
+      const cepInput = document.getElementById(tipo + 'CEP');
+      let cep = cepInput.value.replace(/\D/g, '');
+      
+      if (cep.length !== 8) {
+        alert('CEP inválido! Deve conter 8 dígitos.');
+        return;
+      }
+      
+      try {
+        const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+        const data = await response.json();
+        
+        if (data.erro) {
+          throw new Error('CEP não encontrado');
+        }
+        
+        if (tipo === 'localColeta' || tipo === 'destino') {
+          document.getElementById(tipo + 'Endereco').textContent = 
+            `${data.logradouro || ''} ${data.complemento || ''} - ${data.bairro || ''}`;
+          document.getElementById(tipo + 'Cidade').value = data.localidade || '';
+          document.getElementById(tipo + 'UF').value = data.uf || '';
+        }
+        
+        gerarQRCode();
+      } catch (error) {
+        alert('Erro ao buscar CEP: ' + error.message);
+      }
+    }
+
+    async function carregarEstados() {
+      try {
+        const response = await fetch('https://servicodados.ibge.gov.br/api/v1/localidades/estados');
+        const estados = await response.json();
+        
+        const selectLocalColeta = document.getElementById('localColetaUF');
+        const selectDestino = document.getElementById('destinoUF');
+        
+        estados.sort((a, b) => a.nome.localeCompare(b.nome));
+        
+        estados.forEach(estado => {
+          const option = document.createElement('option');
+          option.value = estado.sigla;
+          option.textContent = estado.sigla;
+          
+          selectLocalColeta.appendChild(option.cloneNode(true));
+          selectDestino.appendChild(option.cloneNode(true));
+        });
+      } catch (error) {
+        console.error('Erro ao carregar estados:', error);
+      }
+    }
+
+    function getDateTimeNow() {
+      const now = new Date();
+      now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+      return now.toISOString().slice(0, 16);
+    }
+
+    function getDateNow() {
+      return new Date().toISOString().slice(0, 10);
+    }
+
+    function formatarCEP(e) {
+      let value = e.target.value.replace(/\D/g, '');
+      if (value.length > 5) {
+        value = value.substring(0, 5) + '-' + value.substring(5, 8);
+      }
+      e.target.value = value;
+    }
+
+    function formatarValorMonetario(elemento) {
+      let valor = elemento.value.replace(/\D/g, '');
+      valor = (valor/100).toLocaleString('pt-BR', {
+        style: 'currency',
+        currency: 'BRL'
+      });
+      elemento.value = valor;
+    }
+
+    // Configurar máscaras para os campos do motorista
+    function configurarMascarasMotorista() {
+      IMask(document.getElementById('motoristaCPF'), {mask: '000.000.000-00'});
+      IMask(document.getElementById('veiculoPlaca'), {
+        mask: 'AAA-0000',
+        definitions: {'A': /[A-Za-z]/, '0': /[0-9]/}
+      });
+      IMask(document.getElementById('veiculoCarreta'), {
+        mask: 'AAA-0000',
+        definitions: {'A': /[A-Za-z]/, '0': /[0-9]/}
+      });
+      IMask(document.getElementById('veiculo2Carreta'), {
+        mask: 'AAA-0000',
+        definitions: {'A': /[A-Za-z]/, '0': /[0-9]/}
+      });
+    }
+
+    // Funções para seleção de motorista com dropdown
+    function toggleMotoristaDropdown() {
+      const dropdown = document.getElementById('motoristaDropdown');
+      
+      if (dropdown.style.display === 'block') {
+        dropdown.style.display = 'none';
+      } else {
+        preencherDropdownMotoristas();
+        dropdown.style.display = 'block';
+      }
+    }
+
+    function preencherDropdownMotoristas() {
+      const dropdown = document.getElementById('motoristaDropdown');
+      dropdown.innerHTML = '';
+      
+      motoristas.forEach(motorista => {
+        const item = document.createElement('div');
+        item.className = 'motorista-dropdown-item';
+        item.innerHTML = `
+          <div>
+            <div class="motorista-name">${motorista.nome}</div>
+            <div class="motorista-cpf">CPF: ${motorista.cpf}</div>
+          </div>
+        `;
+        
+        item.addEventListener('click', () => {
+          selecionarMotorista(motorista);
+          dropdown.style.display = 'none';
+        });
+        
+        dropdown.appendChild(item);
+      });
+    }
+
+    function selecionarMotorista(motorista) {
+      document.getElementById('motoristaNome').value = motorista.nome;
+      document.getElementById('motoristaCPF').value = motorista.cpf;
+      document.getElementById('motoristaRG').value = motorista.rg;
+      document.getElementById('motoristaCNH').value = motorista.cnh;
+    }
+
+    // Funções para seleção de veículo com dropdown
+    function toggleVeiculoDropdown() {
+      const dropdown = document.getElementById('veiculoDropdown');
+      
+      if (dropdown.style.display === 'block') {
+        dropdown.style.display = 'none';
+      } else {
+        preencherDropdownVeiculos();
+        dropdown.style.display = 'block';
+      }
+    }
+
+    function preencherDropdownVeiculos() {
+      const dropdown = document.getElementById('veiculoDropdown');
+      dropdown.innerHTML = '';
+      
+      veiculos.forEach(veiculo => {
+        const item = document.createElement('div');
+        item.className = 'veiculo-dropdown-item';
+        item.innerHTML = `
+          <div>
+            <div class="veiculo-modelo">${veiculo.modelo}</div>
+            <div class="veiculo-placa">Placa: ${veiculo.placa}</div>
+          </div>
+        `;
+        
+        item.addEventListener('click', () => {
+          selecionarVeiculo(veiculo);
+          dropdown.style.display = 'none';
+        });
+        
+        dropdown.appendChild(item);
+      });
+    }
+
+    function selecionarVeiculo(veiculo) {
+      document.getElementById('veiculo').value = veiculo.modelo;
+      document.getElementById('veiculoPlaca').value = veiculo.placa;
+    }
+
+    // Fechar os dropdowns ao clicar fora deles
+    document.addEventListener('click', function(e) {
+      const motoristaDropdown = document.getElementById('motoristaDropdown');
+      const motoristaTrigger = document.querySelector('.motorista-select-trigger');
+      
+      const veiculoDropdown = document.getElementById('veiculoDropdown');
+      const veiculoTrigger = document.querySelector('.veiculo-select-trigger');
+      
+      if (motoristaDropdown && motoristaDropdown.style.display === 'block' && 
+          !motoristaDropdown.contains(e.target) && e.target !== motoristaTrigger) {
+        motoristaDropdown.style.display = 'none';
+      }
+      
+      if (veiculoDropdown && veiculoDropdown.style.display === 'block' && 
+          !veiculoDropdown.contains(e.target) && e.target !== veiculoTrigger) {
+        veiculoDropdown.style.display = 'none';
+      }
+    });
+
+    // Funções para salvar/exportar/importar
+    function obterDadosOrdem() {
+      return {
+        id: document.getElementById('ordemId').value,
+        numeroOrdem: document.getElementById('numeroOrdem').textContent,
+        numeroPedido: document.getElementById('inputNumeroPedido').value,
+        dataEmissao: document.getElementById('dataEmissao').value,
+        operador: document.getElementById('operador').value,
+        notaFiscal: document.getElementById('notaFiscal').value,
+        valorNF: document.getElementById('valorNF').value,
+        
+        localColeta: {
+          nome: document.getElementById('localColetaNome').value,
+          cnpj: document.getElementById('localColetaCNPJ').value,
+          cep: document.getElementById('localColetaCEP').value,
+          endereco: document.getElementById('localColetaEndereco').textContent,
+          cidade: document.getElementById('localColetaCidade').value,
+          uf: document.getElementById('localColetaUF').value
+        },
+        
+        destino: {
+          nome: document.getElementById('destinoNome').value,
+          cnpj: document.getElementById('destinoCNPJ').value,
+          cep: document.getElementById('destinoCEP').value,
+          endereco: document.getElementById('destinoEndereco').textContent,
+          cidade: document.getElementById('destinoCidade').value,
+          uf: document.getElementById('destinoUF').value
+        },
+        
+        produto: {
+          descricao: document.getElementById('produtoDescricao').value,
+          especie: document.getElementById('especie').value,
+          volumes: document.getElementById('volumes').value,
+          pesoBruto: document.getElementById('pesoBruto').value
+        },
+        
+        observacao: document.getElementById('observacao').value,
+        
+        motorista: {
+          nome: document.getElementById('motoristaNome').value,
+          cpf: document.getElementById('motoristaCPF').value,
+          rg: document.getElementById('motoristaRG').value,
+          cnh: document.getElementById('motoristaCNH').value
+        },
+        
+        veiculo: {
+          tipo: document.getElementById('veiculo').value,
+          placa: document.getElementById('veiculoPlaca').value,
+          carreta: document.getElementById('veiculoCarreta').value,
+          carreta2: document.getElementById('veiculo2Carreta').value
+        },
+        
+        cliente: {
+          nome: document.getElementById('clienteNomeInput').value,
+          cnpj: document.getElementById('clienteCNPJ').value,
+          endereco: document.getElementById('clienteEndereco').textContent,
+          cidadeUF: document.getElementById('clienteCidadeUF').textContent
+        },
+        
+        dataAssinatura: document.getElementById('dataAssinatura').value,
+        empresa: document.getElementById('empresa-select').value,
+        dataCriacao: new Date().toISOString(),
+        dataModificacao: new Date().toISOString()
+      };
+    }
+
+    function preencherFormulario(dados) {
+      document.getElementById('ordemId').value = dados.id || '';
+      document.getElementById('numeroOrdem').textContent = dados.numeroOrdem;
+      document.getElementById('inputNumeroPedido').value = dados.numeroPedido || '';
+      document.getElementById('dataEmissao').value = dados.dataEmissao;
+      document.getElementById('operador').value = dados.operador || '';
+      document.getElementById('notaFiscal').value = dados.notaFiscal || '';
+      document.getElementById('valorNF').value = dados.valorNF || '';
+      
+      document.getElementById('localColetaNome').value = dados.localColeta.nome || '';
+      document.getElementById('localColetaCNPJ').value = dados.localColeta.cnpj || '';
+      document.getElementById('localColetaCEP').value = dados.localColeta.cep || '';
+      document.getElementById('localColetaEndereco').textContent = dados.localColeta.endereco || '';
+      document.getElementById('localColetaCidade').value = dados.localColeta.cidade || '';
+      document.getElementById('localColetaUF').value = dados.localColeta.uf || 'BA';
+      
+      document.getElementById('destinoNome').value = dados.destino.nome || '';
+      document.getElementById('destinoCNPJ').value = dados.destino.cnpj || '';
+      document.getElementById('destinoCEP').value = dados.destino.cep || '';
+      document.getElementById('destinoEndereco').textContent = dados.destino.endereco || '';
+      document.getElementById('destinoCidade').value = dados.destino.cidade || '';
+      document.getElementById('destinoUF').value = dados.destino.uf || 'BA';
+      
+      document.getElementById('produtoDescricao').value = dados.produto.descricao || '';
+      document.getElementById('especie').value = dados.produto.especie || '';
+      document.getElementById('volumes').value = dados.produto.volumes || '0';
+      document.getElementById('pesoBruto').value = dados.produto.pesoBruto || '0,00';
+      
+      document.getElementById('observacao').value = dados.observacao || '';
+      
+      document.getElementById('motoristaNome').value = dados.motorista.nome || '';
+      document.getElementById('motoristaCPF').value = dados.motorista.cpf || '';
+      document.getElementById('motoristaRG').value = dados.motorista.rg || '';
+      document.getElementById('motoristaCNH').value = dados.motorista.cnh || '';
+      
+      document.getElementById('veiculo').value = dados.veiculo.tipo || '';
+      document.getElementById('veiculoPlaca').value = dados.veiculo.placa || '';
+      document.getElementById('veiculoCarreta').value = dados.veiculo.carreta || '';
+      document.getElementById('veiculo2Carreta').value = dados.veiculo.carreta2 || '';
+      
+      document.getElementById('clienteNomeInput').value = dados.cliente.nome || '';
+      document.getElementById('clienteCNPJ').value = dados.cliente.cnpj || '';
+      if (dados.cliente.endereco) {
+        document.getElementById('clienteNome').textContent = dados.cliente.nome;
+        document.getElementById('clienteEndereco').textContent = dados.cliente.endereco;
+        document.getElementById('clienteCidadeUF').textContent = dados.cliente.cidadeUF;
+        document.getElementById('clienteInfo').style.display = 'block';
+      }
+      
+      document.getElementById('dataAssinatura').value = dados.dataAssinatura || '';
+      
+      if (dados.empresa) {
+        document.getElementById('empresa-select').value = dados.empresa;
+        trocarEmpresa();
+      }
+      
+      gerarQRCode();
+    }
+
+    // Funções para gerenciamento de múltiplas ordens
+    function getOrdensSalvas() {
+      return JSON.parse(localStorage.getItem('ordensColeta')) || {};
+    }
+
+    function saveOrdens(ordens) {
+      localStorage.setItem('ordensColeta', JSON.stringify(ordens));
+    }
+
+    function generateOrderId() {
+      return Date.now().toString();
+    }
+
+    function salvarOrdem() {
+      const dados = obterDadosOrdem();
+      const ordens = getOrdensSalvas();
+      
+      const ordemExistente = Object.values(ordens).find(ordem => 
+        ordem.numeroOrdem === dados.numeroOrdem && ordem.id !== dados.id);
+      
+      if (ordemExistente && !dados.id) {
+        if (!confirm(`Já existe uma ordem com o número ${dados.numeroOrdem}. Deseja criar uma nova ordem com um número diferente?`)) {
+          return;
+        }
+        gerarNumeroOrdem();
+        dados.numeroOrdem = document.getElementById('numeroOrdem').textContent;
+      }
+      
+      if (!dados.id) {
+        dados.id = generateOrderId();
+        dados.dataCriacao = new Date().toISOString();
+      }
+      
+      dados.dataModificacao = new Date().toISOString();
+      
+      ordens[dados.id] = dados;
+      saveOrdens(ordens);
+      
+      document.getElementById('ordemId').value = dados.id;
+      
+      alert(`Ordem ${dados.numeroOrdem} salva com sucesso!`);
+      listarOrdensSalvas();
+    }
+
+    function listarOrdensSalvas(filtro = '') {
+      const ordens = getOrdensSalvas();
+      const container = document.getElementById('ordensListContainer');
+      
+      if (Object.keys(ordens).length === 0) {
+        container.innerHTML = '<div class="ordem-vazia">Nenhuma ordem salva encontrada.</div>';
+        return;
+      }
+      
+      const ordensArray = Object.values(ordens).sort((a, b) => 
+        new Date(b.dataCriacao) - new Date(a.dataCriacao));
+      
+      const ordensFiltradas = filtro ? 
+        ordensArray.filter(ordem => 
+          ordem.numeroOrdem.toLowerCase().includes(filtro.toLowerCase()) ||
+          (ordem.numeroPedido && ordem.numeroPedido.toLowerCase().includes(filtro.toLowerCase())) ||
+          (ordem.localColeta.nome && ordem.localColeta.nome.toLowerCase().includes(filtro.toLowerCase())) ||
+          (ordem.destino.nome && ordem.destino.nome.toLowerCase().includes(filtro.toLowerCase())) ||
+          (ordem.cliente.nome && ordem.cliente.nome.toLowerCase().includes(filtro.toLowerCase()))
+        ) : ordensArray;
+      
+      let html = '';
+      
+      if (ordensFiltradas.length === 0) {
+        html = '<div class="ordem-vazia">Nenhuma ordem encontrada com o filtro aplicado.</div>';
+      } else {
+        ordensFiltradas.forEach(ordem => {
+          const pedidoInfo = ordem.numeroPedido ? ` | Pedido: ${ordem.numeroPedido}` : '';
+          const clienteInfo = ordem.cliente.nome ? ` | Cliente: ${ordem.cliente.nome}` : '';
+          html += `
+            <div class="ordem-item" data-id="${ordem.id}">
+              <div class="ordem-info" onclick="carregarOrdem('${ordem.id}')">
+                <span class="ordem-numero">${ordem.numeroOrdem}</span>
+                <span class="ordem-data">${new Date(ordem.dataCriacao).toLocaleString('pt-BR')}</span>
+                <span class="ordem-cliente">De: ${ordem.localColeta.nome || 'Sem local de coleta'} | Para: ${ordem.destino.nome || 'Sem destino'}${pedidoInfo}${clienteInfo}</span>
+              </div>
+              <div class="ordem-actions">
+                <button class="btn-excluir" onclick="excluirOrdem('${ordem.id}', event)">Excluir</button>
+              </div>
+            </div>
+          `;
+        });
+      }
+      
+      container.innerHTML = html;
+    }
+
+    function carregarOrdem(id) {
+      const ordens = getOrdensSalvas();
+      const ordem = ordens[id];
+      
+      if (ordem) {
+        if (confirm(`Carregar ordem ${ordem.numeroOrdem}? Os dados atuais serão perdidos.`)) {
+          preencherFormulario(ordem);
+          toggleOrdensSalvas();
+        }
+      } else {
+        alert('Ordem não encontrada!');
+      }
+    }
+
+    function excluirOrdem(id, event) {
+      event.stopPropagation();
+      
+      if (confirm('Tem certeza que deseja excluir esta ordem?')) {
+        const ordens = getOrdensSalvas();
+        delete ordens[id];
+        saveOrdens(ordens);
+        listarOrdensSalvas(document.getElementById('buscaOrdens').value);
+      }
+    }
+
+    function exportarOrdem() {
+      const dados = obterDadosOrdem();
+      const dadosStr = JSON.stringify(dados, null, 2);
+      const blob = new Blob([dadosStr], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `ordem_coleta_${dados.numeroOrdem}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+    function importarOrdem(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const dados = JSON.parse(e.target.result);
+          if (confirm(`Deseja carregar a ordem ${dados.numeroOrdem}?`)) {
+            preencherFormulario(dados);
+          }
+        } catch (error) {
+          alert('Erro ao ler arquivo: ' + error.message);
+        }
+      };
+      reader.readAsText(file);
+      
+      event.target.value = '';
+    }
+
+    function exportarBackup() {
+      const ordens = getOrdensSalvas();
+      const dadosStr = JSON.stringify(ordens, null, 2);
+      const blob = new Blob([dadosStr], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `backup_ordens_coleta_${new Date().toISOString().slice(0, 10)}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+    function importarBackup(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      
+      if (!confirm('Importar backup? Todas as ordens atuais serão substituídas.')) {
+        event.target.value = '';
+        return;
+      }
+      
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const dados = JSON.parse(e.target.result);
+          saveOrdens(dados);
+          alert('Backup importado with success!');
+          listarOrdensSalvas();
+        } catch (error) {
+          alert('Erro ao importar backup: ' + error.message);
+        }
+      };
+      reader.readAsText(file);
+      
+      event.target.value = '';
+    }
+
+    function limparTodasOrdens() {
+      if (confirm('Tem certeza que deseja excluir TODAS as ordens salvas? Esta ação não pode ser desfeita.')) {
+        localStorage.removeItem('ordensColeta');
+        listarOrdensSalvas();
+        alert('Todas as ordens foram removidas.');
+      }
+    }
+
+    function toggleOrdensSalvas() {
+      const container = document.getElementById('ordensSalvas');
+      if (container.style.display === 'block') {
+        container.style.display = 'none';
+      } else {
+        container.style.display = 'block';
+        listarOrdensSalvas();
+      }
+    }
+
+    // Inicialização
+    window.onload = function() {
+      document.getElementById('dataEmissao').value = getDateTimeNow();
+      document.getElementById('dataAssinatura').value = getDateNow();
+      document.getElementById('dataGeracao').textContent = new Date().toLocaleString('pt-BR');
+      
+      carregarEstados();
+      configurarMascarasCNPJ();
+      configurarMascarasMotorista();
+      
+      // Garante que a empresa inicial está selecionada corretamente
+      trocarEmpresa();
+      
+      // Gerar número da ordem automaticamente
+      gerarNumeroOrdem();
+      
+      document.getElementById('numeroOrdem').addEventListener('DOMSubtreeModified', gerarQRCode);
+      document.getElementById('dataEmissao').addEventListener('change', gerarQRCode);
+      document.getElementById('operador').addEventListener('input', function() {
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(gerarQRCode, 500);
+      });
+      document.getElementById('valorNF').addEventListener('blur', function() {
+        formatarValorMonetario(this);
+        gerarQRCode();
+      });
+      
+      document.querySelectorAll('input[id$="CEP"]').forEach(input => {
+        input.addEventListener('input', formatarCEP);
+      });
+
+      // Carregar última ordem salva (opcional)
+      const ordensSalvas = getOrdensSalvas();
+      if (Object.keys(ordensSalvas).length > 0) {
+        const ultimaOrdem = Object.values(ordensSalvas)
+          .sort((a, b) => new Date(b.dataCriacao) - new Date(a.dataCriacao))[0];
+        preencherFormulario(ultimaOrdem);
+      } else {
+        gerarQRCode();
+      }
+    };
+  </script>
+</body>
+</html>

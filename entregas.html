@@ -1,0 +1,1294 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📦 Acompanhamento de Entregas</title>
+    <script src="https://cdn.sheetjs.com/xlsx-0.19.3/package/dist/xlsx.full.min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .controls {
+            background-color: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            align-items: flex-end;
+        }
+        
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            min-width: 150px;
+        }
+        
+        .date-filters {
+            display: flex;
+            gap: 10px;
+            align-items: flex-end;
+        }
+        
+        button {
+            padding: 8px 15px;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        
+        .filter-btn {
+            background-color: #4CAF50;
+        }
+        
+        .filter-btn:hover {
+            background-color: #45a049;
+        }
+        
+        .export-btn {
+            background-color: #2196F3;
+        }
+        
+        .export-btn:hover {
+            background-color: #0b7dda;
+        }
+        
+        .load-btn {
+            background-color: #ff9800;
+        }
+        
+        .load-btn:hover {
+            background-color: #e68a00;
+        }
+        
+        .add-btn {
+            background-color: #9C27B0;
+        }
+        
+        .add-btn:hover {
+            background-color: #7B1FA2;
+        }
+        
+        .save-btn {
+            background-color: #4CAF50;
+        }
+        
+        .edit-btn {
+            background-color: #2196F3;
+        }
+        
+        .delete-btn {
+            background-color: #f44336;
+        }
+        
+        .cancel-btn {
+            background-color: #ff9800;
+            color: #333;
+        }
+        
+        select, input {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: white;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        th, td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+        
+        th {
+            background-color: #f2f2f2;
+            font-weight: bold;
+        }
+        
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        
+        .status-coletando {
+            color: #0077b6;
+            font-weight: bold;
+        }
+        
+        .status-transito {
+            color: #ff9800;
+            font-weight: bold;
+        }
+        
+        .status-parado {
+            color: #f44336;
+            font-weight: bold;
+        }
+        
+        .status-entregue {
+            color: #4CAF50;
+            font-weight: bold;
+        }
+        
+        .whatsapp-link {
+            color: #25D366;
+            text-decoration: none;
+            font-weight: bold;
+            display: inline-block;
+            padding: 2px 5px;
+            border-radius: 3px;
+        }
+        
+        .whatsapp-link:hover {
+            background-color: rgba(37, 211, 102, 0.1);
+        }
+        
+        .copy-notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background-color: #4CAF50;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 6px;
+            display: none;
+            z-index: 1000;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        
+        .edit-row {
+            background-color: #fffde7 !important;
+        }
+        
+        input[type="text"], input[type="date"], select {
+            width: 100%;
+            box-sizing: border-box;
+        }
+        
+        input[type="password"] {
+            width: 100%;
+            box-sizing: border-box;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 5px;
+        }
+        
+        .action-buttons button {
+            padding: 6px 10px;
+            font-size: 12px;
+        }
+        
+        .status-select {
+            border: none;
+            background: transparent;
+            font-weight: bold;
+            color: inherit;
+            cursor: pointer;
+        }
+        
+        .status-select:focus {
+            outline: none;
+            background: white;
+            box-shadow: 0 0 0 2px rgba(0,0,0,0.1);
+        }
+
+        .tabs {
+            display: flex;
+            margin-bottom: 15px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            background-color: #f2f2f2;
+            border-right: 1px solid #ddd;
+            transition: background-color 0.3s;
+        }
+
+        .tab:last-child {
+            border-right: none;
+        }
+
+        .tab.active {
+            background-color: #4CAF50;
+            color: white;
+            font-weight: bold;
+        }
+
+        .tab:hover:not(.active) {
+            background-color: #e6e6e6;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1001;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 15% auto;
+            padding: 20px;
+            border-radius: 8px;
+            width: 300px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+        .modal-buttons {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 20px;
+            gap: 10px;
+        }
+        
+        .empty-message {
+            text-align: center;
+            padding: 20px;
+            font-style: italic;
+            color: #666;
+        }
+        
+        /* Estilos para o botão de voz */
+        .voice-toggle {
+            background-color: #607d8b;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .voice-toggle:hover {
+            background-color: #546e7a;
+        }
+        
+        .voice-toggle.active {
+            background-color: #009688;
+        }
+        
+        .voice-toggle.active:hover {
+            background-color: #00897b;
+        }
+        
+        /* Estilo da notificação estilo WhatsApp */
+        .whatsapp-notification {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 300px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            z-index: 1000;
+            display: none;
+            overflow: hidden;
+            animation: slideIn 0.3s ease-out;
+            border-left: 4px solid #25D366;
+        }
+
+        .whatsapp-notification-header {
+            background-color: #f0f2f5;
+            padding: 10px 15px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid #e9edef;
+        }
+
+        .whatsapp-notification-title {
+            font-weight: bold;
+            color: #111b21;
+            font-size: 14px;
+        }
+
+        .whatsapp-notification-close {
+            background: none;
+            border: none;
+            color: #667781;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .whatsapp-notification-body {
+            padding: 15px;
+            color: #3b4a54;
+            font-size: 13px;
+            line-height: 1.4;
+        }
+
+        .whatsapp-notification-footer {
+            padding: 8px 15px;
+            background-color: #f0f2f5;
+            display: flex;
+            justify-content: flex-end;
+            border-top: 1px solid #e9edef;
+        }
+
+        .whatsapp-notification-button {
+            background-color: #25D366;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 6px 12px;
+            font-size: 12px;
+            cursor: pointer;
+            margin-left: 8px;
+        }
+
+        .whatsapp-notification-button.secondary {
+            background-color: #e9edef;
+            color: #3b4a54;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateY(100px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background-color: #f44336;
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="copy-notification" id="copyNotification">Número copiado!</div>
+    
+    <div id="passwordModal" class="modal">
+        <div class="modal-content">
+            <h3>Digite a senha para excluir</h3>
+            <input type="password" id="passwordInput" placeholder="Senha" autocomplete="off">
+            <div class="modal-buttons">
+                <button class="cancel-btn" onclick="cancelDelete()">Cancelar</button>
+                <button class="save-btn" onclick="confirmDelete()">Confirmar</button>
+            </div>
+            <p id="passwordError" style="color: red; display: none;">Senha incorreta!</p>
+        </div>
+    </div>
+    
+    <h1>📦 Acompanhamento de Entregas</h1>
+    
+    <div class="tabs">
+        <div class="tab active" onclick="filtrarPorAba('todos')">Todos</div>
+        <div class="tab" onclick="filtrarPorAba('coletando')">Coletando</div>
+        <div class="tab" onclick="filtrarPorAba('transito')">Em Trânsito</div>
+        <div class="tab" onclick="filtrarPorAba('parado')">Parado</div>
+        <div class="tab" onclick="filtrarPorAba('entregue')">Entregue</div>
+    </div>
+    
+    <div class="controls">
+        <div class="filter-group">
+            <label for="vendedorFilter">Vendedor</label>
+            <select id="vendedorFilter">
+                <option value="">Todos</option>
+                <option value="MARCIA">MARCIA</option>
+                <option value="MARIANE">MARIANE</option>
+                <option value="JEISE">JEISE</option>
+                <option value="MONICA">MONICA</option>
+                <option value="ANA">ANA</option>
+                <option value="MARIVAL">MARIVAL</option>
+                <option value="GENIVALDO">GENIVALDO</option>
+            </select>
+        </div>
+        
+        <div class="filter-group">
+            <label for="statusFilter">Status</label>
+            <select id="statusFilter">
+                <option value="">Todos</option>
+                <option value="coletando">Coletando</option>
+                <option value="transito">Em trânsito</option>
+                <option value="parado">Parado</option>
+                <option value="entregue">Entregue</option>
+            </select>
+        </div>
+        
+        <div class="date-filters">
+            <div class="filter-group">
+                <label for="mesFilter">Mês</label>
+                <select id="mesFilter">
+                    <option value="01">Janeiro</option>
+                    <option value="02">Fevereiro</option>
+                    <option value="03">Março</option>
+                    <option value="04">Abril</option>
+                    <option value="05">Maio</option>
+                    <option value="06">Junho</option>
+                    <option value="07">Julho</option>
+                    <option value="08">Agosto</option>
+                    <option value="09">Setembro</option>
+                    <option value="10">Outubro</option>
+                    <option value="11">Novembro</option>
+                    <option value="12">Dezembro</option>
+                </select>
+            </div>
+            
+            <div class="filter-group">
+                <label for="anoFilter">Ano</label>
+                <select id="anoFilter">
+                    <option value="2023">2023</option>
+                    <option value="2024" selected>2024</option>
+                    <option value="2025">2025</option>
+                </select>
+            </div>
+            
+            <button class="load-btn" onclick="carregarMes()">Carregar Mês</button>
+            <button class="load-btn" onclick="mostrarTodasEntregas()">Mostrar Todas</button>
+        </div>
+        
+        <button class="add-btn" onclick="adicionarNovaLinha()">Adicionar Entrega</button>
+        <button class="export-btn" onclick="exportarExcel()">Exportar para Excel</button>
+        <button id="voiceToggleBtn" class="voice-toggle" onclick="toggleVoiceNotifications()">
+            <span id="voiceIcon">🔇</span> Aviso por Voz
+        </button>
+    </div>
+    
+    <table id="tabelaEntregas">
+        <thead>
+            <tr>
+                <th>DATA</th>
+                <th>VENDEDOR</th>
+                <th>CLIENTE</th>
+                <th>TELEFONE CLIENTE</th>
+                <th>MOTORISTA</th>
+                <th>TELEFONE MOTORISTA</th>
+                <th>ORIGEM</th>
+                <th>DESTINO</th>
+                <th>FRETE EMPRESA</th>
+                <th>FRETE MOTORISTA</th>
+                <th>STATUS</th>
+                <th>PRAZO</th>
+                <th>OBSERVAÇÃO</th>
+                <th>AÇÕES</th>
+            </tr>
+        </thead>
+        <tbody id="corpoTabela">
+            <!-- Dados serão carregados do Firebase -->
+        </tbody>
+    </table>
+
+    <!-- Notificação estilo WhatsApp -->
+    <div id="whatsappNotification" class="whatsapp-notification">
+        <div class="whatsapp-notification-header">
+            <span class="whatsapp-notification-title">Nova Entrega Adicionada</span>
+            <button class="whatsapp-notification-close" onclick="fecharNotificacao()">×</button>
+        </div>
+        <div class="whatsapp-notification-body" id="notificationContent">
+            <!-- O conteúdo será preenchido dinamicamente -->
+        </div>
+        <div class="whatsapp-notification-footer">
+            <button class="whatsapp-notification-button secondary" onclick="fecharNotificacao()">Fechar</button>
+            <button class="whatsapp-notification-button" onclick="verEntrega()">Ver Entrega</button>
+        </div>
+    </div>
+
+    <!-- Ícone de notificação -->
+    <div id="notificationIcon" style="position: fixed; bottom: 20px; right: 20px; display: none; cursor: pointer;" onclick="mostrarNotificacao()">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" width="50" height="50">
+        <div id="notificationCount" class="notification-badge" style="display: none;">0</div>
+    </div>
+
+    <script>
+        // Configuração do Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyAG60_tih4qVGIlT1bs_kt-_E_77xw-XX8",
+            authDomain: "acompanhamento-transportes.firebaseapp.com",
+            databaseURL: "https://acompanhamento-transportes-default-rtdb.firebaseio.com",
+            projectId: "acompanhamento-transportes",
+            storageBucket: "acompanhamento-transportes.firebasestorage.app",
+            messagingSenderId: "471884949849",
+            appId: "1:471884949849:web:8a14680219698dddc90448"
+        };
+
+        // Inicializa o Firebase
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+        const entregasRef = database.ref('entregas');
+        
+        // Variáveis globais
+        let proximoId = 1;
+        let currentDeleteId = null;
+        const SENHA_EXCLUSAO = "axd236";
+        let voiceNotificationsEnabled = false;
+        let lastDeliveryKey = null;
+        
+        // Variáveis para controle de notificações
+        let notificationsQueue = [];
+        let currentNotification = null;
+        let notificationCount = 0;
+        
+        // Configuração da API de Voz
+        let speechSynthesis = window.speechSynthesis || window.webkitSpeechSynthesis;
+        
+        // Função para verificar e carregar preferência de voz
+        function loadVoicePreference() {
+            const savedPreference = localStorage.getItem('voiceNotificationsEnabled');
+            voiceNotificationsEnabled = savedPreference === 'true';
+            updateVoiceButton();
+            
+            // Se for a primeira vez, ativar por padrão se o navegador suportar
+            if (savedPreference === null && 'speechSynthesis' in window) {
+                voiceNotificationsEnabled = true;
+                saveVoicePreference();
+            }
+        }
+        
+        // Função para salvar preferência de voz
+        function saveVoicePreference() {
+            localStorage.setItem('voiceNotificationsEnabled', voiceNotificationsEnabled);
+            updateVoiceButton();
+        }
+        
+        // Função para atualizar o botão de voz
+        function updateVoiceButton() {
+            const btn = document.getElementById('voiceToggleBtn');
+            const icon = document.getElementById('voiceIcon');
+            
+            if (voiceNotificationsEnabled) {
+                btn.classList.add('active');
+                icon.textContent = '🔊';
+                btn.title = 'Avisos por voz ativados';
+            } else {
+                btn.classList.remove('active');
+                icon.textContent = '🔇';
+                btn.title = 'Avisos por voz desativados';
+            }
+        }
+        
+        // Função para alternar notificações de voz
+        function toggleVoiceNotifications() {
+            if (!('speechSynthesis' in window)) {
+                alert('Seu navegador não suporta a API de síntese de voz.');
+                return;
+            }
+            
+            voiceNotificationsEnabled = !voiceNotificationsEnabled;
+            saveVoicePreference();
+            
+            if (voiceNotificationsEnabled) {
+                // Se acabou de ativar, verificar se há permissão
+                speak('Notificações por voz ativadas');
+            }
+        }
+        
+        // Função para falar um texto
+        function speak(text) {
+            if (!speechSynthesis || !voiceNotificationsEnabled) {
+                return;
+            }
+            
+            if (speechSynthesis.speaking) {
+                speechSynthesis.cancel();
+            }
+            
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = 'pt-BR';
+            utterance.rate = 1.0;
+            utterance.pitch = 1.0;
+            
+            speechSynthesis.speak(utterance);
+        }
+        
+        // Função auxiliar para obter o nome do status
+        function getStatusName(status) {
+            const statusMap = {
+                'coletando': 'Coletando',
+                'transito': 'Em trânsito',
+                'parado': 'Parado',
+                'entregue': 'Entregue'
+            };
+            return statusMap[status] || status;
+        }
+
+        // Função para mostrar o modal de senha
+        function showPasswordModal(id) {
+            currentDeleteId = id;
+            document.getElementById('passwordModal').style.display = 'block';
+            document.getElementById('passwordInput').value = '';
+            document.getElementById('passwordError').style.display = 'none';
+            document.getElementById('passwordInput').focus();
+        }
+        
+        // Função para cancelar a exclusão
+        function cancelDelete() {
+            document.getElementById('passwordModal').style.display = 'none';
+            currentDeleteId = null;
+        }
+        
+        // Função para confirmar a exclusão após verificar a senha
+        function confirmDelete() {
+            const senha = document.getElementById('passwordInput').value;
+            if (senha === SENHA_EXCLUSAO) {
+                excluirLinhaConfirmada(currentDeleteId);
+                document.getElementById('passwordModal').style.display = 'none';
+                currentDeleteId = null;
+            } else {
+                document.getElementById('passwordError').style.display = 'block';
+            }
+        }
+        
+        // Função para excluir a linha após confirmação da senha
+        function excluirLinhaConfirmada(id) {
+            entregasRef.child(id).remove()
+                .catch(error => {
+                    console.error("Erro ao excluir:", error);
+                    alert("Erro ao excluir a entrega. Por favor, tente novamente.");
+                });
+        }
+        
+        // Função para filtrar por aba
+        function filtrarPorAba(aba) {
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+                if (tab.textContent.toLowerCase().includes(aba) || 
+                    (aba === 'todos' && tab.textContent === 'Todos')) {
+                    tab.classList.add('active');
+                }
+            });
+
+            const statusFilter = document.getElementById('statusFilter');
+            if (aba === 'todos') {
+                statusFilter.value = '';
+            } else {
+                statusFilter.value = aba;
+            }
+
+            filtrarTabela();
+        }
+        
+        // Função para copiar número para área de transferência
+        function copiarNumero(numero) {
+            navigator.clipboard.writeText(numero).then(() => {
+                const notification = document.getElementById('copyNotification');
+                notification.style.display = 'block';
+                setTimeout(() => {
+                    notification.style.display = 'none';
+                }, 2000);
+            }).catch(err => {
+                console.error('Erro ao copiar número: ', err);
+                alert('Não foi possível copiar o número. Por favor, copie manualmente.');
+            });
+            return false;
+        }
+        
+        // Função para adicionar nova linha editável
+        function adicionarNovaLinha() {
+            const tabela = document.getElementById('corpoTabela');
+            
+            const newRow = document.createElement('tr');
+            newRow.className = 'edit-row';
+            newRow.dataset.id = 'new-' + Date.now();
+            
+            const today = new Date();
+            const year = today.getFullYear();
+            const month = String(today.getMonth() + 1).padStart(2, '0');
+            const day = String(today.getDate()).padStart(2, '0');
+            const formattedDate = `${year}-${month}-${day}`;
+            
+            newRow.innerHTML = `
+                <td><input type="date" value="${formattedDate}"></td>
+                <td>
+                    <select>
+                        <option value="MARCIA">MARCIA</option>
+                        <option value="MARIANE">MARIANE</option>
+                        <option value="JEISE">JEISE</option>
+                        <option value="MONICA">MONICA</option>
+                        <option value="ANA">ANA</option>
+                        <option value="MARIVAL">MARIVAL</option>
+                        <option value="GENIVALDO">GENIVALDO</option>
+                    </select>
+                </td>
+                <td><input type="text" placeholder="Nome do cliente"></td>
+                <td><input type="text" placeholder="(XX) XXXXX-XXXX"></td>
+                <td><input type="text" placeholder="Nome do motorista"></td>
+                <td><input type="text" placeholder="(XX) XXXXX-XXXX"></td>
+                <td><input type="text" placeholder="Cidade/UF"></td>
+                <td><input type="text" placeholder="Cidade/UF"></td>
+                <td><input type="text" placeholder="R$ 0,00"></td>
+                <td><input type="text" placeholder="R$ 0,00"></td>
+                <td>
+                    <select>
+                        <option value="coletando">Coletando</option>
+                        <option value="transito">Em trânsito</option>
+                        <option value="parado">Parado</option>
+                        <option value="entregue">Entregue</option>
+                    </select>
+                </td>
+                <td><input type="date"></td>
+                <td><input type="text" placeholder="Observações"></td>
+                <td class="action-buttons">
+                    <button class="save-btn" onclick="salvarLinha(this)">Salvar</button>
+                    <button class="cancel-btn" onclick="cancelarEdicao(this)">Cancelar</button>
+                </td>
+            `;
+            
+            newRow.querySelectorAll('input[type="text"]').forEach(input => {
+                if (input.placeholder.includes('(XX)')) {
+                    input.addEventListener('input', formatarTelefoneInput);
+                } else if (input.placeholder.startsWith('R$')) {
+                    input.addEventListener('input', formatarMoedaInput);
+                }
+            });
+            
+            tabela.insertBefore(newRow, tabela.firstChild);
+            newRow.querySelector('input').focus();
+        }
+        
+        // Função para salvar uma linha nova ou editada
+        function salvarLinha(botao) {
+            const linha = botao.closest('tr');
+            const inputs = linha.querySelectorAll('input, select');
+            const id = linha.dataset.id;
+            
+            if (!inputs[0].value || !inputs[2].value || !inputs[3].value || !inputs[4].value || !inputs[5].value) {
+                alert('Por favor, preencha os campos obrigatórios: Data, Cliente, Telefone Cliente, Motorista e Telefone Motorista');
+                return;
+            }
+            
+            const dataInput = inputs[0].value;
+            
+            const entrega = {
+                data: dataInput,
+                vendedor: inputs[1].value,
+                cliente: inputs[2].value,
+                telefoneCliente: inputs[3].value.replace(/\D/g, ''),
+                motorista: inputs[4].value,
+                telefoneMotorista: inputs[5].value.replace(/\D/g, ''),
+                origem: inputs[6].value,
+                destino: inputs[7].value,
+                freteEmpresa: inputs[8].value ? parseFloat(inputs[8].value.replace(/[^\d,]/g, '').replace(',', '.')) : 0,
+                freteMotorista: inputs[9].value ? parseFloat(inputs[9].value.replace(/[^\d,]/g, '').replace(',', '.')) : 0,
+                status: inputs[10].value,
+                prazo: inputs[11].value || '',
+                observacao: inputs[12].value || '',
+                timestamp: firebase.database.ServerValue.TIMESTAMP
+            };
+            
+            if (id.startsWith('new-')) {
+                entregasRef.push(entrega)
+                    .then(() => {
+                        linha.remove();
+                    })
+                    .catch(error => {
+                        console.error("Erro ao salvar:", error);
+                        alert("Erro ao salvar os dados. Por favor, tente novamente.");
+                    });
+            } else {
+                entregasRef.child(id).update(entrega)
+                    .catch(error => {
+                        console.error("Erro ao atualizar:", error);
+                        alert("Erro ao atualizar os dados. Por favor, tente novamente.");
+                    });
+            }
+        }
+        
+        // Função para editar uma linha existente
+        function editarLinha(botao) {
+            const linha = botao.closest('tr');
+            const id = linha.dataset.id;
+            const celulas = linha.cells;
+            
+            linha.dataset.originalContent = linha.innerHTML;
+            
+            const dataDisplay = celulas[0].textContent;
+            const [dia, mes, ano] = dataDisplay.split('/');
+            const dataFormatada = `${ano}-${mes}-${dia}`;
+            
+            const prazoInput = celulas[11].textContent;
+            let prazoFormatado = '';
+            if (prazoInput !== '-') {
+                const [diaP, mesP, anoP] = prazoInput.split('/');
+                prazoFormatado = `${anoP}-${mesP}-${diaP}`;
+            }
+            
+            const statusClass = celulas[10].className;
+            const statusAtual = statusClass.replace('status-', '');
+            
+            linha.className = 'edit-row';
+            linha.innerHTML = `
+                <td><input type="date" value="${dataFormatada}"></td>
+                <td>
+                    <select>
+                        <option value="MARCIA" ${celulas[1].textContent === 'MARCIA' ? 'selected' : ''}>MARCIA</option>
+                        <option value="MARIANE" ${celulas[1].textContent === 'MARIANE' ? 'selected' : ''}>MARIANE</option>
+                        <option value="JEISE" ${celulas[1].textContent === 'JEISE' ? 'selected' : ''}>JEISE</option>
+                        <option value="MONICA" ${celulas[1].textContent === 'MONICA' ? 'selected' : ''}>MONICA</option>
+                        <option value="ANA" ${celulas[1].textContent === 'ANA' ? 'selected' : ''}>ANA</option>
+                        <option value="MARIVAL" ${celulas[1].textContent === 'MARIVAL' ? 'selected' : ''}>MARIVAL</option>
+                        <option value="GENIVALDO" ${celulas[1].textContent === 'GENIVALDO' ? 'selected' : ''}>GENIVALDO</option>
+                    </select>
+                </td>
+                <td><input type="text" value="${celulas[2].textContent}"></td>
+                <td><input type="text" value="${formatarTelefoneDisplay(celulas[3].querySelector('a').textContent)}"></td>
+                <td><input type="text" value="${celulas[4].textContent}"></td>
+                <td><input type="text" value="${formatarTelefoneDisplay(celulas[5].querySelector('a').textContent)}"></td>
+                <td><input type="text" value="${celulas[6].textContent}"></td>
+                <td><input type="text" value="${celulas[7].textContent}"></td>
+                <td><input type="text" value="${celulas[8].textContent === '-' ? '' : celulas[8].textContent}"></td>
+                <td><input type="text" value="${celulas[9].textContent === '-' ? '' : celulas[9].textContent}"></td>
+                <td>
+                    <select>
+                        <option value="coletando" ${statusAtual === 'coletando' ? 'selected' : ''}>Coletando</option>
+                        <option value="transito" ${statusAtual === 'transito' ? 'selected' : ''}>Em trânsito</option>
+                        <option value="parado" ${statusAtual === 'parado' ? 'selected' : ''}>Parado</option>
+                        <option value="entregue" ${statusAtual === 'entregue' ? 'selected' : ''}>Entregue</option>
+                    </select>
+                </td>
+                <td><input type="date" value="${prazoFormatado}"></td>
+                <td><input type="text" value="${celulas[12].textContent === '-' ? '' : celulas[12].textContent}"></td>
+                <td class="action-buttons">
+                    <button class="save-btn" onclick="salvarLinha(this)">Salvar</button>
+                    <button class="cancel-btn" onclick="cancelarEdicao(this)">Cancelar</button>
+                </td>
+            `;
+            
+            linha.querySelectorAll('input[type="text"]').forEach(input => {
+                if (input.value.includes('(')) {
+                    input.addEventListener('input', formatarTelefoneInput);
+                } else if (input.value.startsWith('R$')) {
+                    input.addEventListener('input', formatarMoedaInput);
+                }
+            });
+            
+            linha.querySelector('input').focus();
+        }
+        
+        // Função para cancelar edição
+        function cancelarEdicao(botao) {
+            const linha = botao.closest('tr');
+            
+            if (linha.dataset.originalContent) {
+                linha.innerHTML = linha.dataset.originalContent;
+                linha.className = '';
+            } else {
+                linha.remove();
+            }
+        }
+        
+        // Função para excluir uma linha (agora com verificação de senha)
+        function excluirLinha(botao) {
+            const id = botao.closest('tr').dataset.id;
+            showPasswordModal(id);
+        }
+        
+        // Função para atualizar o status diretamente
+        function atualizarStatus(select, id) {
+            const novoStatus = select.value;
+            entregasRef.child(id).update({
+                status: novoStatus,
+                timestamp: firebase.database.ServerValue.TIMESTAMP
+            })
+            .catch(error => {
+                console.error("Erro ao atualizar status:", error);
+                alert("Erro ao atualizar o status. Por favor, tente novamente.");
+            });
+        }
+        
+        // Função para formatar telefone durante a digitação
+        function formatarTelefoneInput(e) {
+            let value = e.target.value.replace(/\D/g, '');
+            if (value.length > 0) {
+                value = '(' + value;
+            }
+            if (value.length > 3) {
+                value = value.substring(0, 3) + ') ' + value.substring(3);
+            }
+            if (value.length > 10) {
+                value = value.substring(0, 10) + '-' + value.substring(10, 15);
+            }
+            e.target.value = value;
+        }
+        
+        // Função para formatar telefone para exibição
+        function formatarTelefoneDisplay(numero) {
+            const nums = numero.replace(/\D/g, '');
+            return `(${nums.substring(0,2)}) ${nums.substring(2,7)}-${nums.substring(7,11)}`;
+        }
+        
+        // Função para formatar moeda durante a digitação
+        function formatarMoedaInput(e) {
+            let value = e.target.value.replace(/\D/g, '');
+            value = (value / 100).toLocaleString('pt-BR', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            });
+            e.target.value = 'R$ ' + value;
+        }
+        
+        // Função para carregar dados do Firebase
+        function carregarDados() {
+            entregasRef.on('value', (snapshot) => {
+                const entregas = snapshot.val() || {};
+                const tabela = document.getElementById('corpoTabela');
+                tabela.innerHTML = '';
+                
+                if (Object.keys(entregas).length === 0) {
+                    tabela.innerHTML = '<tr><td colspan="14" class="empty-message">Nenhuma entrega cadastrada</td></tr>';
+                    return;
+                }
+                
+                Object.keys(entregas).forEach(id => {
+                    const entrega = entregas[id];
+                    adicionarLinhaTabela(tabela, id, entrega);
+                });
+                
+                proximoId = Object.keys(entregas).length + 1;
+            });
+        }
+        
+        // Função auxiliar para adicionar uma linha na tabela
+        function adicionarLinhaTabela(tabela, id, entrega) {
+            const [ano, mes, dia] = entrega.data.split('-');
+            const dataFormatada = `${dia}/${mes}/${ano}`;
+            
+            let prazoFormatado = '-';
+            if (entrega.prazo) {
+                const [anoP, mesP, diaP] = entrega.prazo.split('-');
+                prazoFormatado = `${diaP}/${mesP}/${anoP}`;
+            }
+            
+            const row = document.createElement('tr');
+            row.dataset.id = id;
+            row.innerHTML = `
+                <td>${dataFormatada}</td>
+                <td>${entrega.vendedor}</td>
+                <td>${entrega.cliente}</td>
+                <td><a href="#" class="whatsapp-link" onclick="copiarNumero('${entrega.telefoneCliente}')">${formatarTelefoneDisplay(entrega.telefoneCliente)}</a></td>
+                <td>${entrega.motorista}</td>
+                <td><a href="#" class="whatsapp-link" onclick="copiarNumero('${entrega.telefoneMotorista}')">${formatarTelefoneDisplay(entrega.telefoneMotorista)}</a></td>
+                <td>${entrega.origem}</td>
+                <td>${entrega.destino}</td>
+                <td>${entrega.freteEmpresa ? 'R$ ' + entrega.freteEmpresa.toFixed(2).replace('.', ',') : '-'}</td>
+                <td>${entrega.freteMotorista ? 'R$ ' + entrega.freteMotorista.toFixed(2).replace('.', ',') : '-'}</td>
+                <td class="status-${entrega.status}">
+                    <select class="status-select" onchange="atualizarStatus(this, '${id}')">
+                        <option value="coletando" ${entrega.status === 'coletando' ? 'selected' : ''}>Coletando</option>
+                        <option value="transito" ${entrega.status === 'transito' ? 'selected' : ''}>Em trânsito</option>
+                        <option value="parado" ${entrega.status === 'parado' ? 'selected' : ''}>Parado</option>
+                        <option value="entregue" ${entrega.status === 'entregue' ? 'selected' : ''}>Entregue</option>
+                    </select>
+                </td>
+                <td>${prazoFormatado}</td>
+                <td>${entrega.observacao || '-'}</td>
+                <td class="action-buttons">
+                    <button class="edit-btn" onclick="editarLinha(this)">Editar</button>
+                    <button class="delete-btn" onclick="excluirLinha(this)">Excluir</button>
+                </td>
+            `;
+            
+            tabela.appendChild(row);
+        }
+        
+        // Função para carregar dados do mês selecionado
+        function carregarMes() {
+            const mes = document.getElementById('mesFilter').value;
+            const ano = document.getElementById('anoFilter').value;
+            
+            document.getElementById('vendedorFilter').value = '';
+            document.getElementById('statusFilter').value = '';
+            
+            entregasRef.once('value', (snapshot) => {
+                const entregas = snapshot.val() || {};
+                const tabela = document.getElementById('corpoTabela');
+                tabela.innerHTML = '';
+                
+                let encontrouDados = false;
+                
+                Object.keys(entregas).forEach(id => {
+                    const entrega = entregas[id];
+                    const dataEntrega = entrega.data;
+                    
+                    if (dataEntrega) {
+                        const [anoEntrega, mesEntrega] = dataEntrega.split('-');
+                        
+                        if (mesEntrega === mes && anoEntrega === ano) {
+                            encontrouDados = true;
+                            adicionarLinhaTabela(tabela, id, entrega);
+                        }
+                    }
+                });
+                
+                if (!encontrouDados) {
+                    tabela.innerHTML = '<tr><td colspan="14" class="empty-message">Nenhuma entrega encontrada para este mês</td></tr>';
+                }
+            });
+        }
+        
+        // Função para mostrar todas as entregas
+        function mostrarTodasEntregas() {
+            carregarDados();
+        }
+        
+        // Função para filtrar a tabela
+        function filtrarTabela() {
+            const vendedor = document.getElementById('vendedorFilter').value;
+            const status = document.getElementById('statusFilter').value;
+            
+            const linhas = document.querySelectorAll('#corpoTabela tr:not(.edit-row)');
+            
+            linhas.forEach(linha => {
+                const colVendedor = linha.cells[1].textContent;
+                const colStatus = linha.cells[10].className.replace('status-', '');
+                
+                const mostraLinha = 
+                    (vendedor === '' || colVendedor === vendedor) &&
+                    (status === '' || colStatus === status);
+                
+                linha.style.display = mostraLinha ? '' : 'none';
+            });
+        }
+        
+        // Função para exportar para Excel
+        function exportarExcel() {
+            const tabela = document.getElementById('tabelaEntregas');
+            const linhasVisiveis = Array.from(tabela.querySelectorAll('tbody tr:not(.edit-row)'))
+                .filter(linha => linha.style.display !== 'none');
+            
+            if (linhasVisiveis.length === 0) {
+                alert('Nenhum dado para exportar!');
+                return;
+            }
+            
+            const wb = XLSX.utils.book_new();
+            const dados = [];
+            
+            const cabecalhos = Array.from(tabela.querySelectorAll('thead th'))
+                .map(th => th.textContent);
+            cabecalhos.pop();
+            dados.push(cabecalhos);
+            
+            linhasVisiveis.forEach(linha => {
+                const celulas = Array.from(linha.cells);
+                const linhaDados = celulas.map(celula => {
+                    if (celula.querySelector('.whatsapp-link')) {
+                        return celula.querySelector('.whatsapp-link').textContent;
+                    }
+                    if (celula.querySelector('.status-select')) {
+                        return celula.querySelector('.status-select').value;
+                    }
+                    return celula.textContent;
+                });
+                linhaDados.pop();
+                dados.push(linhaDados);
+            });
+            
+            const ws = XLSX.utils.aoa_to_sheet(dados);
+            XLSX.utils.book_append_sheet(wb, ws, "Entregas");
+            
+            const nomeArquivo = `entregas_${document.getElementById('mesFilter').value}_${document.getElementById('anoFilter').value}.xlsx`;
+            XLSX.writeFile(wb, nomeArquivo);
+        }
+        
+        // Função para mostrar notificação de nova entrega
+        function showNewDeliveryNotification(delivery) {
+            const notification = {
+                id: Date.now(),
+                delivery: delivery,
+                key: lastDeliveryKey
+            };
+            
+            notificationsQueue.push(notification);
+            notificationCount++;
+            updateNotificationIcon();
+            
+            if (!currentNotification) {
+                showNextNotification();
+            }
+        }
+        
+        // Função para mostrar a próxima notificação na fila
+        function showNextNotification() {
+            if (notificationsQueue.length === 0) {
+                currentNotification = null;
+                return;
+            }
+            
+            currentNotification = notificationsQueue.shift();
+            const delivery = currentNotification.delivery;
+            
+            // Formatar a data
+            const [ano, mes, dia] = delivery.data.split('-');
+            const dataFormatada = `${dia}/${mes}/${ano}`;
+            
+            // Configurar o conteúdo da notificação
+            const content = `
+                <strong>Vendedor:</strong> ${delivery.vendedor}<br>
+                <strong>Cliente:</strong> ${delivery.cliente}<br>
+                <strong>Destino:</strong> ${delivery.destino}<br>
+                <strong>Data:</strong> ${dataFormatada}<br>
+                <strong>Status:</strong> ${getStatusName(delivery.status)}
+            `;
+            
+            document.getElementById('notificationContent').innerHTML = content;
+            
+            // Mostrar a notificação
+            const notificationElement = document.getElementById('whatsappNotification');
+            notificationElement.style.display = 'block';
+            
+            // Esconder após 10 segundos se não interagir
+            notificationElement.timeout = setTimeout(() => {
+                if (currentNotification && currentNotification.id === notification.id) {
+                    fecharNotificacao();
+                }
+            }, 10000);
+        }
+        
+        // Função para fechar a notificação atual
+        function fecharNotificacao() {
+            const notificationElement = document.getElementById('whatsappNotification');
+            clearTimeout(notificationElement.timeout);
+            notificationElement.style.display = 'none';
+            
+            if (currentNotification) {
+                currentNotification = null;
+                showNextNotification();
+            }
+        }
+        
+        // Função para ver a entrega
+        function verEntrega() {
+            fecharNotificacao();
+            
+            if (currentNotification && currentNotification.key) {
+                // Rolar até a entrega correspondente
+                const row = document.querySelector(`tr[data-id="${currentNotification.key}"]`);
+                if (row) {
+                    row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    
+                    // Destacar a linha por 3 segundos
+                    row.style.backgroundColor = '#fffde7';
+                    setTimeout(() => {
+                        row.style.backgroundColor = '';
+                    }, 3000);
+                }
+            }
+        }
+        
+        // Função para mostrar o ícone de notificação
+        function updateNotificationIcon() {
+            const icon = document.getElementById('notificationIcon');
+            const badge = document.getElementById('notificationCount');
+            
+            if (notificationCount > 0) {
+                icon.style.display = 'block';
+                badge.style.display = 'flex';
+                badge.textContent = notificationCount;
+            } else {
+                icon.style.display = 'none';
+                badge.style.display = 'none';
+            }
+        }
+        
+        // Função para mostrar a notificação ao clicar no ícone
+        function mostrarNotificacao() {
+            if (currentNotification) {
+                // Se já houver uma notificação sendo exibida, apenas trazer para frente
+                document.getElementById('whatsappNotification').style.display = 'block';
+            } else if (notificationsQueue.length > 0) {
+                // Mostrar a próxima notificação na fila
+                showNextNotification();
+            } else if (notificationCount > 0) {
+                // Se não houver notificações na fila mas o contador for positivo
+                // (pode acontecer se o usuário fechar todas sem interagir)
+                notificationCount = 0;
+                updateNotificationIcon();
+            }
+        }
+        
+        // Monitorar adições de novas entregas
+        function monitorNewDeliveries() {
+            entregasRef.orderByChild('timestamp').limitToLast(1).on('child_added', (snapshot) => {
+                const newDelivery = snapshot.val();
+                const deliveryKey = snapshot.key;
+                
+                if (deliveryKey !== lastDeliveryKey && lastDeliveryKey !== null) {
+                    lastDeliveryKey = deliveryKey;
+                    
+                    // Mostrar notificação
+                    showNewDeliveryNotification(newDelivery);
+                    
+                    if (voiceNotificationsEnabled) {
+                        const message = `Nova entrega adicionada para o cliente ${newDelivery.cliente} com destino a ${newDelivery.destino}. Status: ${getStatusName(newDelivery.status)}`;
+                        speak(message);
+                    }
+                }
+                
+                if (lastDeliveryKey === null) {
+                    lastDeliveryKey = deliveryKey;
+                }
+            });
+        }
+        
+        // Adicionar eventos aos filtros
+        document.getElementById('vendedorFilter').addEventListener('change', filtrarTabela);
+        document.getElementById('statusFilter').addEventListener('change', filtrarTabela);
+        
+        // Definir mês atual como padrão
+        const dataAtual = new Date();
+        document.getElementById('mesFilter').value = (dataAtual.getMonth() + 1).toString().padStart(2, '0');
+        document.getElementById('anoFilter').value = dataAtual.getFullYear().toString();
+        
+        // Carrega os dados quando a página é carregada
+        document.addEventListener('DOMContentLoaded', function() {
+            loadVoicePreference();
+            carregarDados();
+            monitorNewDeliveries();
+            
+            if (!('speechSynthesis' in window)) {
+                console.warn("Seu navegador não suporta a API de síntese de voz");
+                document.getElementById('voiceToggleBtn').disabled = true;
+                document.getElementById('voiceToggleBtn').title = 'API de voz não suportada neste navegador';
+            }
+            
+            // Inicializar lastDeliveryKey com a última entrega
+            entregasRef.orderByChild('timestamp').limitToLast(1).once('child_added', (snapshot) => {
+                lastDeliveryKey = snapshot.key;
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Sistema de Documentos - Transportadora</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f4;
+    }
+
+    /* Background com imagem de frota */
+    .background {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-image: url(https://brasildotrecho.com.br/wp-content/uploads/2022/12/caminhao-scania-2-1024x576.jpg);
+      background-size: cover;
+      background-position: center;
+      z-index: -2;
+    }
+
+    /* Camada escura sobre a imagem para melhorar contraste */
+    .overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.6);
+      z-index: -1;
+    }
+
+    header {
+      background-color: rgba(255, 92, 0, 0.9);
+      padding: 15px 30px;
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+    }
+
+    header .logo img {
+      height: 50px;
+    }
+
+    header select {
+      padding: 8px;
+      font-size: 16px;
+      border-radius: 5px;
+      border: none;
+    }
+
+    main {
+      padding: 60px 40px;
+      max-width: 1200px;
+      margin: auto;
+      color: #fff;
+    }
+
+    h1 {
+      text-align: left;
+      margin-bottom: 30px;
+      color: #fff;
+      text-shadow: 1px 1px 2px #000;
+    }
+
+    .menu-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 20px;
+    }
+
+    .menu-button {
+      background-color: rgba(255, 255, 255, 0.9);
+      color: #333;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      padding: 20px;
+      font-size: 18px;
+      text-align: center;
+      cursor: pointer;
+      transition: box-shadow 0.3s ease, background-color 0.3s ease;
+    }
+
+    .menu-button:hover {
+      background-color: #fff;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    }
+
+    footer {
+      text-align: center;
+      margin-top: 50px;
+      color: #ddd;
+      font-size: 14px;
+      text-shadow: 1px 1px 2px #000;
+    }
+  </style>
+</head>
+<body>
+  <!-- Background e camada escura -->
+  <div class="background"></div>
+  <div class="overlay"></div>
+
+  <header>
+    <div class="logo">
+      <img id="logoEmpresa" src="logo_axdlog.png" alt="Logo da Empresa" />
+    </div>
+    <div>
+      <label for="empresaSelect">Transportadora:</label>
+      <select id="empresaSelect" onchange="trocarTema()">
+        <option value="axd">AXD Log</option>
+        <option value="rodovar">Rodovar</option>
+      </select>
+    </div>
+  </header>
+
+  <main>
+    <h1>Menu Principal</h1>
+    <div class="menu-grid" id="menuPrincipal">
+      <div class="menu-button" onclick="abrirPagina('proposta.html')">Proposta</div>
+      <div class="menu-button" onclick="abrirPagina('recibo.html')">Recibo</div>
+      <div class="menu-button" onclick="abrirPagina('fatura.html')">Fatura</div>
+      <div class="menu-button" onclick="abrirPagina('ordem.html')">Ordem de Coleta</div>
+      <div class="menu-button" onclick="abrirPagina('controle_fretes.html')">Controle de Fretes</div>
+      <div class="menu-button" onclick="abrirPagina('entregas.html')">Entregas</div>
+      <div class="menu-button" onclick="abrirPagina('roteirizador.html')">Roteirizador de Viagens</div>
+    </div>
+  </main>
+
+  <footer>
+    &copy; 2025 AXD Log | Rodovar Transportes. Todos os direitos reservados.
+  </footer>
+
+  <script>
+    // Carrega a empresa salva
+    window.onload = function () {
+      const empresaSalva = localStorage.getItem('empresaSelecionada') || 'axd';
+      document.getElementById('empresaSelect').value = empresaSalva;
+      aplicarTema(empresaSalva);
+    };
+
+    function abrirPagina(pagina) {
+      window.location.href = pagina;
+    }
+
+    function trocarTema() {
+      const empresa = document.getElementById('empresaSelect').value;
+      localStorage.setItem('empresaSelecionada', empresa);
+      aplicarTema(empresa);
+    }
+
+    function aplicarTema(empresa) {
+      const header = document.querySelector("header");
+      const logo = document.getElementById("logoEmpresa");
+
+      if (empresa === "axd") {
+        header.style.backgroundColor = "rgba(255, 92, 0, 0.9)";
+        logo.src = "logo_axdlog.png";
+      } else {
+        header.style.backgroundColor = "rgba(255, 215, 0, 0.9)";
+        logo.src = "logo_rodovar.png";
+      }
+    }
+  </script>
+</body>
+</html>
