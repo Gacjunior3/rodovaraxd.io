@@ -1,107 +1,54 @@
+
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Sistema de Documentos - Transportadora</title>
+  <title>Sistema de Documentos - Transportadora (Com Senha)</title>
+  <meta name="description" content="Projeto único: tela de login com senha que persiste até o usuário clicar em Sair (usa localStorage)." />
   <style>
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background-color: #f4f4f4;
+    /* ----- Reset e layout ----- */
+    *{box-sizing:border-box;margin:0;padding:0}
+    html,body{height:100%}
+    body{
+      font-family: Arial, Helvetica, sans-serif;
+      background:#f4f4f4;
+      color:#fff;
+      min-height:100%;
     }
 
     /* Background com imagem de frota */
-    .background {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background-image: url(https://brasildotrecho.com.br/wp-content/uploads/2022/12/caminhao-scania-2-1024x576.jpg);
-      background-size: cover;
-      background-position: center;
-      z-index: -2;
-    }
+    .background{position:fixed;top:0;left:0;width:100%;height:100%;background-image:url(https://brasildotrecho.com.br/wp-content/uploads/2022/12/caminhao-scania-2-1024x576.jpg);background-size:cover;background-position:center;z-index:-2}
+    .overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);z-index:-1}
 
-    /* Camada escura sobre a imagem para melhorar contraste */
-    .overlay {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0,0,0,0.6);
-      z-index: -1;
-    }
+    /* Header */
+    header{background-color:rgba(255,92,0,0.95);padding:12px 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:1000}
+    header .logo img{height:48px}
+    header .controls{display:flex;align-items:center;gap:12px}
+    header select, header button{padding:8px;border-radius:6px;border:none;font-size:14px}
 
-    header {
-      background-color: rgba(255, 92, 0, 0.9);
-      padding: 15px 30px;
-      color: white;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      position: sticky;
-      top: 0;
-      z-index: 1000;
-    }
+    /* Main */
+    main{padding:48px 32px;max-width:1100px;margin:20px auto;color:#fff}
+    h1{margin-bottom:22px;text-shadow:1px 1px 2px #000}
 
-    header .logo img {
-      height: 50px;
-    }
+    .menu-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:18px}
+    .menu-button{background:rgba(255,255,255,0.95);color:#222;border-radius:8px;padding:18px;text-align:center;cursor:pointer;font-size:16px;border:1px solid #ddd}
+    .menu-button:hover{box-shadow:0 6px 18px rgba(0,0,0,0.25)}
 
-    header select {
-      padding: 8px;
-      font-size: 16px;
-      border-radius: 5px;
-      border: none;
-    }
+    footer{text-align:center;margin-top:40px;color:#ddd;font-size:13px}
 
-    main {
-      padding: 60px 40px;
-      max-width: 1200px;
-      margin: auto;
-      color: #fff;
-    }
+    /* Tela de login */
+    .login-screen{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.65);z-index:2000}
+    .login-box{background:#111;padding:28px;border-radius:10px;min-width:320px;max-width:420px;text-align:center;box-shadow:0 10px 40px rgba(0,0,0,0.6)}
+    .login-box h2{margin-bottom:14px}
+    .login-box input{width:100%;padding:10px;border-radius:6px;border:1px solid #333;margin:8px 0;font-size:16px}
+    .login-box button{width:100%;padding:10px;border-radius:6px;border:none;margin-top:8px;background:#ffb14d;color:#111;font-weight:700;cursor:pointer}
+    .login-error{color:#ff6b6b;margin-top:8px;display:none}
 
-    h1 {
-      text-align: left;
-      margin-bottom: 30px;
-      color: #fff;
-      text-shadow: 1px 1px 2px #000;
-    }
+    .hidden{display:none}
 
-    .menu-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 20px;
-    }
-
-    .menu-button {
-      background-color: rgba(255, 255, 255, 0.9);
-      color: #333;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-      padding: 20px;
-      font-size: 18px;
-      text-align: center;
-      cursor: pointer;
-      transition: box-shadow 0.3s ease, background-color 0.3s ease;
-    }
-
-    .menu-button:hover {
-      background-color: #fff;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-    }
-
-    footer {
-      text-align: center;
-      margin-top: 50px;
-      color: #ddd;
-      font-size: 14px;
-      text-shadow: 1px 1px 2px #000;
-    }
+    /* Responsividade */
+    @media (max-width:480px){header{padding:10px} .login-box{min-width:260px}}
   </style>
 </head>
 <body>
@@ -109,46 +56,127 @@
   <div class="background"></div>
   <div class="overlay"></div>
 
-  <header>
-    <div class="logo">
-      <img id="logoEmpresa" src="logo_axdlog.png" alt="Logo da Empresa" />
+  <!-- Tela de Login (visível enquanto não está logado) -->
+  <div id="loginScreen" class="login-screen" aria-hidden="false">
+    <div class="login-box">
+      <h2>🔒 Acesso ao Sistema</h2>
+      <p>Digite a senha para acessar. A sessão ficará ativa até você clicar em <strong>Sair</strong>.</p>
+      <input id="senha" type="password" placeholder="Senha de acesso" autocomplete="current-password" />
+      <button id="entrarBtn">Entrar</button>
+      <p id="erro" class="login-error">Senha incorreta — tente novamente.</p>
+      <p style="font-size:12px;color:#bbb;margin-top:10px">Dica: troque a senha na constante <code>SENHA_CORRETA</code> dentro do arquivo.</p>
     </div>
-    <div>
-      <label for="empresaSelect">Transportadora:</label>
-      <select id="empresaSelect" onchange="trocarTema()">
-        <option value="axd">AXD Log</option>
-        <option value="rodovar">Rodovar</option>
-      </select>
-    </div>
-  </header>
+  </div>
 
-  <main>
-    <h1>Menu Principal</h1>
-    <div class="menu-grid" id="menuPrincipal">
-      <div class="menu-button" onclick="abrirPagina('proposta.html')">Proposta</div>
-      <div class="menu-button" onclick="abrirPagina('recibo.html')">Recibo</div>
-      <div class="menu-button" onclick="abrirPagina('fatura.html')">Fatura</div>
-      <div class="menu-button" onclick="abrirPagina('ordem.html')">Ordem de Coleta</div>
-      <div class="menu-button" onclick="abrirPagina('controle_fretes.html')">Controle de Fretes</div>
-      <div class="menu-button" onclick="abrirPagina('entregas.html')">Entregas</div>
-      <div class="menu-button" onclick="abrirPagina('roteirizador.html')">Roteirizador de Viagens</div>
-    </div>
-  </main>
+  <!-- Conteúdo principal (ficará oculto até login) -->
+  <div id="conteudo" class="hidden">
+    <header>
+      <div class="logo"><img id="logoEmpresa" src="logo_axdlog.png" alt="Logo da Empresa" /></div>
+      <div class="controls">
+        <label for="empresaSelect" style="color:#fff;font-weight:700">Transportadora:</label>
+        <select id="empresaSelect" onchange="trocarTema()">
+          <option value="axd">AXD Log</option>
+          <option value="rodovar">Rodovar</option>
+        </select>
+        <button id="logoutBtn">Sair</button>
+      </div>
+    </header>
 
-  <footer>
-    &copy; 2025 AXD Log | Rodovar Transportes. Todos os direitos reservados.
-  </footer>
+    <main>
+      <h1>Menu Principal</h1>
+      <div class="menu-grid" id="menuPrincipal">
+        <div class="menu-button" onclick="abrirPagina('proposta.html')">Proposta</div>
+        <div class="menu-button" onclick="abrirPagina('recibo.html')">Recibo</div>
+        <div class="menu-button" onclick="abrirPagina('fatura.html')">Fatura</div>
+        <div class="menu-button" onclick="abrirPagina('ordem.html')">Ordem de Coleta</div>
+        <div class="menu-button" onclick="abrirPagina('controle_fretes.html')">Controle de Fretes</div>
+        <div class="menu-button" onclick="abrirPagina('entregas.html')">Entregas</div>
+        <div class="menu-button" onclick="abrirPagina('roteirizador.html')">Roteirizador de Viagens</div>
+      </div>
+    </main>
+
+    <footer>&copy; 2025 AXD Log | Rodovar Transportes. Todos os direitos reservados.</footer>
+  </div>
 
   <script>
-    // Carrega a empresa salva
-    window.onload = function () {
-      const empresaSalva = localStorage.getItem('empresaSelecionada') || 'axd';
-      document.getElementById('empresaSelect').value = empresaSalva;
-      aplicarTema(empresaSalva);
-    };
+    /*
+      PROJETO: Single-file HTML com login por senha persistente (localStorage).
+      Instruções:
+      1) Salve este arquivo como "index.html" (ou outro nome). Coloque as imagens (logo_axdlog.png e logo_rodovar.png) na mesma pasta.
+      2) Altere a senha alterando a constante SENHA_CORRETA abaixo.
+      3) Este sistema usa localStorage para lembrar que o usuário está "logado". Para encerrar a sessão, clique em Sair.
+      IMPORTANTE: Este mecanismo não é seguro para proteger dados sensíveis em produção — é só uma proteção simples para uso local/interno.
+    */
 
-    function abrirPagina(pagina) {
-      window.location.href = pagina;
+    // ---------- CONFIG ----------
+    const SENHA_CORRETA = "axdrodovar1020304090"; // <- ALTERE AQUI para definir sua senha
+    const USAR_LOCALSTORAGE = true; // true -> mantém o login mesmo fechando o navegador. false -> usa sessionStorage (expira ao fechar a aba)
+    const STORAGE_KEY = "sistema_documentos_logado";
+
+    // ---------- HELPERS ----------
+    function getStore() {
+      return USAR_LOCALSTORAGE ? localStorage : sessionStorage;
+    }
+
+    function setLogado(valor) {
+      getStore().setItem(STORAGE_KEY, valor ? "true" : "false");
+    }
+
+    function estaLogado() {
+      return getStore().getItem(STORAGE_KEY) === "true";
+    }
+
+    // ---------- Login / Logout ----------
+    const loginScreen = document.getElementById('loginScreen');
+    const conteudo = document.getElementById('conteudo');
+    const erro = document.getElementById('erro');
+
+    function mostrarConteudo() {
+      loginScreen.classList.add('hidden');
+      loginScreen.setAttribute('aria-hidden','true');
+      conteudo.classList.remove('hidden');
+    }
+
+    function mostrarLogin() {
+      loginScreen.classList.remove('hidden');
+      loginScreen.setAttribute('aria-hidden','false');
+      conteudo.classList.add('hidden');
+    }
+
+    function validarSenha() {
+      const senhaDigitada = document.getElementById('senha').value;
+      if (senhaDigitada === SENHA_CORRETA) {
+        setLogado(true);
+        erro.style.display = 'none';
+        mostrarConteudo();
+        carregarEmpresaSalva();
+      } else {
+        erro.style.display = 'block';
+      }
+    }
+
+    function logout() {
+      setLogado(false);
+      // opcional: remover empresa selecionada
+      // localStorage.removeItem('empresaSelecionada');
+      mostrarLogin();
+      // limpa campo de senha
+      document.getElementById('senha').value = '';
+    }
+
+    // ---------- Tema / Empresa ----------
+    function aplicarTema(empresa) {
+      const header = document.querySelector('header');
+      const logo = document.getElementById('logoEmpresa');
+      if(empresa === 'axd'){
+        header.style.backgroundColor = 'rgba(255,92,0,0.95)';
+        logo.src = 'logo_axdlog.png';
+        logo.alt = 'Logo AXD Log';
+      } else {
+        header.style.backgroundColor = 'rgba(255,215,0,0.95)';
+        logo.src = 'logo_rodovar.png';
+        logo.alt = 'Logo Rodovar';
+      }
     }
 
     function trocarTema() {
@@ -157,18 +185,36 @@
       aplicarTema(empresa);
     }
 
-    function aplicarTema(empresa) {
-      const header = document.querySelector("header");
-      const logo = document.getElementById("logoEmpresa");
-
-      if (empresa === "axd") {
-        header.style.backgroundColor = "rgba(255, 92, 0, 0.9)";
-        logo.src = "logo_axdlog.png";
-      } else {
-        header.style.backgroundColor = "rgba(255, 215, 0, 0.9)";
-        logo.src = "logo_rodovar.png";
-      }
+    function carregarEmpresaSalva() {
+      const empresaSalva = localStorage.getItem('empresaSelecionada') || 'axd';
+      document.getElementById('empresaSelect').value = empresaSalva;
+      aplicarTema(empresaSalva);
     }
+
+    // ---------- Navegação simples ----------
+    function abrirPagina(pagina){
+      // Se você tiver páginas separadas, elas podem verificar o STORAGE_KEY na carga para obrigar o login.
+      window.location.href = pagina;
+    }
+
+    // ---------- Eventos ----------
+    document.getElementById('entrarBtn').addEventListener('click', validarSenha);
+    document.getElementById('logoutBtn').addEventListener('click', logout);
+    document.getElementById('senha').addEventListener('keydown', function(e){ if(e.key === 'Enter'){ validarSenha(); } });
+
+    // Ao carregar a página, checamos se já está logado
+    window.addEventListener('load', function(){
+      if (estaLogado()) {
+        mostrarConteudo();
+        carregarEmpresaSalva();
+      } else {
+        mostrarLogin();
+      }
+    });
+
+    // Torna o projeto um pouco mais resiliente caso as logos não existam
+    document.getElementById('logoEmpresa').addEventListener('error', function(){ this.style.display = 'none'; });
   </script>
 </body>
 </html>
+
