@@ -619,6 +619,32 @@
       color: #666;
       font-size: 11px;
     }
+
+    /* NOVOS ESTILOS PARA BOTÕES DE ENDEREÇO MANUAL */
+    .manual-address-btn {
+      padding: 3px 8px;
+      margin-left: 5px;
+      font-size: 11px;
+      background: #9C27B0;
+      color: white;
+      border: none;
+      border-radius: 3px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .manual-address-btn:hover {
+      background: #7B1FA2;
+    }
+    
+    .address-fields {
+      display: none;
+      margin-top: 10px;
+      border: 1px solid #ddd;
+      padding: 10px;
+      border-radius: 4px;
+      background-color: #f9f9f9;
+    }
   </style>
 </head>
 <body>
@@ -636,7 +662,6 @@
       <tr>
         <td class="logo-cell" rowspan="3">
           <div class="logo-container">
-            <!-- ALTERAÇÃO AQUI: Logotipo igual ao do código fornecido -->
             <img id="logotipo" class="logo" src="logo_rodovar.png" alt="Logotipo RODOVAR" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNTAiIGhlaWdodD0iMTAwIiB2aWV3Qm94PSIwIDAgMTUwIDEwMCI+PHJlY3Qgd2lkdGg9IjE1MCIgaGVpZ2h0PSIxMDAiIGZpbGw9IiNlZWVlZWUiLz48dGV4dCB4PSI3NSIgeT0iNTAiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxMiIgZmlsbD0iIzY2NiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZG9taW5hbnQtYmFzZWxpbmU9Im1pZGRsZSI+TG9nb3RpcG8gbmFvIGVuY29udHJhZG88L3RleHQ+PC9zdmc+'">
           </div>
         </td>
@@ -699,10 +724,19 @@
         
         <div style="margin-top: 10px;">
           <input type="text" id="localColetaCEP" placeholder="CEP" style="width: 100px; display: inline-block;">
-          <button class="btn-buscar no-print" onclick="buscarCEP('localColeta')">Buscar</button>
+          <button class="btn-buscar no-print" onclick="buscarCEP('localColeta')">Buscar CEP</button>
+          <button class="manual-address-btn no-print" onclick="toggleManualAddress('localColeta')">Endereço Manual</button>
         </div>
         
         <div id="localColetaEndereco" style="margin-top: 5px;"></div>
+        
+        <!-- Campos de endereço manual para local de coleta -->
+        <div id="localColetaManualAddress" class="address-fields">
+          <input type="text" id="localColetaLogradouro" placeholder="Logradouro" style="width: 100%; margin-bottom: 5px;">
+          <input type="text" id="localColetaNumero" placeholder="Número" style="width: 30%; margin-bottom: 5px;">
+          <input type="text" id="localColetaBairro" placeholder="Bairro" style="width: 65%; margin-bottom: 5px;">
+        </div>
+        
         <div style="margin-top: 5px;">
           <input type="text" id="localColetaCidade" placeholder="Cidade" style="width: 70%; display: inline-block;">
           <select id="localColetaUF" style="width: 25%;">
@@ -721,10 +755,19 @@
         
         <div style="margin-top: 10px;">
           <input type="text" id="destinoCEP" placeholder="CEP" style="width: 100px; display: inline-block;">
-          <button class="btn-buscar no-print" onclick="buscarCEP('destino')">Buscar</button>
+          <button class="btn-buscar no-print" onclick="buscarCEP('destino')">Buscar CEP</button>
+          <button class="manual-address-btn no-print" onclick="toggleManualAddress('destino')">Endereço Manual</button>
         </div>
         
         <div id="destinoEndereco" style="margin-top: 5px;"></div>
+        
+        <!-- Campos de endereço manual para destino -->
+        <div id="destinoManualAddress" class="address-fields">
+          <input type="text" id="destinoLogradouro" placeholder="Logradouro" style="width: 100%; margin-bottom: 5px;">
+          <input type="text" id="destinoNumero" placeholder="Número" style="width: 30%; margin-bottom: 5px;">
+          <input type="text" id="destinoBairro" placeholder="Bairro" style="width: 65%; margin-bottom: 5px;">
+        </div>
+        
         <div style="margin-top: 5px;">
           <input type="text" id="destinoCidade" placeholder="Cidade" style="width: 70%; display: inline-block;">
           <select id="destinoUF" style="width: 25%;">
@@ -797,7 +840,7 @@
           </div>
         </td>
         <td>
-          Placa: <input type="text" id="veiculoPlaca" placeholder="AAA0A00" style="width: 85%;">
+          Placa: <input type="text" id="veiculoPlaca" placeholder="Digite a placa" style="width: 85%;">
         </td>
         <td>Carreta: <input type="text" id="veiculoCarreta" placeholder="Placa da Carreta"></td>
         <td>Carreta 2: <input type="text" id="veiculo2Carreta" placeholder="Placa da Carreta 2"></td>
@@ -878,7 +921,6 @@
         endereco: "RUA Jubiabá, 292 - Bairro: Luis Eduardo Magalhães",
         cidade: "Simões Filho",
         uf: "BA",
-        // ALTERAÇÃO AQUI: Logo da AXD igual ao código fornecido
         logo: "logo_axd.png",
         footer: "AXD TRANSPORTES E SERVIÇOS - CNPJ: 59.352.973/0001-32 - Insc. Estadual: 228.253.729<br>RUA Jubiabá, 292 - Bairro: Luis Eduardo Magalhães - Simões Filho/BA"
       },
@@ -889,7 +931,6 @@
         endereco: "Travessa Acalanto, 84 - Jardim das Margaridas",
         cidade: "Salvador",
         uf: "BA",
-        // ALTERAÇÃO AQUI: Logo da RODOVAR igual ao código fornecido
         logo: "logo_rodovar.png",
         footer: "RODOVAR TRANSPORTES E SERVIÇOS LTDA - CNPJ: 49.908.710/0001-03 - Insc. Estadual: 228.253.729 ME<br>Travessa Acalanto, 84 - Jardim das Margaridas - Salvador/BA"
       }
@@ -932,7 +973,84 @@
     }
 
     // =============================================
-    // RESTANTE DO CÓDIGO (todas as outras funções permanecem iguais)
+    // REMOÇÃO DA MÁSCARA DA PLACA PARA PREENCHIMENTO MANUAL
+    // =============================================
+    function configurarMascarasMotorista() {
+      IMask(document.getElementById('motoristaCPF'), {mask: '000.000.000-00'});
+      
+      // REMOVIDA A MÁSCARA DA PLACA PARA PERMITIR PREENCHIMENTO MANUAL
+      // Os campos de placa agora aceitam qualquer entrada de texto
+    }
+
+    // =============================================
+    // FUNÇÃO PARA ALTERNAR CAMPOS DE ENDEREÇO MANUAL
+    // =============================================
+    function toggleManualAddress(tipo) {
+      const manualAddressDiv = document.getElementById(tipo + 'ManualAddress');
+      
+      if (manualAddressDiv.style.display === 'block') {
+        manualAddressDiv.style.display = 'none';
+      } else {
+        manualAddressDiv.style.display = 'block';
+        
+        // Se já houver dados no endereço automático, copia para os campos manuais
+        const enderecoCompleto = document.getElementById(tipo + 'Endereco').textContent;
+        if (enderecoCompleto) {
+          const partes = enderecoCompleto.split(',');
+          if (partes.length >= 2) {
+            document.getElementById(tipo + 'Logradouro').value = partes[0].trim();
+            
+            const numeroBairro = partes[1].split('-');
+            if (numeroBairro.length >= 2) {
+              document.getElementById(tipo + 'Numero').value = numeroBairro[0].trim();
+              document.getElementById(tipo + 'Bairro').value = numeroBairro[1].trim();
+            }
+          }
+        }
+      }
+    }
+
+    // =============================================
+    // ATUALIZAÇÃO DA FUNÇÃO buscarCEP PARA USAR CAMPOS MANUAIS
+    // =============================================
+    async function buscarCEP(tipo) {
+      const cepInput = document.getElementById(tipo + 'CEP');
+      let cep = cepInput.value.replace(/\D/g, '');
+      
+      if (cep.length !== 8) {
+        alert('CEP inválido! Deve conter 8 dígitos.');
+        return;
+      }
+      
+      try {
+        const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+        const data = await response.json();
+        
+        if (data.erro) {
+          throw new Error('CEP não encontrado');
+        }
+        
+        if (tipo === 'localColeta' || tipo === 'destino') {
+          // Preenche os campos de endereço
+          document.getElementById(tipo + 'Endereco').textContent = 
+            `${data.logradouro || ''} ${data.complemento ? ', ' + data.complemento : ''} - ${data.bairro || ''}`;
+          
+          // Preenche também os campos manuais se estiverem visíveis
+          document.getElementById(tipo + 'Logradouro').value = data.logradouro || '';
+          document.getElementById(tipo + 'Bairro').value = data.bairro || '';
+          
+          document.getElementById(tipo + 'Cidade').value = data.localidade || '';
+          document.getElementById(tipo + 'UF').value = data.uf || '';
+        }
+        
+        gerarQRCode();
+      } catch (error) {
+        alert('Erro ao buscar CEP: ' + error.message);
+      }
+    }
+
+    // =============================================
+    // RESTANTE DO CÓDIGO
     // =============================================
 
     // Dados dos motoristas
@@ -1121,7 +1239,9 @@
           'observacao',
           'motoristaNome', 'motoristaCPF', 'motoristaRG', 'motoristaCNH',
           'veiculo', 'veiculoPlaca', 'veiculoCarreta', 'veiculo2Carreta',
-          'clienteCNPJ', 'clienteNomeInput'
+          'clienteCNPJ', 'clienteNomeInput',
+          'localColetaLogradouro', 'localColetaNumero', 'localColetaBairro',
+          'destinoLogradouro', 'destinoNumero', 'destinoBairro'
         ];
         
         camposParaLimpar.forEach(id => {
@@ -1134,6 +1254,8 @@
         document.getElementById('clienteInfo').style.display = 'none';
         document.getElementById('motoristaDropdown').style.display = 'none';
         document.getElementById('veiculoDropdown').style.display = 'none';
+        document.getElementById('localColetaManualAddress').style.display = 'none';
+        document.getElementById('destinoManualAddress').style.display = 'none';
         
         document.getElementById('especie').selectedIndex = 0;
         document.getElementById('localColetaUF').value = 'BA';
@@ -1144,36 +1266,6 @@
         
         gerarNumeroOrdem();
         gerarQRCode();
-      }
-    }
-
-    async function buscarCEP(tipo) {
-      const cepInput = document.getElementById(tipo + 'CEP');
-      let cep = cepInput.value.replace(/\D/g, '');
-      
-      if (cep.length !== 8) {
-        alert('CEP inválido! Deve conter 8 dígitos.');
-        return;
-      }
-      
-      try {
-        const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
-        const data = await response.json();
-        
-        if (data.erro) {
-          throw new Error('CEP não encontrado');
-        }
-        
-        if (tipo === 'localColeta' || tipo === 'destino') {
-          document.getElementById(tipo + 'Endereco').textContent = 
-            `${data.logradouro || ''} ${data.complemento || ''} - ${data.bairro || ''}`;
-          document.getElementById(tipo + 'Cidade').value = data.localidade || '';
-          document.getElementById(tipo + 'UF').value = data.uf || '';
-        }
-        
-        gerarQRCode();
-      } catch (error) {
-        alert('Erro ao buscar CEP: ' + error.message);
       }
     }
 
@@ -1225,23 +1317,6 @@
         currency: 'BRL'
       });
       elemento.value = valor;
-    }
-
-    // Configurar máscaras para os campos do motorista
-    function configurarMascarasMotorista() {
-      IMask(document.getElementById('motoristaCPF'), {mask: '000.000.000-00'});
-      IMask(document.getElementById('veiculoPlaca'), {
-        mask: 'AAA-0000',
-        definitions: {'A': /[A-Za-z]/, '0': /[0-9]/}
-      });
-      IMask(document.getElementById('veiculoCarreta'), {
-        mask: 'AAA-0000',
-        definitions: {'A': /[A-Za-z]/, '0': /[0-9]/}
-      });
-      IMask(document.getElementById('veiculo2Carreta'), {
-        mask: 'AAA-0000',
-        definitions: {'A': /[A-Za-z]/, '0': /[0-9]/}
-      });
     }
 
     // Funções para seleção de motorista com dropdown
@@ -1361,6 +1436,9 @@
           cnpj: document.getElementById('localColetaCNPJ').value,
           cep: document.getElementById('localColetaCEP').value,
           endereco: document.getElementById('localColetaEndereco').textContent,
+          logradouro: document.getElementById('localColetaLogradouro').value,
+          numero: document.getElementById('localColetaNumero').value,
+          bairro: document.getElementById('localColetaBairro').value,
           cidade: document.getElementById('localColetaCidade').value,
           uf: document.getElementById('localColetaUF').value
         },
@@ -1370,6 +1448,9 @@
           cnpj: document.getElementById('destinoCNPJ').value,
           cep: document.getElementById('destinoCEP').value,
           endereco: document.getElementById('destinoEndereco').textContent,
+          logradouro: document.getElementById('destinoLogradouro').value,
+          numero: document.getElementById('destinoNumero').value,
+          bairro: document.getElementById('destinoBairro').value,
           cidade: document.getElementById('destinoCidade').value,
           uf: document.getElementById('destinoUF').value
         },
@@ -1458,6 +1539,19 @@
         document.getElementById('clienteEndereco').textContent = dados.cliente.endereco;
         document.getElementById('clienteCidadeUF').textContent = dados.cliente.cidadeUF;
         document.getElementById('clienteInfo').style.display = 'block';
+      }
+      
+      // Preenche campos manuais de endereço se existirem nos dados
+      if (dados.localColeta.logradouro) {
+        document.getElementById('localColetaLogradouro').value = dados.localColeta.logradouro || '';
+        document.getElementById('localColetaNumero').value = dados.localColeta.numero || '';
+        document.getElementById('localColetaBairro').value = dados.localColeta.bairro || '';
+      }
+      
+      if (dados.destino.logradouro) {
+        document.getElementById('destinoLogradouro').value = dados.destino.logradouro || '';
+        document.getElementById('destinoNumero').value = dados.destino.numero || '';
+        document.getElementById('destinoBairro').value = dados.destino.bairro || '';
       }
       
       document.getElementById('dataAssinatura').value = dados.dataAssinatura || '';
@@ -1650,7 +1744,7 @@
         try {
           const dados = JSON.parse(e.target.result);
           saveOrdens(dados);
-          alert('Backup importado with success!');
+          alert('Backup importado com sucesso!');
           listarOrdensSalvas();
         } catch (error) {
           alert('Erro ao importar backup: ' + error.message);
@@ -1692,7 +1786,7 @@
       // Garante que a empresa inicial está selecionada corretamente
       trocarEmpresa();
       
-      // Gerar número da ordem automaticamente
+      // Gerar número da ordem automatically
       gerarNumeroOrdem();
       
       document.getElementById('numeroOrdem').addEventListener('DOMSubtreeModified', gerarQRCode);
