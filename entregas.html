@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -8,73 +9,251 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <style>
+        :root {
+            --primary-color: #3498db;
+            --secondary-color: #2ecc71;
+            --danger-color: #e74c3c;
+            --warning-color: #f39c12;
+            --dark-color: #2c3e50;
+            --light-color: #ecf0f1;
+            --gray-color: #95a5a6;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
         body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
-            background-color: #f5f5f5;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            background-color: #f5f7f9;
+            color: #333;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            background: linear-gradient(135deg, var(--primary-color), var(--dark-color));
+            color: white;
+            padding: 20px 0;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
         }
         
         h1 {
-            color: #333;
+            font-size: 2.2rem;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            font-weight: 700;
+        }
+        
+        .user-section {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            background-color: rgba(255, 255, 255, 0.2);
+            padding: 12px 20px;
+            border-radius: 30px;
+        }
+        
+        .user-avatar {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            background-color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: var(--primary-color);
+            font-size: 1.2rem;
+        }
+        
+        .user-info {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .user-name {
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+        
+        .change-user {
+            background: none;
+            border: none;
+            color: white;
+            text-decoration: underline;
+            cursor: pointer;
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+        
+        .change-user:hover {
+            opacity: 1;
+        }
+        
+        .tabs {
+            display: flex;
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            overflow: hidden;
+            margin: 25px 0;
+        }
+        
+        .tab {
+            padding: 16px 25px;
+            cursor: pointer;
+            background-color: #f8f9fa;
+            border-right: 1px solid #e9ecef;
+            transition: all 0.3s ease;
             text-align: center;
-            margin-bottom: 20px;
+            flex: 1;
+            font-size: 1rem;
+            font-weight: 500;
+        }
+        
+        .tab:last-child {
+            border-right: none;
+        }
+        
+        .tab.active {
+            background-color: var(--primary-color);
+            color: white;
+            font-weight: bold;
+        }
+        
+        .tab:hover:not(.active) {
+            background-color: #e9ecef;
         }
         
         .controls {
             background-color: white;
-            padding: 15px;
-            border-radius: 8px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-            margin-bottom: 20px;
-            display: flex;
-            flex-wrap: wrap;
-            gap: 15px;
-            align-items: flex-end;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            margin-bottom: 25px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
         }
         
         .filter-group {
             display: flex;
             flex-direction: column;
-            min-width: 150px;
+        }
+        
+        .filter-group label {
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--dark-color);
+            font-size: 1rem;
+        }
+        
+        select, input {
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 1rem;
+            background-color: #f8f9fa;
+            transition: border-color 0.3s;
+        }
+        
+        select:focus, input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
         }
         
         .date-filters {
             display: flex;
-            gap: 10px;
-            align-items: flex-end;
+            gap: 15px;
+            grid-column: 1 / -1;
+        }
+        
+        .date-filters .filter-group {
+            flex: 1;
+        }
+        
+        .city-filters {
+            display: flex;
+            gap: 15px;
+            grid-column: 1 / -1;
+        }
+        
+        .city-filters .filter-group {
+            flex: 1;
+        }
+        
+        .buttons-container {
+            display: flex;
+            gap: 15px;
+            grid-column: 1 / -1;
+            justify-content: flex-end;
+            margin-top: 15px;
+            flex-wrap: wrap;
         }
         
         button {
-            padding: 8px 15px;
+            padding: 12px 20px;
             color: white;
             border: none;
-            border-radius: 4px;
+            border-radius: 6px;
             cursor: pointer;
-            font-weight: bold;
+            font-weight: 600;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+        }
+        
+        button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
         }
         
         .filter-btn {
-            background-color: #4CAF50;
+            background-color: var(--secondary-color);
         }
         
         .filter-btn:hover {
-            background-color: #45a049;
+            background-color: #27ae60;
         }
         
         .export-btn {
-            background-color: #2196F3;
+            background-color: var(--primary-color);
         }
         
         .export-btn:hover {
-            background-color: #0b7dda;
+            background-color: #2980b9;
         }
         
         .load-btn {
-            background-color: #ff9800;
+            background-color: var(--warning-color);
         }
         
         .load-btn:hover {
-            background-color: #e68a00;
+            background-color: #e67e22;
         }
         
         .add-btn {
@@ -86,205 +265,28 @@
         }
         
         .save-btn {
-            background-color: #4CAF50;
+            background-color: var(--secondary-color);
         }
         
         .edit-btn {
-            background-color: #2196F3;
+            background-color: var(--primary-color);
+            padding: 8px 15px;
+            font-size: 0.9rem;
         }
         
         .delete-btn {
-            background-color: #f44336;
+            background-color: var(--danger-color);
+            padding: 8px 15px;
+            font-size: 0.9rem;
         }
         
         .cancel-btn {
-            background-color: #ff9800;
+            background-color: var(--warning-color);
             color: #333;
         }
         
-        select, input {
-            padding: 8px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-        }
-        
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            background-color: white;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        }
-        
-        th, td {
-            border: 1px solid #ddd;
-            padding: 12px;
-            text-align: left;
-        }
-        
-        th {
-            background-color: #f2f2f2;
-            font-weight: bold;
-        }
-        
-        tr:nth-child(even) {
-            background-color: #f9f9f9;
-        }
-        
-        .status-coletando {
-            color: #0077b6;
-            font-weight: bold;
-        }
-        
-        .status-transito {
-            color: #ff9800;
-            font-weight: bold;
-        }
-        
-        .status-parado {
-            color: #f44336;
-            font-weight: bold;
-        }
-        
-        .status-entregue {
-            color: #4CAF50;
-            font-weight: bold;
-        }
-        
-        .whatsapp-link {
-            color: #25D366;
-            text-decoration: none;
-            font-weight: bold;
-            display: inline-block;
-            padding: 2px 5px;
-            border-radius: 3px;
-        }
-        
-        .whatsapp-link:hover {
-            background-color: rgba(37, 211, 102, 0.1);
-        }
-        
-        .copy-notification {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background-color: #4CAF50;
-            color: white;
-            padding: 12px 24px;
-            border-radius: 6px;
-            display: none;
-            z-index: 1000;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-        }
-        
-        .edit-row {
-            background-color: #fffde7 !important;
-        }
-        
-        input[type="text"], input[type="date"], select {
-            width: 100%;
-            box-sizing: border-box;
-        }
-        
-        input[type="password"] {
-            width: 100%;
-            box-sizing: border-box;
-        }
-        
-        .action-buttons {
-            display: flex;
-            gap: 5px;
-        }
-        
-        .action-buttons button {
-            padding: 6px 10px;
-            font-size: 12px;
-        }
-        
-        .status-select {
-            border: none;
-            background: transparent;
-            font-weight: bold;
-            color: inherit;
-            cursor: pointer;
-        }
-        
-        .status-select:focus {
-            outline: none;
-            background: white;
-            box-shadow: 0 0 0 2px rgba(0,0,0,0.1);
-        }
-
-        .tabs {
-            display: flex;
-            margin-bottom: 15px;
-            background-color: white;
-            border-radius: 8px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-            overflow: hidden;
-        }
-
-        .tab {
-            padding: 10px 20px;
-            cursor: pointer;
-            background-color: #f2f2f2;
-            border-right: 1px solid #ddd;
-            transition: background-color 0.3s;
-        }
-
-        .tab:last-child {
-            border-right: none;
-        }
-
-        .tab.active {
-            background-color: #4CAF50;
-            color: white;
-            font-weight: bold;
-        }
-
-        .tab:hover:not(.active) {
-            background-color: #e6e6e6;
-        }
-
-        .modal {
-            display: none;
-            position: fixed;
-            z-index: 1001;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0,0,0,0.5);
-        }
-
-        .modal-content {
-            background-color: white;
-            margin: 15% auto;
-            padding: 20px;
-            border-radius: 8px;
-            width: 300px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-        }
-
-        .modal-buttons {
-            display: flex;
-            justify-content: flex-end;
-            margin-top: 20px;
-            gap: 10px;
-        }
-        
-        .empty-message {
-            text-align: center;
-            padding: 20px;
-            font-style: italic;
-            color: #666;
-        }
-        
-        /* Estilos para o botão de voz */
         .voice-toggle {
             background-color: #607d8b;
-            display: flex;
-            align-items: center;
-            gap: 5px;
         }
         
         .voice-toggle:hover {
@@ -299,101 +301,467 @@
             background-color: #00897b;
         }
         
-        /* Estilo da notificação estilo WhatsApp */
-        .whatsapp-notification {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            width: 300px;
-            background-color: #fff;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-            z-index: 1000;
-            display: none;
-            overflow: hidden;
-            animation: slideIn 0.3s ease-out;
-            border-left: 4px solid #25D366;
+        .toggle-columns-btn {
+            background-color: #795548;
         }
-
-        .whatsapp-notification-header {
-            background-color: #f0f2f5;
-            padding: 10px 15px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            border-bottom: 1px solid #e9edef;
+        
+        .toggle-columns-btn:hover {
+            background-color: #5D4037;
         }
-
-        .whatsapp-notification-title {
+        
+        .table-container {
+            overflow-x: auto;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            margin-bottom: 30px;
+            background: white;
+            max-height: calc(100vh - 300px);
+            overflow-y: auto;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            background-color: white;
+            font-size: 0.95rem;
+        }
+        
+        th, td {
+            padding: 16px;
+            text-align: left;
+            border-bottom: 1px solid #e9ecef;
+        }
+        
+        th {
+            background-color: #f8f9fa;
+            font-weight: 700;
+            color: var(--dark-color);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            white-space: nowrap;
+        }
+        
+        tr:last-child td {
+            border-bottom: none;
+        }
+        
+        tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+        
+        tr:hover {
+            background-color: #edf2f7;
+        }
+        
+        .status-coletando {
+            color: #0077b6;
             font-weight: bold;
-            color: #111b21;
-            font-size: 14px;
         }
-
-        .whatsapp-notification-close {
+        
+        .status-transito {
+            color: var(--warning-color);
+            font-weight: bold;
+        }
+        
+        .status-parado {
+            color: var(--danger-color);
+            font-weight: bold;
+        }
+        
+        .status-entregue {
+            color: var(--secondary-color);
+            font-weight: bold;
+        }
+        
+        .whatsapp-link {
+            color: #25D366;
+            text-decoration: none;
+            font-weight: bold;
+            display: inline-block;
+            padding: 5px 8px;
+            border-radius: 4px;
+            transition: all 0.2s;
+        }
+        
+        .whatsapp-link:hover {
+            background-color: rgba(37, 211, 102, 0.1);
+            transform: scale(1.05);
+        }
+        
+        .copy-notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background-color: var(--secondary-color);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 8px;
+            display: none;
+            z-index: 1000;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.15);
+            animation: fadeIn 0.3s;
+        }
+        
+        .edit-row {
+            background-color: #fffde7 !important;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .action-buttons button {
+            padding: 8px 12px;
+            font-size: 0.9rem;
+        }
+        
+        /* CORREÇÃO DO STATUS SELECT - REMOVIDA A LARGURA FIXA */
+        .status-select {
+            border: 1px solid #ddd;
+            background: white;
+            font-weight: bold;
+            color: inherit;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            min-width: 120px; /* Largura mínima para garantir visibilidade */
+        }
+        
+        .status-select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+        }
+        
+        .empty-message {
+            text-align: center;
+            padding: 40px;
+            font-style: italic;
+            color: var(--gray-color);
+            grid-column: 1 / -1;
+            font-size: 1.1rem;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1001;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            animation: fadeIn 0.3s;
+        }
+        
+        .modal-content {
+            background-color: white;
+            margin: 10% auto;
+            padding: 30px;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            animation: slideIn 0.3s;
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #e9ecef;
+        }
+        
+        .modal-title {
+            font-size: 1.6rem;
+            color: var(--dark-color);
+        }
+        
+        .close-modal {
             background: none;
             border: none;
-            color: #667781;
+            font-size: 1.8rem;
             cursor: pointer;
-            font-size: 16px;
+            color: var(--gray-color);
         }
-
-        .whatsapp-notification-body {
-            padding: 15px;
-            color: #3b4a54;
-            font-size: 13px;
-            line-height: 1.4;
-        }
-
-        .whatsapp-notification-footer {
-            padding: 8px 15px;
-            background-color: #f0f2f5;
+        
+        .modal-buttons {
             display: flex;
             justify-content: flex-end;
-            border-top: 1px solid #e9edef;
+            margin-top: 25px;
+            gap: 12px;
         }
-
-        .whatsapp-notification-button {
-            background-color: #25D366;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            padding: 6px 12px;
-            font-size: 12px;
+        
+        .user-selection {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+            gap: 15px;
+            margin: 25px 0;
+        }
+        
+        .user-option {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
             cursor: pointer;
-            margin-left: 8px;
+            transition: all 0.2s;
         }
-
-        .whatsapp-notification-button.secondary {
-            background-color: #e9edef;
-            color: #3b4a54;
+        
+        .user-option:hover {
+            border-color: var(--primary-color);
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
         }
-
-        @keyframes slideIn {
-            from {
-                transform: translateY(100px);
-                opacity: 0;
-            }
-            to {
-                transform: translateY(0);
-                opacity: 1;
-            }
+        
+        .user-option.selected {
+            border-color: var(--primary-color);
+            background-color: #e8f4fd;
         }
-
-        .notification-badge {
-            position: absolute;
-            top: -5px;
-            right: -5px;
-            background-color: #f44336;
-            color: white;
+        
+        .user-option-avatar {
+            width: 60px;
+            height: 60px;
             border-radius: 50%;
-            width: 20px;
-            height: 20px;
+            background-color: var(--primary-color);
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 12px;
             font-weight: bold;
+            color: white;
+            font-size: 1.4rem;
+            margin-bottom: 15px;
+        }
+        
+        .user-option-name {
+            font-weight: 600;
+            text-align: center;
+            font-size: 1.1rem;
+        }
+        
+        .column-toggle {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 12px 0;
+        }
+        
+        .column-toggle input {
+            margin: 0;
+            width: 18px;
+            height: 18px;
+        }
+        
+        .column-toggle label {
+            font-size: 1rem;
+            cursor: pointer;
+        }
+        
+        .hidden-column {
+            display: none;
+        }
+        
+        .cell-content {
+            max-width: 180px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        
+        .cell-content:hover {
+            overflow: visible;
+            white-space: normal;
+            background: white;
+            z-index: 10;
+            position: relative;
+            box-shadow: 0 0 12px rgba(0,0,0,0.1);
+            border-radius: 6px;
+            padding: 8px;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        @keyframes slideIn {
+            from { transform: translateY(-50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        
+        /* Responsividade */
+        @media (max-width: 1400px) {
+            .container {
+                padding: 15px;
+            }
+            
+            table {
+                font-size: 0.9rem;
+            }
+            
+            th, td {
+                padding: 14px;
+            }
+            
+            .status-select {
+                min-width: 110px;
+                font-size: 0.85rem;
+            }
+        }
+        
+        @media (max-width: 1200px) {
+            .header-content {
+                flex-direction: column;
+                gap: 15px;
+                text-align: center;
+            }
+            
+            .controls {
+                grid-template-columns: 1fr 1fr;
+            }
+            
+            .date-filters, .city-filters {
+                grid-column: 1 / -1;
+            }
+            
+            .buttons-container {
+                grid-column: 1 / -1;
+            }
+            
+            .cell-content {
+                max-width: 150px;
+            }
+            
+            .status-select {
+                min-width: 100px;
+            }
+        }
+        
+        @media (max-width: 992px) {
+            .controls {
+                grid-template-columns: 1fr;
+            }
+            
+            .tabs {
+                flex-wrap: wrap;
+            }
+            
+            .tab {
+                flex: 1 0 50%;
+                border-bottom: 1px solid #e9ecef;
+                padding: 14px;
+            }
+            
+            .user-selection {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .cell-content {
+                max-width: 120px;
+            }
+            
+            h1 {
+                font-size: 1.8rem;
+            }
+            
+            .status-select {
+                min-width: 90px;
+                font-size: 0.8rem;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .tab {
+                flex: 1 0 100%;
+                padding: 12px;
+            }
+            
+            .user-selection {
+                grid-template-columns: 1fr;
+            }
+            
+            .modal-content {
+                width: 95%;
+                margin: 5% auto;
+                padding: 20px;
+            }
+            
+            .cell-content {
+                max-width: 100px;
+            }
+            
+            button {
+                padding: 10px 15px;
+                font-size: 0.9rem;
+            }
+            
+            th, td {
+                padding: 12px 10px;
+            }
+            
+            h1 {
+                font-size: 1.6rem;
+            }
+            
+            .status-select {
+                min-width: 80px;
+                font-size: 0.75rem;
+                padding: 6px;
+            }
+        }
+        
+        @media (max-width: 576px) {
+            .buttons-container {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .buttons-container button {
+                width: 100%;
+                justify-content: center;
+            }
+            
+            .date-filters, .city-filters {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .cell-content {
+                max-width: 80px;
+            }
+            
+            th, td {
+                padding: 10px 8px;
+                font-size: 0.85rem;
+            }
+            
+            h1 {
+                font-size: 1.4rem;
+            }
+            
+            .user-option {
+                padding: 15px;
+            }
+            
+            .user-option-avatar {
+                width: 50px;
+                height: 50px;
+                font-size: 1.2rem;
+            }
+            
+            .status-select {
+                min-width: 70px;
+                font-size: 0.7rem;
+                padding: 4px;
+            }
         }
     </style>
 </head>
@@ -402,134 +770,237 @@
     
     <div id="passwordModal" class="modal">
         <div class="modal-content">
-            <h3>Digite a senha para excluir</h3>
+            <div class="modal-header">
+                <h3 class="modal-title">Digite a senha para excluir</h3>
+                <button class="close-modal" onclick="cancelDelete()">&times;</button>
+            </div>
             <input type="password" id="passwordInput" placeholder="Senha" autocomplete="off">
             <div class="modal-buttons">
                 <button class="cancel-btn" onclick="cancelDelete()">Cancelar</button>
                 <button class="save-btn" onclick="confirmDelete()">Confirmar</button>
             </div>
-            <p id="passwordError" style="color: red; display: none;">Senha incorreta!</p>
+            <p id="passwordError" style="color: red; display: none; margin-top: 10px;">Senha incorreta!</p>
         </div>
     </div>
     
-    <h1>📦 Acompanhamento de Entregas</h1>
-    
-    <div class="tabs">
-        <div class="tab active" onclick="filtrarPorAba('todos')">Todos</div>
-        <div class="tab" onclick="filtrarPorAba('coletando')">Coletando</div>
-        <div class="tab" onclick="filtrarPorAba('transito')">Em Trânsito</div>
-        <div class="tab" onclick="filtrarPorAba('parado')">Parado</div>
-        <div class="tab" onclick="filtrarPorAba('entregue')">Entregue</div>
+    <div id="userModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Selecione seu usuário</h3>
+                <button class="close-modal" onclick="closeUserModal()">&times;</button>
+            </div>
+            <p>Selecione seu nome para visualizar apenas suas entregas:</p>
+            <div class="user-selection" id="userSelection">
+                <div class="user-option" onclick="selectUser('MARCIA')">
+                    <div class="user-option-avatar">M</div>
+                    <div class="user-option-name">MARCIA</div>
+                </div>
+                <div class="user-option" onclick="selectUser('MARIANE')">
+                    <div class="user-option-avatar">M</div>
+                    <div class="user-option-name">MARIANE</div>
+                </div>
+                <div class="user-option" onclick="selectUser('JEISE')">
+                    <div class="user-option-avatar">J</div>
+                    <div class="user-option-name">JEISE</div>
+                </div>
+                <div class="user-option" onclick="selectUser('MONICA')">
+                    <div class="user-option-avatar">M</div>
+                    <div class="user-option-name">MONICA</div>
+                </div>
+                <div class="user-option" onclick="selectUser('ANA')">
+                    <div class="user-option-avatar">A</div>
+                    <div class="user-option-name">ANA</div>
+                </div>
+                <div class="user-option" onclick="selectUser('MARIVAL')">
+                    <div class="user-option-avatar">M</div>
+                    <div class="user-option-name">MARIVAL</div>
+                </div>
+                <div class="user-option" onclick="selectUser('GENIVALDO')">
+                    <div class="user-option-avatar">G</div>
+                    <div class="user-option-name">GENIVALDO</div>
+                </div>
+                <div class="user-option" onclick="selectUser('TODOS')">
+                    <div class="user-option-avatar">T</div>
+                    <div class="user-option-name">TODOS</div>
+                </div>
+            </div>
+        </div>
     </div>
     
-    <div class="controls">
-        <div class="filter-group">
-            <label for="vendedorFilter">Vendedor</label>
-            <select id="vendedorFilter">
-                <option value="">Todos</option>
-                <option value="MARCIA">MARCIA</option>
-                <option value="MARIANE">MARIANE</option>
-                <option value="JEISE">JEISE</option>
-                <option value="MONICA">MONICA</option>
-                <option value="ANA">ANA</option>
-                <option value="MARIVAL">MARIVAL</option>
-                <option value="GENIVALDO">GENIVALDO</option>
-            </select>
+    <div id="columnsModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Selecionar Colunas Visíveis</h3>
+                <button class="close-modal" onclick="closeColumnsModal()">&times;</button>
+            </div>
+            <p>Selecione quais colunas deseja exibir na tabela:</p>
+            <div id="columnsList">
+                <div class="column-toggle">
+                    <input type="checkbox" id="toggle-data" checked onchange="toggleColumn('data')">
+                    <label for="toggle-data">DATA</label>
+                </div>
+                <div class="column-toggle">
+                    <input type="checkbox" id="toggle-vendedor" checked onchange="toggleColumn('vendedor')">
+                    <label for="toggle-vendedor">VENDEDOR</label>
+                </div>
+                <div class="column-toggle">
+                    <input type="checkbox" id="toggle-cliente" checked onchange="toggleColumn('cliente')">
+                    <label for="toggle-cliente">CLIENTE</label>
+                </div>
+                <div class="column-toggle">
+                    <input type="checkbox" id="toggle-telefone-cliente" checked onchange="toggleColumn('telefone-cliente')">
+                    <label for="toggle-telefone-cliente">TELEFONE CLIENTE</label>
+                </div>
+                <div class="column-toggle">
+                    <input type="checkbox" id="toggle-motorista" checked onchange="toggleColumn('motorista')">
+                    <label for="toggle-motorista">MOTORISTA</label>
+                </div>
+                <div class="column-toggle">
+                    <input type="checkbox" id="toggle-telefone-motorista" checked onchange="toggleColumn('telefone-motorista')">
+                    <label for="toggle-telefone-motorista">TELEFONE MOTORISTA</label>
+                </div>
+                <div class="column-toggle">
+                    <input type="checkbox" id="toggle-origem" checked onchange="toggleColumn('origem')">
+                    <label for="toggle-origem">ORIGEM</label>
+                </div>
+                <div class="column-toggle">
+                    <input type="checkbox" id="toggle-destino" checked onchange="toggleColumn('destino')">
+                    <label for="toggle-destino">DESTINO</label>
+                </div>
+                <div class="column-toggle">
+                    <input type="checkbox" id="toggle-frete-empresa" checked onchange="toggleColumn('frete-empresa')">
+                    <label for="toggle-frete-empresa">FRETE EMPRESA</label>
+                </div>
+                <div class="column-toggle">
+                    <input type="checkbox" id="toggle-frete-motorista" checked onchange="toggleColumn('frete-motorista')">
+                    <label for="toggle-frete-motorista">FRETE MOTORISTA</label>
+                </div>
+                <div class="column-toggle">
+                    <input type="checkbox" id="toggle-status" checked onchange="toggleColumn('status')">
+                    <label for="toggle-status">STATUS</label>
+                </div>
+                <div class="column-toggle">
+                    <input type="checkbox" id="toggle-prazo" checked onchange="toggleColumn('prazo')">
+                    <label for="toggle-prazo">PRAZO</label>
+                </div>
+                <div class="column-toggle">
+                    <input type="checkbox" id="toggle-observacao" checked onchange="toggleColumn('observacao')">
+                    <label for="toggle-observacao">OBSERVAÇÃO</label>
+                </div>
+            </div>
+            <div class="modal-buttons">
+                <button class="cancel-btn" onclick="closeColumnsModal()">Fechar</button>
+            </div>
+        </div>
+    </div>
+    
+    <header>
+        <div class="container header-content">
+            <h1>📦 Acompanhamento de Entregas</h1>
+            <div class="user-section">
+                <div class="user-avatar" id="currentUserAvatar">U</div>
+                <div class="user-info">
+                    <div class="user-name" id="currentUserName">Selecionar Usuário</div>
+                    <button class="change-user" onclick="openUserModal()">Trocar usuário</button>
+                </div>
+            </div>
+        </div>
+    </header>
+    
+    <div class="container">
+        <div class="tabs">
+            <div class="tab active" onclick="filtrarPorAba('todos')">Todos</div>
+            <div class="tab" onclick="filtrarPorAba('coletando')">Coletando</div>
+            <div class="tab" onclick="filtrarPorAba('transito')">Em Trânsito</div>
+            <div class="tab" onclick="filtrarPorAba('parado')">Parado</div>
+            <div class="tab" onclick="filtrarPorAba('entregue')">Entregue</div>
         </div>
         
-        <div class="filter-group">
-            <label for="statusFilter">Status</label>
-            <select id="statusFilter">
-                <option value="">Todos</option>
-                <option value="coletando">Coletando</option>
-                <option value="transito">Em trânsito</option>
-                <option value="parado">Parado</option>
-                <option value="entregue">Entregue</option>
-            </select>
-        </div>
-        
-        <div class="date-filters">
+        <div class="controls">
             <div class="filter-group">
-                <label for="mesFilter">Mês</label>
-                <select id="mesFilter">
-                    <option value="01">Janeiro</option>
-                    <option value="02">Fevereiro</option>
-                    <option value="03">Março</option>
-                    <option value="04">Abril</option>
-                    <option value="05">Maio</option>
-                    <option value="06">Junho</option>
-                    <option value="07">Julho</option>
-                    <option value="08">Agosto</option>
-                    <option value="09">Setembro</option>
-                    <option value="10">Outubro</option>
-                    <option value="11">Novembro</option>
-                    <option value="12">Dezembro</option>
+                <label for="statusFilter">Status</label>
+                <select id="statusFilter">
+                    <option value="">Todos</option>
+                    <option value="coletando">Coletando</option>
+                    <option value="transito">Em trânsito</option>
+                    <option value="parado">Parado</option>
+                    <option value="entregue">Entregue</option>
                 </select>
             </div>
             
-            <div class="filter-group">
-                <label for="anoFilter">Ano</label>
-                <select id="anoFilter">
-                    <option value="2023">2023</option>
-                    <option value="2024" selected>2024</option>
-                    <option value="2025">2025</option>
-                </select>
+            <div class="date-filters">
+                <div class="filter-group">
+                    <label for="dataInicioFilter">Data Início</label>
+                    <input type="date" id="dataInicioFilter">
+                </div>
+                <div class="filter-group">
+                    <label for="dataFimFilter">Data Fim</label>
+                    <input type="date" id="dataFimFilter">
+                </div>
             </div>
             
-            <button class="load-btn" onclick="carregarMes()">Carregar Mês</button>
-            <button class="load-btn" onclick="mostrarTodasEntregas()">Mostrar Todas</button>
+            <div class="city-filters">
+                <div class="filter-group">
+                    <label for="origemFilter">Cidade Origem</label>
+                    <select id="origemFilter">
+                        <option value="">Todas</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="destinoFilter">Cidade Destino</label>
+                    <select id="destinoFilter">
+                        <option value="">Todas</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="buttons-container">
+                <button class="filter-btn" onclick="aplicarFiltros()">
+                    <span>🔍</span> Aplicar Filtros
+                </button>
+                <button class="load-btn" onclick="limparFiltros()">
+                    <span>🗑️</span> Limpar Filtros
+                </button>
+                <button class="add-btn" onclick="adicionarNovaLinha()">
+                    <span>➕</span> Adicionar Entrega
+                </button>
+                <button class="export-btn" onclick="exportarExcel()">
+                    <span>📊</span> Exportar Excel
+                </button>
+                <button class="toggle-columns-btn" onclick="openColumnsModal()">
+                    <span>👁️</span> Colunas
+                </button>
+                <button id="voiceToggleBtn" class="voice-toggle" onclick="toggleVoiceNotifications()">
+                    <span id="voiceIcon">🔇</span> Aviso por Voz
+                </button>
+            </div>
         </div>
         
-        <button class="add-btn" onclick="adicionarNovaLinha()">Adicionar Entrega</button>
-        <button class="export-btn" onclick="exportarExcel()">Exportar para Excel</button>
-        <button id="voiceToggleBtn" class="voice-toggle" onclick="toggleVoiceNotifications()">
-            <span id="voiceIcon">🔇</span> Aviso por Voz
-        </button>
-    </div>
-    
-    <table id="tabelaEntregas">
-        <thead>
-            <tr>
-                <th>DATA</th>
-                <th>VENDEDOR</th>
-                <th>CLIENTE</th>
-                <th>TELEFONE CLIENTE</th>
-                <th>MOTORISTA</th>
-                <th>TELEFONE MOTORISTA</th>
-                <th>ORIGEM</th>
-                <th>DESTINO</th>
-                <th>FRETE EMPRESA</th>
-                <th>FRETE MOTORISTA</th>
-                <th>STATUS</th>
-                <th>PRAZO</th>
-                <th>OBSERVAÇÃO</th>
-                <th>AÇÕES</th>
-            </tr>
-        </thead>
-        <tbody id="corpoTabela">
-            <!-- Dados serão carregados do Firebase -->
-        </tbody>
-    </table>
-
-    <!-- Notificação estilo WhatsApp -->
-    <div id="whatsappNotification" class="whatsapp-notification">
-        <div class="whatsapp-notification-header">
-            <span class="whatsapp-notification-title">Nova Entrega Adicionada</span>
-            <button class="whatsapp-notification-close" onclick="fecharNotificacao()">×</button>
+        <div class="table-container">
+            <table id="tabelaEntregas">
+                <thead>
+                    <tr>
+                        <th data-column="data">DATA</th>
+                        <th data-column="vendedor">VENDEDOR</th>
+                        <th data-column="cliente">CLIENTE</th>
+                        <th data-column="telefone-cliente">TELEFONE CLIENTE</th>
+                        <th data-column="motorista">MOTORISTA</th>
+                        <th data-column="telefone-motorista">TELEFONE MOTORISTA</th>
+                        <th data-column="origem">ORIGEM</th>
+                        <th data-column="destino">DESTINO</th>
+                        <th data-column="frete-empresa">FRETE EMPRESA</th>
+                        <th data-column="frete-motorista">FRETE MOTORISTA</th>
+                        <th data-column="status">STATUS</th>
+                        <th data-column="prazo">PRAZO</th>
+                        <th data-column="observacao">OBSERVAÇÃO</th>
+                        <th>AÇÕES</th>
+                    </tr>
+                </thead>
+                <tbody id="corpoTabela">
+                    <!-- Dados serão carregados do Firebase -->
+                </tbody>
+            </table>
         </div>
-        <div class="whatsapp-notification-body" id="notificationContent">
-            <!-- O conteúdo será preenchido dinamicamente -->
-        </div>
-        <div class="whatsapp-notification-footer">
-            <button class="whatsapp-notification-button secondary" onclick="fecharNotificacao()">Fechar</button>
-            <button class="whatsapp-notification-button" onclick="verEntrega()">Ver Entrega</button>
-        </div>
-    </div>
-
-    <!-- Ícone de notificação -->
-    <div id="notificationIcon" style="position: fixed; bottom: 20px; right: 20px; display: none; cursor: pointer;" onclick="mostrarNotificacao()">
-        <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" width="50" height="50">
-        <div id="notificationCount" class="notification-badge" style="display: none;">0</div>
     </div>
 
     <script>
@@ -550,100 +1021,168 @@
         const entregasRef = database.ref('entregas');
         
         // Variáveis globais
-        let proximoId = 1;
         let currentDeleteId = null;
         const SENHA_EXCLUSAO = "axd236";
         let voiceNotificationsEnabled = false;
-        let lastDeliveryKey = null;
+        let currentUser = null;
+        let todasEntregas = [];
         
-        // Variáveis para controle de notificações
-        let notificationsQueue = [];
-        let currentNotification = null;
-        let notificationCount = 0;
+        // Mapeamento de colunas para índices
+        const columnIndices = {
+            'data': 0,
+            'vendedor': 1,
+            'cliente': 2,
+            'telefone-cliente': 3,
+            'motorista': 4,
+            'telefone-motorista': 5,
+            'origem': 6,
+            'destino': 7,
+            'frete-empresa': 8,
+            'frete-motorista': 9,
+            'status': 10,
+            'prazo': 11,
+            'observacao': 12
+        };
         
-        // Configuração da API de Voz
-        let speechSynthesis = window.speechSynthesis || window.webkitSpeechSynthesis;
-        
-        // Função para verificar e carregar preferência de voz
-        function loadVoicePreference() {
-            const savedPreference = localStorage.getItem('voiceNotificationsEnabled');
-            voiceNotificationsEnabled = savedPreference === 'true';
-            updateVoiceButton();
+        // Função para carregar cidades únicas para os filtros
+        function carregarCidadesFiltro() {
+            const origens = new Set();
+            const destinos = new Set();
             
-            // Se for a primeira vez, ativar por padrão se o navegador suportar
-            if (savedPreference === null && 'speechSynthesis' in window) {
-                voiceNotificationsEnabled = true;
-                saveVoicePreference();
+            todasEntregas.forEach(entrega => {
+                if (entrega.origem) origens.add(entrega.origem);
+                if (entrega.destino) destinos.add(entrega.destino);
+            });
+            
+            const origemFilter = document.getElementById('origemFilter');
+            const destinoFilter = document.getElementById('destinoFilter');
+            
+            // Limpar opções exceto a primeira
+            while (origemFilter.options.length > 1) origemFilter.remove(1);
+            while (destinoFilter.options.length > 1) destinoFilter.remove(1);
+            
+            // Adicionar cidades únicas
+            origens.forEach(cidade => {
+                const option = document.createElement('option');
+                option.value = cidade;
+                option.textContent = cidade;
+                origemFilter.appendChild(option);
+            });
+            
+            destinos.forEach(cidade => {
+                const option = document.createElement('option');
+                option.value = cidade;
+                option.textContent = cidade;
+                destinoFilter.appendChild(option);
+            });
+        }
+        
+        // Função para aplicar todos os filtros
+        function aplicarFiltros() {
+            filtrarTabela();
+        }
+        
+        // Função para limpar todos os filtros
+        function limparFiltros() {
+            document.getElementById('statusFilter').value = '';
+            document.getElementById('dataInicioFilter').value = '';
+            document.getElementById('dataFimFilter').value = '';
+            document.getElementById('origemFilter').value = '';
+            document.getElementById('destinoFilter').value = '';
+            
+            filtrarTabela();
+        }
+        
+        // Função para abrir o modal de seleção de usuário
+        function openUserModal() {
+            document.getElementById('userModal').style.display = 'block';
+        }
+        
+        // Função para fechar o modal de seleção de usuário
+        function closeUserModal() {
+            document.getElementById('userModal').style.display = 'none';
+        }
+        
+        // Função para abrir o modal de seleção de colunas
+        function openColumnsModal() {
+            document.getElementById('columnsModal').style.display = 'block';
+        }
+        
+        // Função para fechar o modal de seleção de colunas
+        function closeColumnsModal() {
+            document.getElementById('columnsModal').style.display = 'none';
+        }
+        
+        // Função para alternar a visibilidade de colunas
+        function toggleColumn(columnName) {
+            const isChecked = document.getElementById(`toggle-${columnName}`).checked;
+            const columnIndex = columnIndices[columnName];
+            
+            if (columnIndex !== undefined) {
+                // Ocultar/mostrar cabeçalho
+                const headerCells = document.querySelectorAll(`th[data-column="${columnName}"]`);
+                headerCells.forEach(cell => {
+                    cell.style.display = isChecked ? '' : 'none';
+                });
+                
+                // Ocultar/mostrar células do corpo
+                const rows = document.querySelectorAll('#corpoTabela tr');
+                rows.forEach(row => {
+                    const cell = row.cells[columnIndex];
+                    if (cell) {
+                        cell.style.display = isChecked ? '' : 'none';
+                    }
+                });
+                
+                // Salvar preferências
+                const columnPreferences = JSON.parse(localStorage.getItem('columnPreferences') || '{}');
+                columnPreferences[columnName] = isChecked;
+                localStorage.setItem('columnPreferences', JSON.stringify(columnPreferences));
             }
         }
         
-        // Função para salvar preferência de voz
-        function saveVoicePreference() {
-            localStorage.setItem('voiceNotificationsEnabled', voiceNotificationsEnabled);
-            updateVoiceButton();
+        // Carregar preferências de colunas
+        function loadColumnPreferences() {
+            const preferences = JSON.parse(localStorage.getItem('columnPreferences') || '{}');
+            
+            // Aplicar preferências salvas
+            Object.keys(preferences).forEach(column => {
+                const checkbox = document.getElementById(`toggle-${column}`);
+                if (checkbox) {
+                    checkbox.checked = preferences[column];
+                    toggleColumn(column);
+                }
+            });
         }
         
-        // Função para atualizar o botão de voz
-        function updateVoiceButton() {
-            const btn = document.getElementById('voiceToggleBtn');
-            const icon = document.getElementById('voiceIcon');
+        // Função para selecionar um usuário
+        function selectUser(user) {
+            currentUser = user;
             
-            if (voiceNotificationsEnabled) {
-                btn.classList.add('active');
-                icon.textContent = '🔊';
-                btn.title = 'Avisos por voz ativados';
+            // Salvar a seleção no localStorage
+            localStorage.setItem('selectedUser', user);
+            
+            // Atualizar a interface
+            document.getElementById('currentUserName').textContent = user === 'TODOS' ? 'Todos os usuários' : user;
+            document.getElementById('currentUserAvatar').textContent = user.charAt(0);
+            
+            // Fechar o modal
+            closeUserModal();
+            
+            // Aplicar o filtro
+            filtrarTabela();
+        }
+        
+        // Função para carregar o usuário salvo
+        function loadUser() {
+            const savedUser = localStorage.getItem('selectedUser');
+            if (savedUser) {
+                selectUser(savedUser);
             } else {
-                btn.classList.remove('active');
-                icon.textContent = '🔇';
-                btn.title = 'Avisos por voz desativados';
+                openUserModal();
             }
         }
         
-        // Função para alternar notificações de voz
-        function toggleVoiceNotifications() {
-            if (!('speechSynthesis' in window)) {
-                alert('Seu navegador não suporta a API de síntese de voz.');
-                return;
-            }
-            
-            voiceNotificationsEnabled = !voiceNotificationsEnabled;
-            saveVoicePreference();
-            
-            if (voiceNotificationsEnabled) {
-                // Se acabou de ativar, verificar se há permissão
-                speak('Notificações por voz ativadas');
-            }
-        }
-        
-        // Função para falar um texto
-        function speak(text) {
-            if (!speechSynthesis || !voiceNotificationsEnabled) {
-                return;
-            }
-            
-            if (speechSynthesis.speaking) {
-                speechSynthesis.cancel();
-            }
-            
-            const utterance = new SpeechSynthesisUtterance(text);
-            utterance.lang = 'pt-BR';
-            utterance.rate = 1.0;
-            utterance.pitch = 1.0;
-            
-            speechSynthesis.speak(utterance);
-        }
-        
-        // Função auxiliar para obter o nome do status
-        function getStatusName(status) {
-            const statusMap = {
-                'coletando': 'Coletando',
-                'transito': 'Em trânsito',
-                'parado': 'Parado',
-                'entregue': 'Entregue'
-            };
-            return statusMap[status] || status;
-        }
-
         // Função para mostrar o modal de senha
         function showPasswordModal(id) {
             currentDeleteId = id;
@@ -717,6 +1256,13 @@
         
         // Função para adicionar nova linha editável
         function adicionarNovaLinha() {
+            // Se nenhum usuário estiver selecionado, pedir para selecionar primeiro
+            if (!currentUser || currentUser === 'TODOS') {
+                alert('Por favor, selecione seu usuário antes de adicionar uma entrega.');
+                openUserModal();
+                return;
+            }
+            
             const tabela = document.getElementById('corpoTabela');
             
             const newRow = document.createElement('tr');
@@ -730,42 +1276,43 @@
             const formattedDate = `${year}-${month}-${day}`;
             
             newRow.innerHTML = `
-                <td><input type="date" value="${formattedDate}"></td>
+                <td><input type="date" value="${formattedDate}" style="padding: 8px; width: 100%;"></td>
                 <td>
-                    <select>
-                        <option value="MARCIA">MARCIA</option>
-                        <option value="MARIANE">MARIANE</option>
-                        <option value="JEISE">JEISE</option>
-                        <option value="MONICA">MONICA</option>
-                        <option value="ANA">ANA</option>
-                        <option value="MARIVAL">MARIVAL</option>
-                        <option value="GENIVALDO">GENIVALDO</option>
+                    <select style="padding: 8px; width: 100%;">
+                        <option value="MARCIA" ${currentUser === 'MARCIA' ? 'selected' : ''}>MARCIA</option>
+                        <option value="MARIANE" ${currentUser === 'MARIANE' ? 'selected' : ''}>MARIANE</option>
+                        <option value="JEISE" ${currentUser === 'JEISE' ? 'selected' : ''}>JEISE</option>
+                        <option value="MONICA" ${currentUser === 'MONICA' ? 'selected' : ''}>MONICA</option>
+                        <option value="ANA" ${currentUser === 'ANA' ? 'selected' : ''}>ANA</option>
+                        <option value="MARIVAL" ${currentUser === 'MARIVAL' ? 'selected' : ''}>MARIVAL</option>
+                        <option value="GENIVALDO" ${currentUser === 'GENIVALDO' ? 'selected' : ''}>GENIVALDO</option>
                     </select>
                 </td>
-                <td><input type="text" placeholder="Nome do cliente"></td>
-                <td><input type="text" placeholder="(XX) XXXXX-XXXX"></td>
-                <td><input type="text" placeholder="Nome do motorista"></td>
-                <td><input type="text" placeholder="(XX) XXXXX-XXXX"></td>
-                <td><input type="text" placeholder="Cidade/UF"></td>
-                <td><input type="text" placeholder="Cidade/UF"></td>
-                <td><input type="text" placeholder="R$ 0,00"></td>
-                <td><input type="text" placeholder="R$ 0,00"></td>
+                <td><input type="text" placeholder="Nome do cliente" style="padding: 8px; width: 100%;"></td>
+                <td><input type="text" placeholder="(XX) XXXXX-XXXX" style="padding: 8px; width: 100%;"></td>
+                <td><input type="text" placeholder="Nome do motorista" style="padding: 8px; width: 100%;"></td>
+                <td><input type="text" placeholder="(XX) XXXXX-XXXX" style="padding: 8px; width: 100%;"></td>
+                <td><input type="text" placeholder="Cidade/UF" style="padding: 8px; width: 100%;"></td>
+                <td><input type="text" placeholder="Cidade/UF" style="padding: 8px; width: 100%;"></td>
+                <td><input type="text" placeholder="R$ 0,00" style="padding: 8px; width: 100%;"></td>
+                <td><input type="text" placeholder="R$ 0,00" style="padding: 8px; width: 100%;"></td>
                 <td>
-                    <select>
+                    <select style="padding: 8px; width: 100%;">
                         <option value="coletando">Coletando</option>
                         <option value="transito">Em trânsito</option>
                         <option value="parado">Parado</option>
                         <option value="entregue">Entregue</option>
                     </select>
                 </td>
-                <td><input type="date"></td>
-                <td><input type="text" placeholder="Observações"></td>
+                <td><input type="date" style="padding: 8px; width: 100%;"></td>
+                <td><input type="text" placeholder="Observações" style="padding: 8px; width: 100%;"></td>
                 <td class="action-buttons">
                     <button class="save-btn" onclick="salvarLinha(this)">Salvar</button>
                     <button class="cancel-btn" onclick="cancelarEdicao(this)">Cancelar</button>
                 </td>
             `;
             
+            // Adicionar event listeners para formatação
             newRow.querySelectorAll('input[type="text"]').forEach(input => {
                 if (input.placeholder.includes('(XX)')) {
                     input.addEventListener('input', formatarTelefoneInput);
@@ -774,7 +1321,13 @@
                 }
             });
             
-            tabela.insertBefore(newRow, tabela.firstChild);
+            // Adicionar como PRIMEIRA linha do corpo da tabela
+            if (tabela.firstChild) {
+                tabela.insertBefore(newRow, tabela.firstChild);
+            } else {
+                tabela.appendChild(newRow);
+            }
+            
             newRow.querySelector('input').focus();
         }
         
@@ -784,12 +1337,25 @@
             const inputs = linha.querySelectorAll('input, select');
             const id = linha.dataset.id;
             
+            // Validação de campos obrigatórios
             if (!inputs[0].value || !inputs[2].value || !inputs[3].value || !inputs[4].value || !inputs[5].value) {
                 alert('Por favor, preencha os campos obrigatórios: Data, Cliente, Telefone Cliente, Motorista e Telefone Motorista');
                 return;
             }
             
             const dataInput = inputs[0].value;
+            
+            // Formatar valores monetários
+            let freteEmpresa = 0;
+            let freteMotorista = 0;
+            
+            if (inputs[8].value) {
+                freteEmpresa = parseFloat(inputs[8].value.replace(/[^\d,]/g, '').replace(',', '.')) || 0;
+            }
+            
+            if (inputs[9].value) {
+                freteMotorista = parseFloat(inputs[9].value.replace(/[^\d,]/g, '').replace(',', '.')) || 0;
+            }
             
             const entrega = {
                 data: dataInput,
@@ -800,8 +1366,8 @@
                 telefoneMotorista: inputs[5].value.replace(/\D/g, ''),
                 origem: inputs[6].value,
                 destino: inputs[7].value,
-                freteEmpresa: inputs[8].value ? parseFloat(inputs[8].value.replace(/[^\d,]/g, '').replace(',', '.')) : 0,
-                freteMotorista: inputs[9].value ? parseFloat(inputs[9].value.replace(/[^\d,]/g, '').replace(',', '.')) : 0,
+                freteEmpresa: freteEmpresa,
+                freteMotorista: freteMotorista,
                 status: inputs[10].value,
                 prazo: inputs[11].value || '',
                 observacao: inputs[12].value || '',
@@ -809,6 +1375,7 @@
             };
             
             if (id.startsWith('new-')) {
+                // Nova entrega
                 entregasRef.push(entrega)
                     .then(() => {
                         linha.remove();
@@ -818,6 +1385,7 @@
                         alert("Erro ao salvar os dados. Por favor, tente novamente.");
                     });
             } else {
+                // Atualizar entrega existente
                 entregasRef.child(id).update(entrega)
                     .catch(error => {
                         console.error("Erro ao atualizar:", error);
@@ -832,12 +1400,15 @@
             const id = linha.dataset.id;
             const celulas = linha.cells;
             
+            // Salvar conteúdo original para cancelamento
             linha.dataset.originalContent = linha.innerHTML;
             
+            // Formatar data para input type="date"
             const dataDisplay = celulas[0].textContent;
             const [dia, mes, ano] = dataDisplay.split('/');
             const dataFormatada = `${ano}-${mes}-${dia}`;
             
+            // Formatar prazo se existir
             const prazoInput = celulas[11].textContent;
             let prazoFormatado = '';
             if (prazoInput !== '-') {
@@ -845,14 +1416,16 @@
                 prazoFormatado = `${anoP}-${mesP}-${diaP}`;
             }
             
+            // Obter status atual
             const statusClass = celulas[10].className;
             const statusAtual = statusClass.replace('status-', '');
             
+            // Substituir por inputs
             linha.className = 'edit-row';
             linha.innerHTML = `
-                <td><input type="date" value="${dataFormatada}"></td>
+                <td><input type="date" value="${dataFormatada}" style="padding: 8px; width: 100%;"></td>
                 <td>
-                    <select>
+                    <select style="padding: 8px; width: 100%;">
                         <option value="MARCIA" ${celulas[1].textContent === 'MARCIA' ? 'selected' : ''}>MARCIA</option>
                         <option value="MARIANE" ${celulas[1].textContent === 'MARIANE' ? 'selected' : ''}>MARIANE</option>
                         <option value="JEISE" ${celulas[1].textContent === 'JEISE' ? 'selected' : ''}>JEISE</option>
@@ -862,34 +1435,35 @@
                         <option value="GENIVALDO" ${celulas[1].textContent === 'GENIVALDO' ? 'selected' : ''}>GENIVALDO</option>
                     </select>
                 </td>
-                <td><input type="text" value="${celulas[2].textContent}"></td>
-                <td><input type="text" value="${formatarTelefoneDisplay(celulas[3].querySelector('a').textContent)}"></td>
-                <td><input type="text" value="${celulas[4].textContent}"></td>
-                <td><input type="text" value="${formatarTelefoneDisplay(celulas[5].querySelector('a').textContent)}"></td>
-                <td><input type="text" value="${celulas[6].textContent}"></td>
-                <td><input type="text" value="${celulas[7].textContent}"></td>
-                <td><input type="text" value="${celulas[8].textContent === '-' ? '' : celulas[8].textContent}"></td>
-                <td><input type="text" value="${celulas[9].textContent === '-' ? '' : celulas[9].textContent}"></td>
+                <td><input type="text" value="${celulas[2].textContent}" style="padding: 8px; width: 100%;"></td>
+                <td><input type="text" value="${formatarTelefoneDisplay(celulas[3].querySelector('a') ? celulas[3].querySelector('a').textContent : '')}" style="padding: 8px; width: 100%;"></td>
+                <td><input type="text" value="${celulas[4].textContent}" style="padding: 8px; width: 100%;"></td>
+                <td><input type="text" value="${formatarTelefoneDisplay(celulas[5].querySelector('a') ? celulas[5].querySelector('a').textContent : '')}" style="padding: 8px; width: 100%;"></td>
+                <td><input type="text" value="${celulas[6].textContent}" style="padding: 8px; width: 100%;"></td>
+                <td><input type="text" value="${celulas[7].textContent}" style="padding: 8px; width: 100%;"></td>
+                <td><input type="text" value="${celulas[8].textContent === '-' ? '' : celulas[8].textContent}" style="padding: 8px; width: 100%;"></td>
+                <td><input type="text" value="${celulas[9].textContent === '-' ? '' : celulas[9].textContent}" style="padding: 8px; width: 100%;"></td>
                 <td>
-                    <select>
+                    <select style="padding: 8px; width: 100%;">
                         <option value="coletando" ${statusAtual === 'coletando' ? 'selected' : ''}>Coletando</option>
                         <option value="transito" ${statusAtual === 'transito' ? 'selected' : ''}>Em trânsito</option>
                         <option value="parado" ${statusAtual === 'parado' ? 'selected' : ''}>Parado</option>
                         <option value="entregue" ${statusAtual === 'entregue' ? 'selected' : ''}>Entregue</option>
                     </select>
                 </td>
-                <td><input type="date" value="${prazoFormatado}"></td>
-                <td><input type="text" value="${celulas[12].textContent === '-' ? '' : celulas[12].textContent}"></td>
+                <td><input type="date" value="${prazoFormatado}" style="padding: 8px; width: 100%;"></td>
+                <td><input type="text" value="${celulas[12].textContent === '-' ? '' : celulas[12].textContent}" style="padding: 8px; width: 100%;"></td>
                 <td class="action-buttons">
                     <button class="save-btn" onclick="salvarLinha(this)">Salvar</button>
                     <button class="cancel-btn" onclick="cancelarEdicao(this)">Cancelar</button>
                 </td>
             `;
             
+            // Adicionar event listeners para formatação
             linha.querySelectorAll('input[type="text"]').forEach(input => {
-                if (input.value.includes('(')) {
+                if (input.value.includes('(') || (input.placeholder && input.placeholder.includes('(XX)'))) {
                     input.addEventListener('input', formatarTelefoneInput);
-                } else if (input.value.startsWith('R$')) {
+                } else if (input.value.startsWith('R$') || (input.placeholder && input.placeholder.startsWith('R$'))) {
                     input.addEventListener('input', formatarMoedaInput);
                 }
             });
@@ -909,7 +1483,7 @@
             }
         }
         
-        // Função para excluir uma linha (agora com verificação de senha)
+        // Função para excluir uma linha (com verificação de senha)
         function excluirLinha(botao) {
             const id = botao.closest('tr').dataset.id;
             showPasswordModal(id);
@@ -945,18 +1519,28 @@
         
         // Função para formatar telefone para exibição
         function formatarTelefoneDisplay(numero) {
+            if (!numero) return '';
             const nums = numero.replace(/\D/g, '');
+            if (nums.length === 0) return '';
+            if (nums.length <= 2) return `(${nums}`;
+            if (nums.length <= 10) return `(${nums.substring(0,2)}) ${nums.substring(2)}`;
             return `(${nums.substring(0,2)}) ${nums.substring(2,7)}-${nums.substring(7,11)}`;
         }
         
         // Função para formatar moeda durante a digitação
         function formatarMoedaInput(e) {
             let value = e.target.value.replace(/\D/g, '');
-            value = (value / 100).toLocaleString('pt-BR', {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2
-            });
-            e.target.value = 'R$ ' + value;
+            if (value) {
+                value = (value / 100).toLocaleString('pt-BR', {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                });
+                if (value !== '0,00') {
+                    e.target.value = 'R$ ' + value;
+                } else {
+                    e.target.value = '';
+                }
+            }
         }
         
         // Função para carregar dados do Firebase
@@ -971,20 +1555,42 @@
                     return;
                 }
                 
-                Object.keys(entregas).forEach(id => {
-                    const entrega = entregas[id];
+                // Converter objeto em array e ordenar por data (mais recente primeiro)
+                const entregasArray = Object.entries(entregas).map(([id, entrega]) => ({ id, ...entrega }));
+                entregasArray.sort((a, b) => {
+                    // Ordenar por timestamp ou por data se timestamp não existir
+                    const timeA = a.timestamp || (a.data ? new Date(a.data).getTime() : 0);
+                    const timeB = b.timestamp || (b.data ? new Date(b.data).getTime() : 0);
+                    return timeB - timeA; // Mais recente primeiro
+                });
+                
+                todasEntregas = entregasArray;
+                
+                entregasArray.forEach(({ id, ...entrega }) => {
                     adicionarLinhaTabela(tabela, id, entrega);
                 });
                 
-                proximoId = Object.keys(entregas).length + 1;
+                // Carregar cidades para os filtros
+                carregarCidadesFiltro();
+                
+                // Aplicar filtro após carregar os dados
+                filtrarTabela();
+                
+                // Aplicar preferências de colunas após carregar os dados
+                loadColumnPreferences();
             });
         }
         
         // Função auxiliar para adicionar uma linha na tabela
         function adicionarLinhaTabela(tabela, id, entrega) {
-            const [ano, mes, dia] = entrega.data.split('-');
-            const dataFormatada = `${dia}/${mes}/${ano}`;
+            // Formatar data
+            let dataFormatada = '-';
+            if (entrega.data) {
+                const [ano, mes, dia] = entrega.data.split('-');
+                dataFormatada = `${dia}/${mes}/${ano}`;
+            }
             
+            // Formatar prazo
             let prazoFormatado = '-';
             if (entrega.prazo) {
                 const [anoP, mesP, diaP] = entrega.prazo.split('-');
@@ -995,16 +1601,16 @@
             row.dataset.id = id;
             row.innerHTML = `
                 <td>${dataFormatada}</td>
-                <td>${entrega.vendedor}</td>
-                <td>${entrega.cliente}</td>
-                <td><a href="#" class="whatsapp-link" onclick="copiarNumero('${entrega.telefoneCliente}')">${formatarTelefoneDisplay(entrega.telefoneCliente)}</a></td>
-                <td>${entrega.motorista}</td>
-                <td><a href="#" class="whatsapp-link" onclick="copiarNumero('${entrega.telefoneMotorista}')">${formatarTelefoneDisplay(entrega.telefoneMotorista)}</a></td>
-                <td>${entrega.origem}</td>
-                <td>${entrega.destino}</td>
-                <td>${entrega.freteEmpresa ? 'R$ ' + entrega.freteEmpresa.toFixed(2).replace('.', ',') : '-'}</td>
-                <td>${entrega.freteMotorista ? 'R$ ' + entrega.freteMotorista.toFixed(2).replace('.', ',') : '-'}</td>
-                <td class="status-${entrega.status}">
+                <td>${entrega.vendedor || '-'}</td>
+                <td><div class="cell-content">${entrega.cliente || '-'}</div></td>
+                <td><a href="#" class="whatsapp-link" onclick="copiarNumero('${entrega.telefoneCliente || ''}')">${formatarTelefoneDisplay(entrega.telefoneCliente)}</a></td>
+                <td><div class="cell-content">${entrega.motorista || '-'}</div></td>
+                <td><a href="#" class="whatsapp-link" onclick="copiarNumero('${entrega.telefoneMotorista || ''}')">${formatarTelefoneDisplay(entrega.telefoneMotorista)}</a></td>
+                <td><div class="cell-content">${entrega.origem || '-'}</div></td>
+                <td><div class="cell-content">${entrega.destino || '-'}</div></td>
+                <td>${entrega.freteEmpresa ? 'R$ ' + parseFloat(entrega.freteEmpresa).toFixed(2).replace('.', ',') : '-'}</td>
+                <td>${entrega.freteMotorista ? 'R$ ' + parseFloat(entrega.freteMotorista).toFixed(2).replace('.', ',') : '-'}</td>
+                <td class="status-${entrega.status || 'coletando'}">
                     <select class="status-select" onchange="atualizarStatus(this, '${id}')">
                         <option value="coletando" ${entrega.status === 'coletando' ? 'selected' : ''}>Coletando</option>
                         <option value="transito" ${entrega.status === 'transito' ? 'selected' : ''}>Em trânsito</option>
@@ -1013,80 +1619,91 @@
                     </select>
                 </td>
                 <td>${prazoFormatado}</td>
-                <td>${entrega.observacao || '-'}</td>
+                <td><div class="cell-content">${entrega.observacao || '-'}</div></td>
                 <td class="action-buttons">
                     <button class="edit-btn" onclick="editarLinha(this)">Editar</button>
                     <button class="delete-btn" onclick="excluirLinha(this)">Excluir</button>
                 </td>
             `;
             
+            // Adicionar a linha no final da tabela
             tabela.appendChild(row);
         }
         
-        // Função para carregar dados do mês selecionado
-        function carregarMes() {
-            const mes = document.getElementById('mesFilter').value;
-            const ano = document.getElementById('anoFilter').value;
-            
-            document.getElementById('vendedorFilter').value = '';
-            document.getElementById('statusFilter').value = '';
-            
-            entregasRef.once('value', (snapshot) => {
-                const entregas = snapshot.val() || {};
-                const tabela = document.getElementById('corpoTabela');
-                tabela.innerHTML = '';
-                
-                let encontrouDados = false;
-                
-                Object.keys(entregas).forEach(id => {
-                    const entrega = entregas[id];
-                    const dataEntrega = entrega.data;
-                    
-                    if (dataEntrega) {
-                        const [anoEntrega, mesEntrega] = dataEntrega.split('-');
-                        
-                        if (mesEntrega === mes && anoEntrega === ano) {
-                            encontrouDados = true;
-                            adicionarLinhaTabela(tabela, id, entrega);
-                        }
-                    }
-                });
-                
-                if (!encontrouDados) {
-                    tabela.innerHTML = '<tr><td colspan="14" class="empty-message">Nenhuma entrega encontrada para este mês</td></tr>';
-                }
-            });
-        }
-        
-        // Função para mostrar todas as entregas
-        function mostrarTodasEntregas() {
-            carregarDados();
-        }
-        
-        // Função para filtrar a tabela
+        // Função para filtrar a tabela com todos os filtros
         function filtrarTabela() {
-            const vendedor = document.getElementById('vendedorFilter').value;
             const status = document.getElementById('statusFilter').value;
+            const dataInicio = document.getElementById('dataInicioFilter').value;
+            const dataFim = document.getElementById('dataFimFilter').value;
+            const origem = document.getElementById('origemFilter').value;
+            const destino = document.getElementById('destinoFilter').value;
             
-            const linhas = document.querySelectorAll('#corpoTabela tr:not(.edit-row)');
+            const linhas = document.querySelectorAll('#corpoTabela tr');
+            
+            let encontrouDados = false;
             
             linhas.forEach(linha => {
-                const colVendedor = linha.cells[1].textContent;
-                const colStatus = linha.cells[10].className.replace('status-', '');
+                // Pular linhas de edição e mensagens vazias
+                if (linha.classList.contains('edit-row') || linha.querySelector('.empty-message')) {
+                    return;
+                }
                 
-                const mostraLinha = 
-                    (vendedor === '' || colVendedor === vendedor) &&
-                    (status === '' || colStatus === status);
+                if (linha.cells.length < 14) return; // Pular linhas incompletas
+                
+                const colVendedor = linha.cells[1].textContent;
+                const colStatusElement = linha.cells[10];
+                const colStatus = colStatusElement.className.replace('status-', '');
+                const colData = linha.cells[0].textContent;
+                const colOrigem = linha.cells[6].textContent;
+                const colDestino = linha.cells[7].textContent;
+                
+                // Converter data para comparação
+                let dataEntrega = null;
+                if (colData !== '-') {
+                    const [dia, mes, ano] = colData.split('/');
+                    dataEntrega = new Date(ano, mes - 1, dia);
+                }
+                
+                // Aplicar filtros
+                const mostraPorUsuario = !currentUser || currentUser === 'TODOS' || colVendedor === currentUser;
+                const mostraPorStatus = status === '' || colStatus === status;
+                const mostraPorDataInicio = !dataInicio || (dataEntrega && dataEntrega >= new Date(dataInicio));
+                const mostraPorDataFim = !dataFim || (dataEntrega && dataEntrega <= new Date(dataFim + 'T23:59:59'));
+                const mostraPorOrigem = origem === '' || colOrigem === origem;
+                const mostraPorDestino = destino === '' || colDestino === destino;
+                
+                const mostraLinha = mostraPorUsuario && mostraPorStatus && mostraPorDataInicio && 
+                                  mostraPorDataFim && mostraPorOrigem && mostraPorDestino;
                 
                 linha.style.display = mostraLinha ? '' : 'none';
+                
+                if (mostraLinha) {
+                    encontrouDados = true;
+                }
             });
+            
+            // Mostrar mensagem se não houver dados
+            const existingMessage = document.querySelector('.empty-message');
+            if (!encontrouDados) {
+                if (!existingMessage) {
+                    const tabela = document.getElementById('corpoTabela');
+                    const emptyRow = document.createElement('tr');
+                    emptyRow.innerHTML = `<td colspan="14" class="empty-message">Nenhuma entrega encontrada</td>`;
+                    tabela.appendChild(emptyRow);
+                }
+            } else {
+                // Remover mensagem de vazio se existir
+                if (existingMessage) {
+                    existingMessage.remove();
+                }
+            }
         }
         
         // Função para exportar para Excel
         function exportarExcel() {
             const tabela = document.getElementById('tabelaEntregas');
-            const linhasVisiveis = Array.from(tabela.querySelectorAll('tbody tr:not(.edit-row)'))
-                .filter(linha => linha.style.display !== 'none');
+            const linhasVisiveis = Array.from(tabela.querySelectorAll('tbody tr'))
+                .filter(linha => linha.style.display !== 'none' && !linha.classList.contains('edit-row') && !linha.querySelector('.empty-message'));
             
             if (linhasVisiveis.length === 0) {
                 alert('Nenhum dado para exportar!');
@@ -1096,14 +1713,19 @@
             const wb = XLSX.utils.book_new();
             const dados = [];
             
+            // Cabeçalhos
             const cabecalhos = Array.from(tabela.querySelectorAll('thead th'))
                 .map(th => th.textContent);
-            cabecalhos.pop();
+            cabecalhos.pop(); // Remover coluna AÇÕES
             dados.push(cabecalhos);
             
+            // Dados
             linhasVisiveis.forEach(linha => {
                 const celulas = Array.from(linha.cells);
-                const linhaDados = celulas.map(celula => {
+                const linhaDados = celulas.map((celula, index) => {
+                    // Pular coluna de ações (última)
+                    if (index === celulas.length - 1) return null;
+                    
                     if (celula.querySelector('.whatsapp-link')) {
                         return celula.querySelector('.whatsapp-link').textContent;
                     }
@@ -1111,183 +1733,111 @@
                         return celula.querySelector('.status-select').value;
                     }
                     return celula.textContent;
-                });
-                linhaDados.pop();
+                }).filter(val => val !== null); // Remover valores nulos
+                
                 dados.push(linhaDados);
             });
             
             const ws = XLSX.utils.aoa_to_sheet(dados);
             XLSX.utils.book_append_sheet(wb, ws, "Entregas");
             
-            const nomeArquivo = `entregas_${document.getElementById('mesFilter').value}_${document.getElementById('anoFilter').value}.xlsx`;
+            const nomeArquivo = `entregas_${new Date().toISOString().split('T')[0]}.xlsx`;
             XLSX.writeFile(wb, nomeArquivo);
         }
         
-        // Função para mostrar notificação de nova entrega
-        function showNewDeliveryNotification(delivery) {
-            const notification = {
-                id: Date.now(),
-                delivery: delivery,
-                key: lastDeliveryKey
-            };
+        // Função para verificar e carregar preferência de voz
+        function loadVoicePreference() {
+            const savedPreference = localStorage.getItem('voiceNotificationsEnabled');
+            voiceNotificationsEnabled = savedPreference === 'true';
+            updateVoiceButton();
             
-            notificationsQueue.push(notification);
-            notificationCount++;
-            updateNotificationIcon();
-            
-            if (!currentNotification) {
-                showNextNotification();
+            // Se for a primeira vez, ativar por padrão se o navegador suportar
+            if (savedPreference === null && 'speechSynthesis' in window) {
+                voiceNotificationsEnabled = true;
+                saveVoicePreference();
             }
         }
         
-        // Função para mostrar a próxima notificação na fila
-        function showNextNotification() {
-            if (notificationsQueue.length === 0) {
-                currentNotification = null;
+        // Função para salvar preferência de voz
+        function saveVoicePreference() {
+            localStorage.setItem('voiceNotificationsEnabled', voiceNotificationsEnabled);
+            updateVoiceButton();
+        }
+        
+        // Função para atualizar o botão de voz
+        function updateVoiceButton() {
+            const btn = document.getElementById('voiceToggleBtn');
+            const icon = document.getElementById('voiceIcon');
+            
+            if (voiceNotificationsEnabled) {
+                btn.classList.add('active');
+                icon.textContent = '🔊';
+                btn.title = 'Avisos por voz ativados';
+            } else {
+                btn.classList.remove('active');
+                icon.textContent = '🔇';
+                btn.title = 'Avisos por voz desativados';
+            }
+        }
+        
+        // Função para alternar notificações de voz
+        function toggleVoiceNotifications() {
+            if (!('speechSynthesis' in window)) {
+                alert('Seu navegador não suporta a API de síntese de voz.');
                 return;
             }
             
-            currentNotification = notificationsQueue.shift();
-            const delivery = currentNotification.delivery;
+            voiceNotificationsEnabled = !voiceNotificationsEnabled;
+            saveVoicePreference();
             
-            // Formatar a data
-            const [ano, mes, dia] = delivery.data.split('-');
-            const dataFormatada = `${dia}/${mes}/${ano}`;
-            
-            // Configurar o conteúdo da notificação
-            const content = `
-                <strong>Vendedor:</strong> ${delivery.vendedor}<br>
-                <strong>Cliente:</strong> ${delivery.cliente}<br>
-                <strong>Destino:</strong> ${delivery.destino}<br>
-                <strong>Data:</strong> ${dataFormatada}<br>
-                <strong>Status:</strong> ${getStatusName(delivery.status)}
-            `;
-            
-            document.getElementById('notificationContent').innerHTML = content;
-            
-            // Mostrar a notificação
-            const notificationElement = document.getElementById('whatsappNotification');
-            notificationElement.style.display = 'block';
-            
-            // Esconder após 10 segundos se não interagir
-            notificationElement.timeout = setTimeout(() => {
-                if (currentNotification && currentNotification.id === notification.id) {
-                    fecharNotificacao();
-                }
-            }, 10000);
-        }
-        
-        // Função para fechar a notificação atual
-        function fecharNotificacao() {
-            const notificationElement = document.getElementById('whatsappNotification');
-            clearTimeout(notificationElement.timeout);
-            notificationElement.style.display = 'none';
-            
-            if (currentNotification) {
-                currentNotification = null;
-                showNextNotification();
+            if (voiceNotificationsEnabled) {
+                speak('Notificações por voz ativadas');
             }
         }
         
-        // Função para ver a entrega
-        function verEntrega() {
-            fecharNotificacao();
+        // Função para falar um texto
+        function speak(text) {
+            if (!speechSynthesis || !voiceNotificationsEnabled) {
+                return;
+            }
             
-            if (currentNotification && currentNotification.key) {
-                // Rolar até a entrega correspondente
-                const row = document.querySelector(`tr[data-id="${currentNotification.key}"]`);
-                if (row) {
-                    row.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    
-                    // Destacar a linha por 3 segundos
-                    row.style.backgroundColor = '#fffde7';
-                    setTimeout(() => {
-                        row.style.backgroundColor = '';
-                    }, 3000);
-                }
+            if (speechSynthesis.speaking) {
+                speechSynthesis.cancel();
             }
-        }
-        
-        // Função para mostrar o ícone de notificação
-        function updateNotificationIcon() {
-            const icon = document.getElementById('notificationIcon');
-            const badge = document.getElementById('notificationCount');
             
-            if (notificationCount > 0) {
-                icon.style.display = 'block';
-                badge.style.display = 'flex';
-                badge.textContent = notificationCount;
-            } else {
-                icon.style.display = 'none';
-                badge.style.display = 'none';
-            }
-        }
-        
-        // Função para mostrar a notificação ao clicar no ícone
-        function mostrarNotificacao() {
-            if (currentNotification) {
-                // Se já houver uma notificação sendo exibida, apenas trazer para frente
-                document.getElementById('whatsappNotification').style.display = 'block';
-            } else if (notificationsQueue.length > 0) {
-                // Mostrar a próxima notificação na fila
-                showNextNotification();
-            } else if (notificationCount > 0) {
-                // Se não houver notificações na fila mas o contador for positivo
-                // (pode acontecer se o usuário fechar todas sem interagir)
-                notificationCount = 0;
-                updateNotificationIcon();
-            }
-        }
-        
-        // Monitorar adições de novas entregas
-        function monitorNewDeliveries() {
-            entregasRef.orderByChild('timestamp').limitToLast(1).on('child_added', (snapshot) => {
-                const newDelivery = snapshot.val();
-                const deliveryKey = snapshot.key;
-                
-                if (deliveryKey !== lastDeliveryKey && lastDeliveryKey !== null) {
-                    lastDeliveryKey = deliveryKey;
-                    
-                    // Mostrar notificação
-                    showNewDeliveryNotification(newDelivery);
-                    
-                    if (voiceNotificationsEnabled) {
-                        const message = `Nova entrega adicionada para o cliente ${newDelivery.cliente} com destino a ${newDelivery.destino}. Status: ${getStatusName(newDelivery.status)}`;
-                        speak(message);
-                    }
-                }
-                
-                if (lastDeliveryKey === null) {
-                    lastDeliveryKey = deliveryKey;
-                }
-            });
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = 'pt-BR';
+            utterance.rate = 1.0;
+            utterance.pitch = 1.0;
+            
+            speechSynthesis.speak(utterance);
         }
         
         // Adicionar eventos aos filtros
-        document.getElementById('vendedorFilter').addEventListener('change', filtrarTabela);
         document.getElementById('statusFilter').addEventListener('change', filtrarTabela);
+        document.getElementById('dataInicioFilter').addEventListener('change', filtrarTabela);
+        document.getElementById('dataFimFilter').addEventListener('change', filtrarTabela);
+        document.getElementById('origemFilter').addEventListener('change', filtrarTabela);
+        document.getElementById('destinoFilter').addEventListener('change', filtrarTabela);
         
-        // Definir mês atual como padrão
+        // Definir data atual como padrão para data fim
         const dataAtual = new Date();
-        document.getElementById('mesFilter').value = (dataAtual.getMonth() + 1).toString().padStart(2, '0');
-        document.getElementById('anoFilter').value = dataAtual.getFullYear().toString();
+        const ano = dataAtual.getFullYear();
+        const mes = String(dataAtual.getMonth() + 1).padStart(2, '0');
+        const dia = String(dataAtual.getDate()).padStart(2, '0');
+        document.getElementById('dataFimFilter').value = `${ano}-${mes}-${dia}`;
         
         // Carrega os dados quando a página é carregada
         document.addEventListener('DOMContentLoaded', function() {
             loadVoicePreference();
+            loadUser();
             carregarDados();
-            monitorNewDeliveries();
             
             if (!('speechSynthesis' in window)) {
                 console.warn("Seu navegador não suporta a API de síntese de voz");
                 document.getElementById('voiceToggleBtn').disabled = true;
                 document.getElementById('voiceToggleBtn').title = 'API de voz não suportada neste navegador';
             }
-            
-            // Inicializar lastDeliveryKey com a última entrega
-            entregasRef.orderByChild('timestamp').limitToLast(1).once('child_added', (snapshot) => {
-                lastDeliveryKey = snapshot.key;
-            });
         });
     </script>
 </body>
