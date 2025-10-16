@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -791,10 +790,6 @@
             </div>
             <p>Selecione seu nome para visualizar apenas suas entregas:</p>
             <div class="user-selection" id="userSelection">
-                <div class="user-option" onclick="selectUser('MARCIA')">
-                    <div class="user-option-avatar">M</div>
-                    <div class="user-option-name">MARCIA</div>
-                </div>
                 <div class="user-option" onclick="selectUser('MARIANE')">
                     <div class="user-option-avatar">M</div>
                     <div class="user-option-name">MARIANE</div>
@@ -807,17 +802,9 @@
                     <div class="user-option-avatar">M</div>
                     <div class="user-option-name">MONICA</div>
                 </div>
-                <div class="user-option" onclick="selectUser('ANA')">
-                    <div class="user-option-avatar">A</div>
-                    <div class="user-option-name">ANA</div>
-                </div>
                 <div class="user-option" onclick="selectUser('MARIVAL')">
                     <div class="user-option-avatar">M</div>
                     <div class="user-option-name">MARIVAL</div>
-                </div>
-                <div class="user-option" onclick="selectUser('GENIVALDO')">
-                    <div class="user-option-avatar">G</div>
-                    <div class="user-option-name">GENIVALDO</div>
                 </div>
                 <div class="user-option" onclick="selectUser('TODOS')">
                     <div class="user-option-avatar">T</div>
@@ -1279,13 +1266,10 @@
                 <td><input type="date" value="${formattedDate}" style="padding: 8px; width: 100%;"></td>
                 <td>
                     <select style="padding: 8px; width: 100%;">
-                        <option value="MARCIA" ${currentUser === 'MARCIA' ? 'selected' : ''}>MARCIA</option>
                         <option value="MARIANE" ${currentUser === 'MARIANE' ? 'selected' : ''}>MARIANE</option>
                         <option value="JEISE" ${currentUser === 'JEISE' ? 'selected' : ''}>JEISE</option>
                         <option value="MONICA" ${currentUser === 'MONICA' ? 'selected' : ''}>MONICA</option>
-                        <option value="ANA" ${currentUser === 'ANA' ? 'selected' : ''}>ANA</option>
                         <option value="MARIVAL" ${currentUser === 'MARIVAL' ? 'selected' : ''}>MARIVAL</option>
-                        <option value="GENIVALDO" ${currentUser === 'GENIVALDO' ? 'selected' : ''}>GENIVALDO</option>
                     </select>
                 </td>
                 <td><input type="text" placeholder="Nome do cliente" style="padding: 8px; width: 100%;"></td>
@@ -1426,13 +1410,10 @@
                 <td><input type="date" value="${dataFormatada}" style="padding: 8px; width: 100%;"></td>
                 <td>
                     <select style="padding: 8px; width: 100%;">
-                        <option value="MARCIA" ${celulas[1].textContent === 'MARCIA' ? 'selected' : ''}>MARCIA</option>
                         <option value="MARIANE" ${celulas[1].textContent === 'MARIANE' ? 'selected' : ''}>MARIANE</option>
                         <option value="JEISE" ${celulas[1].textContent === 'JEISE' ? 'selected' : ''}>JEISE</option>
                         <option value="MONICA" ${celulas[1].textContent === 'MONICA' ? 'selected' : ''}>MONICA</option>
-                        <option value="ANA" ${celulas[1].textContent === 'ANA' ? 'selected' : ''}>ANA</option>
                         <option value="MARIVAL" ${celulas[1].textContent === 'MARIVAL' ? 'selected' : ''}>MARIVAL</option>
-                        <option value="GENIVALDO" ${celulas[1].textContent === 'GENIVALDO' ? 'selected' : ''}>GENIVALDO</option>
                     </select>
                 </td>
                 <td><input type="text" value="${celulas[2].textContent}" style="padding: 8px; width: 100%;"></td>
