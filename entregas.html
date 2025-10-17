@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>📦 Acompanhamento de Entregas</title>
     <script src="https://cdn.sheetjs.com/xlsx-0.19.3/package/dist/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <style>
@@ -308,6 +310,22 @@
             background-color: #5D4037;
         }
         
+        .print-btn {
+            background-color: #2196F3;
+        }
+        
+        .print-btn:hover {
+            background-color: #1976D2;
+        }
+        
+        .pdf-btn {
+            background-color: #F44336;
+        }
+        
+        .pdf-btn:hover {
+            background-color: #D32F2F;
+        }
+        
         .table-container {
             overflow-x: auto;
             border-radius: 12px;
@@ -352,6 +370,16 @@
         
         tr:hover {
             background-color: #edf2f7;
+        }
+        
+        /* NOVO: Estilo para entregas atrasadas */
+        .atrasada {
+            background-color: #ffeaea !important;
+            border-left: 4px solid var(--danger-color);
+        }
+        
+        .atrasada:hover {
+            background-color: #ffd6d6 !important;
         }
         
         .status-coletando {
@@ -584,6 +612,51 @@
             box-shadow: 0 0 12px rgba(0,0,0,0.1);
             border-radius: 6px;
             padding: 8px;
+        }
+        
+        /* Estilos para impressão */
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            
+            .table-container, .table-container * {
+                visibility: visible;
+            }
+            
+            .table-container {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                box-shadow: none;
+                max-height: none;
+                overflow: visible;
+            }
+            
+            table {
+                width: 100%;
+                font-size: 12px;
+            }
+            
+            th, td {
+                padding: 8px 10px;
+            }
+            
+            .action-buttons, 
+            .status-select,
+            .whatsapp-link {
+                display: none !important;
+            }
+            
+            .atrasada {
+                background-color: #ffeaea !important;
+                border-left: 3px solid #e74c3c;
+            }
+            
+            header, .tabs, .controls, button {
+                display: none !important;
+            }
         }
         
         @keyframes fadeIn {
@@ -904,17 +977,6 @@
         </div>
         
         <div class="controls">
-            <div class="filter-group">
-                <label for="statusFilter">Status</label>
-                <select id="statusFilter">
-                    <option value="">Todos</option>
-                    <option value="coletando">Coletando</option>
-                    <option value="transito">Em trânsito</option>
-                    <option value="parado">Parado</option>
-                    <option value="entregue">Entregue</option>
-                </select>
-            </div>
-            
             <div class="date-filters">
                 <div class="filter-group">
                     <label for="dataInicioFilter">Data Início</label>
@@ -953,6 +1015,12 @@
                 </button>
                 <button class="export-btn" onclick="exportarExcel()">
                     <span>📊</span> Exportar Excel
+                </button>
+                <button class="print-btn" onclick="imprimirTabela()">
+                    <span>🖨️</span> Imprimir
+                </button>
+                <button class="pdf-btn" onclick="exportarPDF()">
+                    <span>📄</span> Exportar PDF
                 </button>
                 <button class="toggle-columns-btn" onclick="openColumnsModal()">
                     <span>👁️</span> Colunas
@@ -1013,6 +1081,7 @@
         let voiceNotificationsEnabled = false;
         let currentUser = null;
         let todasEntregas = [];
+        let abaAtual = 'todos';
         
         // Mapeamento de colunas para índices
         const columnIndices = {
@@ -1030,6 +1099,31 @@
             'prazo': 11,
             'observacao': 12
         };
+        
+        // Função para verificar se uma entrega está atrasada
+        function verificarSeAtrasada(prazoString, status) {
+            // Se já foi entregue, não está atrasada
+            if (status === 'entregue') return false;
+            
+            // Se não tem prazo definido, não está atrasada
+            if (!prazoString || prazoString === '-') return false;
+            
+            try {
+                // Converter prazo para Date
+                const [dia, mes, ano] = prazoString.split('/');
+                const prazoDate = new Date(ano, mes - 1, dia);
+                
+                // Data atual (sem horas, minutos, segundos)
+                const hoje = new Date();
+                hoje.setHours(0, 0, 0, 0);
+                
+                // Verificar se o prazo já passou
+                return prazoDate < hoje;
+            } catch (e) {
+                console.error('Erro ao verificar prazo:', e);
+                return false;
+            }
+        }
         
         // Função para carregar cidades únicas para os filtros
         function carregarCidadesFiltro() {
@@ -1071,7 +1165,6 @@
         
         // Função para limpar todos os filtros
         function limparFiltros() {
-            document.getElementById('statusFilter').value = '';
             document.getElementById('dataInicioFilter').value = '';
             document.getElementById('dataFimFilter').value = '';
             document.getElementById('origemFilter').value = '';
@@ -1208,6 +1301,8 @@
         
         // Função para filtrar por aba
         function filtrarPorAba(aba) {
+            abaAtual = aba;
+            
             document.querySelectorAll('.tab').forEach(tab => {
                 tab.classList.remove('active');
                 if (tab.textContent.toLowerCase().includes(aba) || 
@@ -1215,13 +1310,6 @@
                     tab.classList.add('active');
                 }
             });
-
-            const statusFilter = document.getElementById('statusFilter');
-            if (aba === 'todos') {
-                statusFilter.value = '';
-            } else {
-                statusFilter.value = aba;
-            }
 
             filtrarTabela();
         }
@@ -1578,8 +1666,15 @@
                 prazoFormatado = `${diaP}/${mesP}/${anoP}`;
             }
             
+            // Verificar se está atrasada
+            const estaAtrasada = verificarSeAtrasada(prazoFormatado, entrega.status);
+            
             const row = document.createElement('tr');
             row.dataset.id = id;
+            if (estaAtrasada) {
+                row.className = 'atrasada';
+            }
+            
             row.innerHTML = `
                 <td>${dataFormatada}</td>
                 <td>${entrega.vendedor || '-'}</td>
@@ -1613,7 +1708,6 @@
         
         // Função para filtrar a tabela com todos os filtros
         function filtrarTabela() {
-            const status = document.getElementById('statusFilter').value;
             const dataInicio = document.getElementById('dataInicioFilter').value;
             const dataFim = document.getElementById('dataFimFilter').value;
             const origem = document.getElementById('origemFilter').value;
@@ -1647,7 +1741,7 @@
                 
                 // Aplicar filtros
                 const mostraPorUsuario = !currentUser || currentUser === 'TODOS' || colVendedor === currentUser;
-                const mostraPorStatus = status === '' || colStatus === status;
+                const mostraPorStatus = abaAtual === 'todos' || colStatus === abaAtual;
                 const mostraPorDataInicio = !dataInicio || (dataEntrega && dataEntrega >= new Date(dataInicio));
                 const mostraPorDataFim = !dataFim || (dataEntrega && dataEntrega <= new Date(dataFim + 'T23:59:59'));
                 const mostraPorOrigem = origem === '' || colOrigem === origem;
@@ -1726,6 +1820,225 @@
             XLSX.writeFile(wb, nomeArquivo);
         }
         
+        // Função para imprimir a tabela
+        function imprimirTabela() {
+            const linhasVisiveis = Array.from(document.querySelectorAll('#corpoTabela tr'))
+                .filter(linha => linha.style.display !== 'none' && !linha.classList.contains('edit-row') && !linha.querySelector('.empty-message'));
+            
+            if (linhasVisiveis.length === 0) {
+                alert('Nenhum dado para imprimir!');
+                return;
+            }
+            
+            // Criar uma nova janela para impressão
+            const janelaImpressao = window.open('', '_blank');
+            if (!janelaImpressao) {
+                alert('Permita pop-ups para esta funcionalidade funcionar corretamente.');
+                return;
+            }
+            
+            // Obter cabeçalhos
+            const headers = Array.from(document.querySelectorAll('#tabelaEntregas thead th'))
+                .map(th => th.textContent)
+                .slice(0, -1); // Remover coluna AÇÕES
+            
+            janelaImpressao.document.write(`
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>Relatório de Entregas</title>
+                    <meta charset="UTF-8">
+                    <style>
+                        body { 
+                            font-family: Arial, sans-serif; 
+                            margin: 20px; 
+                            color: #333;
+                        }
+                        h1 { 
+                            text-align: center; 
+                            color: #2c3e50; 
+                            margin-bottom: 10px;
+                            border-bottom: 2px solid #3498db;
+                            padding-bottom: 10px;
+                        }
+                        .info { 
+                            text-align: center; 
+                            margin-bottom: 20px; 
+                            color: #666;
+                            font-size: 14px;
+                        }
+                        table { 
+                            width: 100%; 
+                            border-collapse: collapse; 
+                            font-size: 12px;
+                            margin-top: 10px;
+                        }
+                        th, td { 
+                            border: 1px solid #ddd; 
+                            padding: 8px; 
+                            text-align: left; 
+                        }
+                        th { 
+                            background-color: #3498db; 
+                            color: white;
+                            font-weight: bold;
+                        }
+                        tr:nth-child(even) { 
+                            background-color: #f8f9fa; 
+                        }
+                        .atrasada { 
+                            background-color: #ffeaea !important; 
+                        }
+                        .status-coletando { color: #0077b6; }
+                        .status-transito { color: #f39c12; }
+                        .status-parado { color: #e74c3c; }
+                        .status-entregue { color: #2ecc71; }
+                        @media print {
+                            body { margin: 0; }
+                            .no-print { display: none; }
+                        }
+                    </style>
+                </head>
+                <body>
+                    <h1>📦 Relatório de Entregas</h1>
+                    <div class="info">
+                        <strong>Data do Relatório:</strong> ${new Date().toLocaleDateString('pt-BR')} | 
+                        <strong>Usuário:</strong> ${currentUser || 'Todos'} | 
+                        <strong>Filtro:</strong> ${abaAtual === 'todos' ? 'Todos' : abaAtual} | 
+                        <strong>Total de Registros:</strong> ${linhasVisiveis.length}
+                    </div>
+                    <table>
+                        <thead>
+                            <tr>
+                                ${headers.map(header => `<th>${header}</th>`).join('')}
+                            </tr>
+                        </thead>
+                        <tbody>
+            `);
+            
+            // Adicionar dados
+            linhasVisiveis.forEach(linha => {
+                const celulas = Array.from(linha.cells).slice(0, -1); // Remover coluna AÇÕES
+                const estaAtrasada = linha.classList.contains('atrasada');
+                const rowClass = estaAtrasada ? 'class="atrasada"' : '';
+                
+                janelaImpressao.document.write(`<tr ${rowClass}>`);
+                
+                celulas.forEach((celula, index) => {
+                    let conteudo = '';
+                    
+                    if (celula.querySelector('.whatsapp-link')) {
+                        conteudo = celula.querySelector('.whatsapp-link').textContent;
+                    } else if (celula.querySelector('.status-select')) {
+                        const status = celula.querySelector('.status-select').value;
+                        conteudo = `<span class="status-${status}">${status}</span>`;
+                    } else {
+                        conteudo = celula.textContent;
+                    }
+                    
+                    janelaImpressao.document.write(`<td>${conteudo}</td>`);
+                });
+                
+                janelaImpressao.document.write('</tr>');
+            });
+            
+            janelaImpressao.document.write(`
+                        </tbody>
+                    </table>
+                    <div class="info no-print" style="margin-top: 20px;">
+                        <button onclick="window.print()" style="padding: 10px 20px; background: #3498db; color: white; border: none; border-radius: 5px; cursor: pointer;">Imprimir</button>
+                        <button onclick="window.close()" style="padding: 10px 20px; background: #95a5a6; color: white; border: none; border-radius: 5px; cursor: pointer;">Fechar</button>
+                    </div>
+                </body>
+                </html>
+            `);
+            
+            janelaImpressao.document.close();
+        }
+        
+        // Função para exportar para PDF
+        function exportarPDF() {
+            // Verificar se jsPDF está carregado
+            if (typeof window.jspdf === 'undefined') {
+                alert('Biblioteca PDF não carregada corretamente. Recarregue a página.');
+                return;
+            }
+            
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF({
+                orientation: 'landscape',
+                unit: 'mm',
+                format: 'a4'
+            });
+            
+            const linhasVisiveis = Array.from(document.querySelectorAll('#corpoTabela tr'))
+                .filter(linha => linha.style.display !== 'none' && !linha.classList.contains('edit-row') && !linha.querySelector('.empty-message'));
+            
+            if (linhasVisiveis.length === 0) {
+                alert('Nenhum dado para exportar!');
+                return;
+            }
+            
+            try {
+                // Título
+                doc.setFontSize(16);
+                doc.setTextColor(44, 62, 80);
+                doc.text('📦 Relatório de Entregas', 14, 15);
+                
+                // Informações do relatório
+                doc.setFontSize(10);
+                doc.setTextColor(100, 100, 100);
+                const infoText = `Data: ${new Date().toLocaleDateString('pt-BR')} | Usuário: ${currentUser || 'Todos'} | Filtro: ${abaAtual === 'todos' ? 'Todos' : abaAtual} | Total: ${linhasVisiveis.length} registros`;
+                doc.text(infoText, 14, 22);
+                
+                // Preparar dados para a tabela
+                const headers = Array.from(document.querySelectorAll('#tabelaEntregas thead th'))
+                    .map(th => th.textContent)
+                    .slice(0, -1); // Remover coluna AÇÕES
+                
+                const data = linhasVisiveis.map(linha => {
+                    const celulas = Array.from(linha.cells).slice(0, -1); // Remover coluna AÇÕES
+                    return celulas.map(celula => {
+                        if (celula.querySelector('.whatsapp-link')) {
+                            return celula.querySelector('.whatsapp-link').textContent;
+                        }
+                        if (celula.querySelector('.status-select')) {
+                            return celula.querySelector('.status-select').value;
+                        }
+                        return celula.textContent || '-';
+                    });
+                });
+                
+                // Adicionar tabela usando autoTable
+                doc.autoTable({
+                    head: [headers],
+                    body: data,
+                    startY: 30,
+                    styles: {
+                        fontSize: 8,
+                        cellPadding: 2,
+                    },
+                    headStyles: {
+                        fillColor: [52, 152, 219],
+                        textColor: 255,
+                        fontStyle: 'bold'
+                    },
+                    alternateRowStyles: {
+                        fillColor: [245, 247, 249]
+                    },
+                    margin: { top: 30 }
+                });
+                
+                // Salvar o PDF
+                const nomeArquivo = `entregas_${new Date().toISOString().split('T')[0]}.pdf`;
+                doc.save(nomeArquivo);
+                
+            } catch (error) {
+                console.error('Erro ao gerar PDF:', error);
+                alert('Erro ao gerar PDF. Verifique o console para mais detalhes.');
+            }
+        }
+        
         // Função para verificar e carregar preferência de voz
         function loadVoicePreference() {
             const savedPreference = localStorage.getItem('voiceNotificationsEnabled');
@@ -1795,7 +2108,6 @@
         }
         
         // Adicionar eventos aos filtros
-        document.getElementById('statusFilter').addEventListener('change', filtrarTabela);
         document.getElementById('dataInicioFilter').addEventListener('change', filtrarTabela);
         document.getElementById('dataFimFilter').addEventListener('change', filtrarTabela);
         document.getElementById('origemFilter').addEventListener('change', filtrarTabela);
