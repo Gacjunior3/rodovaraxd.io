@@ -973,13 +973,113 @@
     }
 
     // =============================================
-    // REMOÇÃO DA MÁSCARA DA PLACA PARA PREENCHIMENTO MANUAL
+    // DADOS DOS MOTORISTAS CORRIGIDOS
     // =============================================
-    function configurarMascarasMotorista() {
-      IMask(document.getElementById('motoristaCPF'), {mask: '000.000.000-00'});
+    const motoristas = [
+      {nome: "YAGO REZENDE RIBEIRO", cpf: "077.067.175-69", cnh: "07567666291", rg: "2036612814"},
+      {nome: "JOSE AUGUSTO DA SILVA SANTOS", cpf: "014.660.965-43", cnh: "02429919260", rg: "843999454"},
+      {nome: "FRANCISCO EUDES DE FREITAS", cpf: "824.606.713-34", cnh: "506470404", rg: "506470404"},
+      {nome: "MARCOS ANTONIO DA ANUNCIACAO COSTA", cpf: "459.105.295-87", cnh: "01408541442", rg: "350451320"},
+      {nome: "JOAO PABLO CERQUEIRA DA SILVA", cpf: "069.543.065-33", cnh: "07896175779", rg: "1646825959"},
+      {nome: "WESLEY CAIQUE DOS SANTOS BARBOSA", cpf: "104.615.225-43", cnh: "08700954074", rg: "2077683740"},
+      {nome: "MATEUS CERQUEIRA MACHADO", cpf: "069.542.595-19", cnh: "07295786047", rg: "2079051504"},
+      {nome: "FERNANDO MALTEZ DE OLIVEIRA", cpf: "058.290.225-83", cnh: "05845811723", rg: "1349116874"}
+    ];
+
+    // Dados dos veículos
+    const veiculos = [
+      {modelo: "STRADA", placa: "SHD8H83"},
+      {modelo: "IVECO", placa: "NTR8D64"},
+      {modelo: "TRUCK", placa: "KIS3B61"},
+      {modelo: "HYUNDAI", placa: "SJY8F42"},
+      {modelo: "VW15.180", placa: "JQR7F07"},
+      {modelo: "HR", placa: "PLB4B47"}
+    ];
+
+    // =============================================
+    // FUNÇÕES PARA SELEÇÃO DE MOTORISTA
+    // =============================================
+    function toggleMotoristaDropdown() {
+      const dropdown = document.getElementById('motoristaDropdown');
       
-      // REMOVIDA A MÁSCARA DA PLACA PARA PERMITIR PREENCHIMENTO MANUAL
-      // Os campos de placa agora aceitam qualquer entrada de texto
+      if (dropdown.style.display === 'block') {
+        dropdown.style.display = 'none';
+      } else {
+        preencherDropdownMotoristas();
+        dropdown.style.display = 'block';
+      }
+    }
+
+    function preencherDropdownMotoristas() {
+      const dropdown = document.getElementById('motoristaDropdown');
+      dropdown.innerHTML = '';
+      
+      motoristas.forEach(motorista => {
+        const item = document.createElement('div');
+        item.className = 'motorista-dropdown-item';
+        item.innerHTML = `
+          <div>
+            <div class="motorista-name">${motorista.nome}</div>
+            <div class="motorista-cpf">CPF: ${motorista.cpf}</div>
+          </div>
+        `;
+        
+        item.addEventListener('click', () => {
+          selecionarMotorista(motorista);
+          dropdown.style.display = 'none';
+        });
+        
+        dropdown.appendChild(item);
+      });
+    }
+
+    function selecionarMotorista(motorista) {
+      document.getElementById('motoristaNome').value = motorista.nome;
+      document.getElementById('motoristaCPF').value = motorista.cpf;
+      document.getElementById('motoristaRG').value = motorista.rg;
+      document.getElementById('motoristaCNH').value = motorista.cnh;
+    }
+
+    // =============================================
+    // FUNÇÕES PARA SELEÇÃO DE VEÍCULO
+    // =============================================
+    function toggleVeiculoDropdown() {
+      const dropdown = document.getElementById('veiculoDropdown');
+      
+      if (dropdown.style.display === 'block') {
+        dropdown.style.display = 'none';
+      } else {
+        preencherDropdownVeiculos();
+        dropdown.style.display = 'block';
+      }
+    }
+
+    function preencherDropdownVeiculos() {
+      const dropdown = document.getElementById('veiculoDropdown');
+      dropdown.innerHTML = '';
+      
+      veiculos.forEach(veiculo => {
+        const item = document.createElement('div');
+        item.className = 'veiculo-dropdown-item';
+        item.innerHTML = `
+          <div>
+            <div class="veiculo-modelo">${veiculo.modelo}</div>
+            <div class="veiculo-placa">Placa: ${veiculo.placa}</div>
+          </div>
+        `;
+        
+        item.addEventListener('click', () => {
+          selecionarVeiculo(veiculo);
+          dropdown.style.display = 'none';
+        });
+        
+        dropdown.appendChild(item);
+      });
+    }
+
+    function selecionarVeiculo(veiculo) {
+      document.getElementById('veiculo').value = veiculo.modelo;
+      document.getElementById('veiculoPlaca').value = veiculo.placa;
     }
 
     // =============================================
@@ -1011,7 +1111,7 @@
     }
 
     // =============================================
-    // ATUALIZAÇÃO DA FUNÇÃO buscarCEP PARA USAR CAMPOS MANUAIS
+    // FUNÇÃO buscarCEP PARA USAR CAMPOS MANUAIS
     // =============================================
     async function buscarCEP(tipo) {
       const cepInput = document.getElementById(tipo + 'CEP');
@@ -1050,29 +1150,12 @@
     }
 
     // =============================================
-    // RESTANTE DO CÓDIGO
+    // REMOÇÃO DA MÁSCARA DA PLACA PARA PREENCHIMENTO MANUAL
     // =============================================
-
-    // Dados dos motoristas
-    const motoristas = [
-      {nome: "YAGO REZENDE RIBEIRO", cpf: "077.067.175-69", cnh: "07567666291", rg: "2036612814"},
-      {nome: "JOSE AUGUSTO DA SILVA SANTOS", cpf: "014.660.965-43", cnh: "02429919260", rg: "843999454"},
-      {nome: "FRANCISCO EUDES DE FREITAS", cpf: "824.606.713-34", cnh: "506470404", rg: "506470404"},
-      {nome: "MARCOS ANTONIO DA ANUNCIACAO COSTA", cpf: "459.105.295-87", cnh: "01408541442", rg: "350451320"},
-      {nome: "JOAO PABLO CERQUEIRA DA SILVA", cpf: "069.543.065-33", cnh: "07896175779", rg: "1646825959"},
-      {nome: "WESLEY CAIQUE DOS SANTOS BARBOSA", cpf: "104.615.225-43", cnh: "08700954074", rg: "2077683740"},
-      {nome: "MATEUS CERQUEIRA MACHADO", cpf: "069.542.595-19", cnh: "07295786047", rg: "2079051504"}
-    ];
-
-    // Dados dos veículos
-    const veiculos = [
-      {modelo: "STRADA", placa: "SHD8H83"},
-      {modelo: "IVECO", placa: "NTR8D64"},
-      {modelo: "TRUCK", placa: "KIS3B61"},
-      {modelo: "HYUNDAI", placa: "SJY8F42"},
-      {modelo: "VW15.180", placa: "JQR7F07"},
-      {modelo: "HR", placa: "PLB4B47"}
-    ];
+    function configurarMascarasMotorista() {
+      IMask(document.getElementById('motoristaCPF'), {mask: '000.000.000-00'});
+      // Os campos de placa agora aceitam qualquer entrada de texto (sem máscara)
+    }
 
     // Variáveis globais
     let qrCodeInstance = null;
@@ -1317,88 +1400,6 @@
         currency: 'BRL'
       });
       elemento.value = valor;
-    }
-
-    // Funções para seleção de motorista com dropdown
-    function toggleMotoristaDropdown() {
-      const dropdown = document.getElementById('motoristaDropdown');
-      
-      if (dropdown.style.display === 'block') {
-        dropdown.style.display = 'none';
-      } else {
-        preencherDropdownMotoristas();
-        dropdown.style.display = 'block';
-      }
-    }
-
-    function preencherDropdownMotoristas() {
-      const dropdown = document.getElementById('motoristaDropdown');
-      dropdown.innerHTML = '';
-      
-      motoristas.forEach(motorista => {
-        const item = document.createElement('div');
-        item.className = 'motorista-dropdown-item';
-        item.innerHTML = `
-          <div>
-            <div class="motorista-name">${motorista.nome}</div>
-            <div class="motorista-cpf">CPF: ${motorista.cpf}</div>
-          </div>
-        `;
-        
-        item.addEventListener('click', () => {
-          selecionarMotorista(motorista);
-          dropdown.style.display = 'none';
-        });
-        
-        dropdown.appendChild(item);
-      });
-    }
-
-    function selecionarMotorista(motorista) {
-      document.getElementById('motoristaNome').value = motorista.nome;
-      document.getElementById('motoristaCPF').value = motorista.cpf;
-      document.getElementById('motoristaRG').value = motorista.rg;
-      document.getElementById('motoristaCNH').value = motorista.cnh;
-    }
-
-    // Funções para seleção de veículo com dropdown
-    function toggleVeiculoDropdown() {
-      const dropdown = document.getElementById('veiculoDropdown');
-      
-      if (dropdown.style.display === 'block') {
-        dropdown.style.display = 'none';
-      } else {
-        preencherDropdownVeiculos();
-        dropdown.style.display = 'block';
-      }
-    }
-
-    function preencherDropdownVeiculos() {
-      const dropdown = document.getElementById('veiculoDropdown');
-      dropdown.innerHTML = '';
-      
-      veiculos.forEach(veiculo => {
-        const item = document.createElement('div');
-        item.className = 'veiculo-dropdown-item';
-        item.innerHTML = `
-          <div>
-            <div class="veiculo-modelo">${veiculo.modelo}</div>
-            <div class="veiculo-placa">Placa: ${veiculo.placa}</div>
-          </div>
-        `;
-        
-        item.addEventListener('click', () => {
-          selecionarVeiculo(veiculo);
-          dropdown.style.display = 'none';
-        });
-        
-        dropdown.appendChild(item);
-      });
-    }
-
-    function selecionarVeiculo(veiculo) {
-      document.getElementById('veiculo').value = veiculo.modelo;
-      document.getElementById('veiculoPlaca').value = veiculo.placa;
     }
 
     // Fechar os dropdowns ao clicar fora deles
@@ -1786,7 +1787,7 @@
       // Garante que a empresa inicial está selecionada corretamente
       trocarEmpresa();
       
-      // Gerar número da ordem automatically
+      // Gerar número da ordem automaticamente
       gerarNumeroOrdem();
       
       document.getElementById('numeroOrdem').addEventListener('DOMSubtreeModified', gerarQRCode);
@@ -1817,7 +1818,3 @@
   </script>
 </body>
 </html>
-
-
-
-
