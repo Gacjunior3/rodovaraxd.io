@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
@@ -11,10 +10,8 @@
     <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-database-compat.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-    <!-- Adicionando html2canvas -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
-        /* Seus estilos permanecem os mesmos */
         :root {
             --primary: #4361ee;
             --primary-light: #4895ef;
@@ -276,14 +273,6 @@
             font-size: 0.8rem;
             border-radius: 4px;
         }
-        .edit-form {
-            display: none;
-            margin-top: 1rem;
-            padding: 1rem;
-            background-color: #f8f9fa;
-            border-radius: 6px;
-            border: 1px solid #eee;
-        }
         .filter-section {
             background: white;
             border-radius: 10px;
@@ -304,6 +293,43 @@
             gap: 10px;
             margin-bottom: 20px;
             flex-wrap: wrap;
+        }
+        /* Estilo para impressão - usado pelo PDF */
+        @media print {
+            body {
+                background: white;
+            }
+            .no-print, .tabs, .filter-section, .export-buttons, header {
+                display: none !important;
+            }
+            .veiculo-card {
+                page-break-inside: avoid;
+                break-inside: avoid;
+                margin-bottom: 20px;
+            }
+            .container {
+                padding: 0;
+                margin: 0;
+            }
+        }
+        .pdf-loading {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 20px 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.3);
+            z-index: 9999;
+            text-align: center;
+            font-weight: 500;
+            color: var(--primary);
+        }
+        .pdf-loading i {
+            font-size: 2rem;
+            margin-bottom: 10px;
+            display: block;
         }
         @media (max-width: 768px) {
             .form-row {
@@ -530,6 +556,10 @@
             </div>
         </div>
     </div>
+    
+    <!-- Elemento oculto para clonar e gerar PDF -->
+    <div id="pdfContainer" style="position: absolute; left: -9999px; top: 0; width: 1000px;"></div>
+
 <script>
     // Configuração do Firebase
     const firebaseConfig = {
@@ -552,7 +582,6 @@
     
     // Função para formatar valores no padrão brasileiro
     function formatarValorBrasileiro(valor) {
-        // Adiciona uma verificação para garantir que o valor é um número
         if (typeof valor !== 'number' || isNaN(valor)) {
             valor = 0;
         }
@@ -637,53 +666,6 @@
         const valorInput = document.getElementById('valor').value;
         const valor = parseValorBrasileiro(valorInput);
         const observacoes = document.getElementById('observacoes').value;
-        
-        /* --- INÍCIO DA ALTERAÇÃO: VALIDAÇÃO REMOVIDA ---
-        
-        // A validação de campos obrigatórios foi removida (comentada).
-        
-        let isValid = true;
-        if (!data) {
-            document.getElementById('data-error').textContent = 'Data é obrigatória';
-            isValid = false;
-        }
-        if (!tipo) {
-            document.getElementById('tipo-error').textContent = 'Tipo é obrigatório';
-            isValid = false;
-        }
-        if (!veiculo) {
-            document.getElementById('veiculo-error').textContent = 'Veículo é obrigatório';
-            isValid = false;
-        }
-        if (!motorista) {
-            document.getElementById('motorista-error').textContent = 'Motorista é obrigatório';
-            isValid = false;
-        }
-        if (!colaborador) {
-            document.getElementById('colaborador-error').textContent = 'Colaborador é obrigatório';
-            isValid = false;
-        }
-        if (!origem) {
-            document.getElementById('origem-error').textContent = 'Origem é obrigatória';
-            isValid = false;
-        }
-        if (!destino) {
-            document.getElementById('destino-error').textContent = 'Destino é obrigatório';
-            isValid = false;
-        }
-        if (!cliente) {
-            document.getElementById('cliente-error').textContent = 'Cliente é obrigatório';
-            isValid = false;
-        }
-        if (isNaN(valor) || valorInput === '' || valor <= 0) {
-            document.getElementById('valor-error').textContent = 'Valor inválido (deve ser maior que zero)';
-            isValid = false;
-        }
-        if (!isValid) {
-            return;
-        }
-        
-        */ // --- FIM DA ALTERAÇÃO ---
 
         const viagem = {
             data,
@@ -771,7 +753,7 @@
         const veiculo = document.getElementById('filterVeiculo').value;
         const motorista = document.getElementById('filterMotorista').value;
         viagensFiltradas = viagens.filter(viagem => {
-            if (!viagem.data) return true; // Permite que viagens sem data apareçam
+            if (!viagem.data) return true;
             let dataViagem = new Date(viagem.data + 'T00:00:00');
             if (dataInicio && dataViagem < new Date(dataInicio + 'T00:00:00')) {
                 return false;
@@ -911,74 +893,143 @@
         roteiroContainer.innerHTML += `<div class="total" style="font-size: 1.5rem; text-align: center; margin-top: 2rem;">Total Geral: ${formatarValorBrasileiro(totalGeral)}</div>`;
     }
 
-    function exportarParaPDF() {
-        const { jsPDF } = window.jspdf;
-        const roteiroContainer = document.getElementById("roteiroContainer");
+    // FUNÇÃO CORRIGIDA - Usa a API de impressão do navegador para gerar PDF perfeitamente
+    async function exportarParaPDF() {
+        // Mostra indicador de carregamento
+        const loadingDiv = document.createElement('div');
+        loadingDiv.className = 'pdf-loading';
+        loadingDiv.innerHTML = '<i class="fas fa-spinner fa-pulse"></i> Gerando PDF, aguarde...';
+        document.body.appendChild(loadingDiv);
         
-        // Adiciona um título ao PDF
-        const title = "Roteiro de Viagens";
-        const date = new Date().toLocaleDateString('pt-BR');
-        
-        // Opções para o html2canvas
-        const options = {
-            scale: 2, // Aumenta a qualidade da imagem
-            useCORS: true, // Permite carregar imagens externas
-            allowTaint: true, // Permite carregar imagens de outras origens
-            scrollY: 0 // Remove qualquer scroll da página
-        };
-        
-        // Usa html2canvas para capturar o layout renderizado
-        html2canvas(roteiroContainer, options).then(canvas => {
-            const imgData = canvas.toDataURL("image/png");
-            const pdf = new jsPDF("p", "mm", "a4");
+        try {
+            // Pega o container do roteiro
+            const roteiroContainer = document.getElementById('roteiroContainer');
             
-            // Adiciona o título e data no PDF
-            pdf.setFontSize(18);
-            pdf.text(title, 105, 15, { align: 'center' });
-            pdf.setFontSize(12);
-            pdf.text(`Gerado em: ${date}`, 105, 22, { align: 'center' });
+            // Cria um clone do conteúdo para não afetar a tela
+            const cloneContainer = roteiroContainer.cloneNode(true);
             
-            const pageWidth = pdf.internal.pageSize.getWidth() - 20; // Margem de 10mm cada lado
-            const pageHeight = pdf.internal.pageSize.getHeight() - 30; // Margem superior e inferior
+            // Remove os botões de ação do clone (para não aparecerem no PDF)
+            const actionButtons = cloneContainer.querySelectorAll('.action-buttons, .action-btn');
+            actionButtons.forEach(btn => btn.remove());
             
-            const imgProps = pdf.getImageProperties(imgData);
-            const pdfWidth = pageWidth;
-            const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+            // Cria um iframe invisível para impressão
+            const iframe = document.createElement('iframe');
+            iframe.style.position = 'absolute';
+            iframe.style.width = '0';
+            iframe.style.height = '0';
+            iframe.style.border = 'none';
+            document.body.appendChild(iframe);
             
-            let position = 30; // Começa após o título
+            // Escreve o conteúdo no iframe
+            const iframeDoc = iframe.contentWindow.document;
+            iframeDoc.open();
+            iframeDoc.write(`
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <meta charset="UTF-8">
+                    <title>Roteiro de Viagens</title>
+                    <style>
+                        body {
+                            font-family: 'Poppins', sans-serif;
+                            padding: 20px;
+                            margin: 0;
+                            background: white;
+                        }
+                        .veiculo-card {
+                            background: white;
+                            border-radius: 10px;
+                            padding: 20px;
+                            margin-bottom: 30px;
+                            border-left: 4px solid #4361ee;
+                            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                            page-break-inside: avoid;
+                            break-inside: avoid;
+                        }
+                        .veiculo-title {
+                            font-size: 1.3rem;
+                            margin-bottom: 15px;
+                            color: #1b263b;
+                        }
+                        .viagem-type {
+                            font-size: 1.1rem;
+                            margin: 20px 0 10px;
+                            padding-bottom: 5px;
+                            border-bottom: 1px solid #adb5bd;
+                            color: #4361ee;
+                        }
+                        table {
+                            width: 100%;
+                            border-collapse: collapse;
+                            margin-bottom: 20px;
+                        }
+                        th {
+                            background-color: #4361ee;
+                            color: white;
+                            padding: 10px;
+                            text-align: left;
+                        }
+                        td {
+                            padding: 10px;
+                            border-bottom: 1px solid #eee;
+                        }
+                        tr:nth-child(even) {
+                            background-color: #f8f9fa;
+                        }
+                        .total {
+                            font-weight: 600;
+                            text-align: right;
+                            font-size: 1.1rem;
+                            margin-top: 15px;
+                            color: #1b263b;
+                        }
+                        .header {
+                            text-align: center;
+                            margin-bottom: 30px;
+                        }
+                        .header h1 {
+                            color: #4361ee;
+                            margin-bottom: 5px;
+                        }
+                        @media print {
+                            body {
+                                padding: 0;
+                            }
+                            .veiculo-card {
+                                page-break-inside: avoid;
+                                break-inside: avoid;
+                            }
+                        }
+                    </style>
+                </head>
+                <body>
+                    <div class="header">
+                        <h1>Roteiro de Viagens</h1>
+                        <p>Gerado em: ${new Date().toLocaleDateString('pt-BR')} às ${new Date().toLocaleTimeString('pt-BR')}</p>
+                    </div>
+                    ${cloneContainer.outerHTML}
+                </body>
+                </html>
+            `);
+            iframeDoc.close();
             
-            // Se a imagem for maior que uma página
-            if (pdfHeight > pageHeight) {
-                let heightLeft = pdfHeight;
-                let currentPage = 1;
+            // Aguarda o iframe carregar
+            setTimeout(() => {
+                // Chama a impressão do iframe
+                iframe.contentWindow.print();
                 
-                while (heightLeft > 0) {
-                    pdf.addImage(imgData, "PNG", 10, position, pdfWidth, pdfHeight);
-                    heightLeft -= pageHeight;
-                    position -= pageHeight;
-                    
-                    if (heightLeft > 0) {
-                        pdf.addPage();
-                        currentPage++;
-                        position = 10; // Reset position for new page
-                    }
-                    
-                    // Adiciona número da página
-                    pdf.setFontSize(10);
-                    pdf.text(`Página ${currentPage}`, 105, pdf.internal.pageSize.getHeight() - 10, { align: 'center' });
-                }
-            } else {
-                pdf.addImage(imgData, "PNG", 10, position, pdfWidth, pdfHeight);
-                // Adiciona número da página
-                pdf.setFontSize(10);
-                pdf.text("Página 1", 105, pdf.internal.pageSize.getHeight() - 10, { align: 'center' });
-            }
+                // Remove o iframe após a impressão
+                setTimeout(() => {
+                    document.body.removeChild(iframe);
+                    document.body.removeChild(loadingDiv);
+                }, 1000);
+            }, 500);
             
-            pdf.save("roteiro_viagens.pdf");
-        }).catch(error => {
+        } catch (error) {
+            document.body.removeChild(loadingDiv);
             console.error("Erro ao gerar PDF:", error);
-            alert("Ocorreu um erro ao gerar o PDF. Por favor, tente novamente.");
-        });
+            alert("Ocorreu um erro ao gerar o PDF: " + error.message);
+        }
     }
 
     function exportarParaExcel() {
@@ -1013,6 +1064,3 @@
 </script>
 </body>
 </html>
-
-
-
