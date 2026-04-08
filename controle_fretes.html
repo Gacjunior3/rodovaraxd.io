@@ -1,1 +1,859 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Roteirizador - Motoristas Terceiros</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-database-compat.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        :root {
+            --primary: #4361ee;
+            --primary-light: #4895ef;
+            --secondary: #3f37c9;
+            --dark: #1b263b;
+            --light: #f8f9fa;
+            --success: #4cc9f0;
+            --warning: #f72585;
+            --gray: #adb5bd;
+            --white: #ffffff;
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #f5f7fa;
+            color: var(--dark);
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        header {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            padding: 1.5rem;
+            border-radius: 10px;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+        h1 {
+            font-size: 2rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+        .logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 1rem;
+        }
+        .logo i {
+            font-size: 2rem;
+        }
+        .tabs {
+            display: flex;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            margin-bottom: 2rem;
+        }
+        .tab {
+            flex: 1;
+            padding: 1rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-bottom: 3px solid transparent;
+        }
+        .tab:hover {
+            background-color: rgba(67, 97, 238, 0.1);
+        }
+        .tab.active {
+            border-bottom: 3px solid var(--primary);
+            color: var(--primary);
+            font-weight: 500;
+        }
+        .card {
+            background: white;
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+        .card-title {
+            font-size: 1.25rem;
+            margin-bottom: 1.5rem;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .card-title i {
+            font-size: 1.2rem;
+        }
+        .form-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+        .form-group {
+            flex: 1;
+            min-width: 200px;
+        }
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: var(--dark);
+        }
+        input, select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid var(--gray);
+            border-radius: 6px;
+            font-family: 'Poppins', sans-serif;
+            transition: border 0.3s;
+        }
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(67, 97, 238, 0.2);
+        }
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 6px;
+            font-family: 'Poppins', sans-serif;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn-primary {
+            background-color: var(--primary);
+            color: white;
+        }
+        .btn-primary:hover {
+            background-color: var(--secondary);
+            transform: translateY(-2px);
+        }
+        .btn-danger {
+            background-color: var(--warning);
+            color: white;
+        }
+        .btn-danger:hover {
+            background-color: #d91a6a;
+            transform: translateY(-2px);
+        }
+        .btn-secondary {
+            background-color: var(--gray);
+            color: white;
+        }
+        .btn-secondary:hover {
+            background-color: #8d99ae;
+            transform: translateY(-2px);
+        }
+        .btn-success {
+            background-color: var(--success);
+            color: white;
+        }
+        .btn-success:hover {
+            background-color: #3aa8d0;
+            transform: translateY(-2px);
+        }
+        .btn-warning {
+            background-color: #ffc107;
+            color: #212529;
+        }
+        .btn-warning:hover {
+            background-color: #e0a800;
+            transform: translateY(-2px);
+        }
+        .btn-info {
+            background-color: #17a2b8;
+            color: white;
+        }
+        .btn-info:hover {
+            background-color: #138496;
+            transform: translateY(-2px);
+        }
+        .error {
+            color: var(--warning);
+            font-size: 0.8rem;
+            margin-top: 0.25rem;
+            display: block;
+        }
+        .veiculo-card {
+            background: white;
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            border-left: 4px solid var(--primary);
+        }
+        .veiculo-title {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: var(--dark);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .viagem-type {
+            font-size: 1rem;
+            margin: 1.5rem 0 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--gray);
+            color: var(--primary);
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 1.5rem;
+        }
+        th {
+            background-color: var(--primary);
+            color: white;
+            padding: 0.75rem;
+            text-align: left;
+        }
+        td {
+            padding: 0.75rem;
+            border-bottom: 1px solid #eee;
+        }
+        tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+        tr:hover {
+            background-color: #e9ecef;
+        }
+        .total {
+            font-weight: 600;
+            text-align: right;
+            font-size: 1.1rem;
+            margin-top: 1rem;
+            color: var(--dark);
+        }
+        .hidden {
+            display: none;
+        }
+        .empty-state {
+            text-align: center;
+            padding: 2rem;
+            color: var(--gray);
+        }
+        .empty-state i {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            color: var(--gray);
+        }
+        .action-buttons {
+            display: flex;
+            gap: 5px;
+        }
+        .action-btn {
+            padding: 0.35rem 0.5rem;
+            font-size: 0.8rem;
+            border-radius: 4px;
+        }
+        .filter-section {
+            background: white;
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+        .filter-title {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .export-buttons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        @media print {
+            body { background: white; }
+            .no-print, .tabs, .filter-section, .export-buttons, header { display: none !important; }
+            .veiculo-card { page-break-inside: avoid; break-inside: avoid; margin-bottom: 20px; }
+            .container { padding: 0; margin: 0; }
+        }
+        .pdf-loading {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 20px 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.3);
+            z-index: 9999;
+            text-align: center;
+            font-weight: 500;
+            color: var(--primary);
+        }
+        .pdf-loading i {
+            font-size: 2rem;
+            margin-bottom: 10px;
+            display: block;
+        }
+        @media (max-width: 768px) {
+            .form-row { flex-direction: column; gap: 0; }
+            .form-group { margin-bottom: 1rem; }
+            .tabs { flex-direction: column; }
+            .action-buttons { flex-direction: column; }
+            .action-btn { width: 100%; }
+            .export-buttons { flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">
+                <i class="fas fa-truck-moving"></i>
+                <h1>Roteirizador de Terceiros</h1>
+            </div>
+            <p>Controle de fretes com motoristas agregados</p>
+        </header>
 
+        <div class="tabs">
+            <div class="tab active" onclick="showTab('form')">
+                <i class="fas fa-plus-circle"></i> Nova Viagem
+            </div>
+            <div class="tab" onclick="showTab('results')">
+                <i class="fas fa-list-ul"></i> Visualizar Roteiros
+            </div>
+        </div>
+
+        <div id="form-section" class="card">
+            <h2 class="card-title"><i class="fas fa-road"></i> Cadastrar Nova Viagem</h2>
+            <form id="viagemForm">
+                <input type="hidden" id="editId" value="">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="data"><i class="far fa-calendar-alt"></i> Data</label>
+                        <input type="date" id="data">
+                    </div>
+                    <div class="form-group">
+                        <label for="tipo"><i class="fas fa-exchange-alt"></i> Tipo</label>
+                        <select id="tipo">
+                            <option value="">Selecione...</option>
+                            <option value="ida">Ida</option>
+                            <option value="volta">Volta</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="numeroMotorista"><i class="fas fa-id-card"></i> Nº do Motorista (Identificação)</label>
+                        <input type="text" id="numeroMotorista" placeholder="Ex: MOTO-001 ou CPF">
+                        <span id="numeroMotorista-error" class="error"></span>
+                    </div>
+                    <div class="form-group">
+                        <label for="nomeMotorista"><i class="fas fa-user-tie"></i> Nome do Motorista</label>
+                        <input type="text" id="nomeMotorista" placeholder="Nome completo">
+                        <span id="nomeMotorista-error" class="error"></span>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="colaborador"><i class="fas fa-users"></i> Colaborador (Interno)</label>
+                        <select id="colaborador">
+                            <option value="">Selecione...</option>
+                            <option value="JEISE">JEISE</option>
+                            <option value="MARIANE">MARIANE</option>
+                            <option value="MONICA">MONICA</option>
+                            <option value="MARIVAL">MARIVAL</option>
+                            <option value="Raisa">Raisa</option>
+                            <option value="Genivaldo">Genivaldo</option>
+                            <option value="Aranda">Aranda</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="cliente"><i class="fas fa-building"></i> Cliente</label>
+                        <input type="text" id="cliente">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="origem"><i class="fas fa-map-marker-alt"></i> Origem</label>
+                        <input type="text" id="origem">
+                    </div>
+                    <div class="form-group">
+                        <label for="destino"><i class="fas fa-map-marker"></i> Destino</label>
+                        <input type="text" id="destino">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="valor"><i class="fas fa-money-bill-wave"></i> Valor do Frete</label>
+                        <input type="text" id="valor" placeholder="Digite o valor">
+                    </div>
+                    <div class="form-group">
+                        <label for="observacoes"><i class="fas fa-sticky-note"></i> Observações</label>
+                        <input type="text" id="observacoes">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <button type="button" class="btn btn-primary" id="submitBtn" onclick="adicionarViagem()">
+                        <i class="fas fa-save"></i> Salvar Viagem
+                    </button>
+                    <button type="button" class="btn btn-secondary" onclick="limparFormulario()">
+                        <i class="fas fa-broom"></i> Limpar
+                    </button>
+                    <button type="button" class="btn btn-warning hidden" id="cancelEditBtn" onclick="cancelarEdicao()">
+                        <i class="fas fa-times"></i> Cancelar Edição
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <div id="results-section" class="hidden">
+            <div class="card">
+                <h2 class="card-title"><i class="fas fa-route"></i> Roteiro por Motorista Terceiro</h2>
+
+                <div class="filter-section">
+                    <h3 class="filter-title"><i class="fas fa-filter"></i> Filtros</h3>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="filterDataInicio"><i class="far fa-calendar-alt"></i> Data Início</label>
+                            <input type="date" id="filterDataInicio">
+                        </div>
+                        <div class="form-group">
+                            <label for="filterDataFim"><i class="far fa-calendar-alt"></i> Data Fim</label>
+                            <input type="date" id="filterDataFim">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="filterNumeroMotorista"><i class="fas fa-id-card"></i> Nº do Motorista</label>
+                            <input type="text" id="filterNumeroMotorista" placeholder="Filtrar por Número">
+                        </div>
+                        <div class="form-group">
+                            <label for="filterNomeMotorista"><i class="fas fa-user-tie"></i> Nome do Motorista</label>
+                            <input type="text" id="filterNomeMotorista" placeholder="Filtrar por Nome">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="filterColaborador"><i class="fas fa-users"></i> Colaborador</label>
+                            <select id="filterColaborador">
+                                <option value="">Todos</option>
+                                <option value="JEISE">JEISE</option>
+                                <option value="MARIANE">MARIANE</option>
+                                <option value="MONICA">MONICA</option>
+                                <option value="MARIVAL">MARIVAL</option>
+                                <option value="Raisa">Raisa</option>
+                                <option value="Genivaldo">Genivaldo</option>
+                                <option value="Aranda">Aranda</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <button type="button" class="btn btn-primary" onclick="aplicarFiltros()">
+                            <i class="fas fa-filter"></i> Aplicar Filtros
+                        </button>
+                        <button type="button" class="btn btn-secondary" onclick="limparFiltros()">
+                            <i class="fas fa-broom"></i> Limpar Filtros
+                        </button>
+                    </div>
+                </div>
+
+                <div class="export-buttons">
+                    <button type="button" class="btn btn-success" onclick="exportarParaPDF()">
+                        <i class="fas fa-file-pdf"></i> Exportar para PDF
+                    </button>
+                    <button type="button" class="btn btn-info" onclick="exportarParaExcel()">
+                        <i class="fas fa-file-excel"></i> Exportar para Excel
+                    </button>
+                    <button type="button" class="btn btn-danger" onclick="limparTodasViagens()">
+                        <i class="fas fa-trash-alt"></i> Limpar Todas as Viagens
+                    </button>
+                </div>
+
+                <div id="roteiroContainer"></div>
+            </div>
+        </div>
+    </div>
+    
+    <div id="pdfContainer" style="position: absolute; left: -9999px; top: 0; width: 1000px;"></div>
+
+<script>
+    // Configuração do Firebase
+    const firebaseConfig = {
+        apiKey: "AIzaSyBQLbjaGe4sjHWpFNnLpIhfeLm_1Xceyoc",
+        authDomain: "roteiros-64517.firebaseapp.com",
+        databaseURL: "https://roteiros-64517-default-rtdb.firebaseio.com",
+        projectId: "roteiros-64517",
+        storageBucket: "roteiros-64517.appspot.com",
+        messagingSenderId: "154694664377",
+        appId: "1:154694664377:web:5be20dd286a29081e5db68"
+    };
+    
+    firebase.initializeApp(firebaseConfig);
+    const database = firebase.database();
+    const viagensRef = database.ref('viagensTerceiros');
+    let viagens = [];
+    let viagensFiltradas = [];
+    let editando = false;
+    
+    function formatarValorBrasileiro(valor) {
+        if (typeof valor !== 'number' || isNaN(valor)) valor = 0;
+        return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    }
+    
+    function parseValorBrasileiro(valorStr) {
+        if (!valorStr) return 0;
+        const valorLimpo = valorStr.replace(/\./g, '').replace(',', '.');
+        const valorNumerico = parseFloat(valorLimpo);
+        return isNaN(valorNumerico) ? 0 : valorNumerico;
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const valorInput = document.getElementById('valor');
+        valorInput.addEventListener('input', function(e) {
+            let value = e.target.value.replace(/\D/g, '');
+            if (!value) { e.target.value = ''; return; }
+            const valorFormatado = (parseFloat(value) / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+            e.target.value = valorFormatado.replace('R$', '').trim();
+        });
+        carregarViagens();
+    });
+    
+    function carregarViagens() {
+        viagensRef.on('value', (snapshot) => {
+            viagens = [];
+            const dados = snapshot.val();
+            if (dados) {
+                Object.keys(dados).forEach(key => {
+                    viagens.push({ id: key, ...dados[key] });
+                });
+                viagens.sort((a, b) => new Date(b.data) - new Date(a.data));
+                viagensFiltradas = [...viagens];
+            }
+            if (!document.getElementById('results-section').classList.contains('hidden')) {
+                gerarRoteiro();
+            }
+        });
+    }
+
+    function showTab(tabName) {
+        document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+        document.querySelector(`.tab[onclick="showTab('${tabName}')"]`).classList.add('active');
+        document.getElementById('form-section').classList.toggle('hidden', tabName !== 'form');
+        document.getElementById('results-section').classList.toggle('hidden', tabName !== 'results');
+        if (tabName === 'results') gerarRoteiro();
+    }
+
+    function adicionarViagem() {
+        const id = document.getElementById('editId').value;
+        const data = document.getElementById('data').value;
+        const tipo = document.getElementById('tipo').value;
+        const numeroMotorista = document.getElementById('numeroMotorista').value;
+        const nomeMotorista = document.getElementById('nomeMotorista').value;
+        const colaborador = document.getElementById('colaborador').value;
+        const origem = document.getElementById('origem').value;
+        const destino = document.getElementById('destino').value;
+        const cliente = document.getElementById('cliente').value;
+        const valor = parseValorBrasileiro(document.getElementById('valor').value);
+        const observacoes = document.getElementById('observacoes').value;
+
+        if (!data || !tipo || !numeroMotorista || !nomeMotorista) {
+            alert("Preencha Data, Tipo, Nº do Motorista e Nome do Motorista!");
+            return;
+        }
+
+        const viagem = {
+            data,
+            tipo,
+            numeroMotorista,
+            nomeMotorista,
+            colaborador,
+            origem,
+            destino,
+            cliente,
+            valor,
+            observacoes: observacoes || '',
+            timestamp: firebase.database.ServerValue.TIMESTAMP
+        };
+
+        if (editando && id) {
+            viagensRef.child(id).update(viagem)
+                .then(() => {
+                    limparFormulario();
+                    alert('Viagem atualizada com sucesso!');
+                    showTab('results');
+                    editando = false;
+                })
+                .catch(error => alert('Erro ao atualizar viagem: ' + error.message));
+        } else {
+            viagensRef.push(viagem)
+                .then(() => {
+                    limparFormulario();
+                    alert('Viagem cadastrada com sucesso!');
+                    showTab('results');
+                })
+                .catch(error => alert('Erro ao salvar viagem: ' + error.message));
+        }
+    }
+
+    function editarViagem(id) {
+        const viagem = viagens.find(v => v.id === id);
+        if (!viagem) return;
+        document.getElementById('editId').value = id;
+        document.getElementById('data').value = viagem.data;
+        document.getElementById('tipo').value = viagem.tipo;
+        document.getElementById('numeroMotorista').value = viagem.numeroMotorista || '';
+        document.getElementById('nomeMotorista').value = viagem.nomeMotorista || '';
+        document.getElementById('colaborador').value = viagem.colaborador || '';
+        document.getElementById('origem').value = viagem.origem || '';
+        document.getElementById('destino').value = viagem.destino || '';
+        document.getElementById('cliente').value = viagem.cliente || '';
+        const valorNumerico = (typeof viagem.valor === 'number') ? viagem.valor : 0;
+        const valorFormatado = (valorNumerico).toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+        document.getElementById('valor').value = valorFormatado;
+        document.getElementById('observacoes').value = viagem.observacoes || '';
+        
+        editando = true;
+        document.getElementById('submitBtn').innerHTML = '<i class="fas fa-save"></i> Atualizar Viagem';
+        document.getElementById('cancelEditBtn').classList.remove('hidden');
+        showTab('form');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function cancelarEdicao() {
+        limparFormulario();
+        editando = false;
+    }
+
+    function excluirViagem(id) {
+        if (confirm('Tem certeza que deseja excluir esta viagem?')) {
+            viagensRef.child(id).remove()
+                .then(() => alert('Viagem excluída com sucesso!'))
+                .catch(error => alert('Erro ao excluir viagem: ' + error.message));
+        }
+    }
+
+    function aplicarFiltros() {
+        const dataInicio = document.getElementById('filterDataInicio').value;
+        const dataFim = document.getElementById('filterDataFim').value;
+        const numeroMotorista = document.getElementById('filterNumeroMotorista').value.toUpperCase();
+        const nomeMotorista = document.getElementById('filterNomeMotorista').value.toUpperCase();
+        const colaborador = document.getElementById('filterColaborador').value;
+
+        viagensFiltradas = viagens.filter(viagem => {
+            let dataViagem = new Date(viagem.data + 'T00:00:00');
+            if (dataInicio && dataViagem < new Date(dataInicio + 'T00:00:00')) return false;
+            if (dataFim && dataViagem > new Date(dataFim + 'T00:00:00')) return false;
+            if (numeroMotorista && !viagem.numeroMotorista.toUpperCase().includes(numeroMotorista)) return false;
+            if (nomeMotorista && !viagem.nomeMotorista.toUpperCase().includes(nomeMotorista)) return false;
+            if (colaborador && viagem.colaborador !== colaborador) return false;
+            return true;
+        });
+        gerarRoteiro();
+    }
+
+    function limparFiltros() {
+        document.getElementById('filterDataInicio').value = '';
+        document.getElementById('filterDataFim').value = '';
+        document.getElementById('filterNumeroMotorista').value = '';
+        document.getElementById('filterNomeMotorista').value = '';
+        document.getElementById('filterColaborador').value = '';
+        viagensFiltradas = [...viagens];
+        gerarRoteiro();
+    }
+
+    function limparFormulario() {
+        document.getElementById('viagemForm').reset();
+        document.getElementById('editId').value = '';
+        if (editando) {
+            document.getElementById('submitBtn').innerHTML = '<i class="fas fa-save"></i> Salvar Viagem';
+            document.getElementById('cancelEditBtn').classList.add('hidden');
+            editando = false;
+        }
+    }
+
+    function limparTodasViagens() {
+        if (confirm('Tem certeza que deseja apagar TODAS as viagens cadastradas?')) {
+            viagensRef.remove()
+                .then(() => {
+                    viagens = []; viagensFiltradas = [];
+                    gerarRoteiro();
+                    alert('Todas as viagens foram removidas!');
+                }).catch(error => alert("Ocorreu um erro ao limpar as viagens."));
+        }
+    }
+
+    function gerarRoteiro() {
+        const roteiroContainer = document.getElementById('roteiroContainer');
+        roteiroContainer.innerHTML = '';
+        
+        if (viagensFiltradas.length === 0) {
+            roteiroContainer.innerHTML = `<div class="empty-state"><i class="fas fa-box-open"></i><p>Nenhuma viagem encontrada.</p></div>`;
+            return;
+        }
+
+        const viagensPorMotorista = viagensFiltradas.reduce((acc, viagem) => {
+            const chave = viagem.numeroMotorista || 'SEM NÚMERO';
+            if (!acc[chave]) acc[chave] = [];
+            acc[chave].push(viagem);
+            return acc;
+        }, {});
+
+        for (const numeroMotorista in viagensPorMotorista) {
+            const motoristaCard = document.createElement('div');
+            motoristaCard.className = 'veiculo-card';
+            
+            let totalFreteMotorista = 0;
+            let tabelaIda = `<h3 class="viagem-type">Viagens de Ida</h3>
+                            <table>
+                                <thead>
+                                    <tr><th>Data</th><th>Nome</th><th>Colaborador</th><th>Cliente</th><th>Origem</th><th>Destino</th><th>Valor</th><th>Obs.</th><th>Ações</th></tr>
+                                </thead>
+                                <tbody>`;
+            let tabelaVolta = `<h3 class="viagem-type">Viagens de Volta</h3>
+                              <table>
+                                  <thead>
+                                      <tr><th>Data</th><th>Nome</th><th>Colaborador</th><th>Cliente</th><th>Origem</th><th>Destino</th><th>Valor</th><th>Obs.</th><th>Ações</th></tr>
+                                  </thead>
+                                  <tbody>`;
+            let temIda = false, temVolta = false;
+
+            viagensPorMotorista[numeroMotorista].forEach(viagem => {
+                totalFreteMotorista += viagem.valor || 0;
+                const dataFormatada = viagem.data ? new Date(viagem.data + 'T00:00:00').toLocaleDateString('pt-BR') : 'N/A';
+                
+                const linha = `
+                    <tr>
+                        <td>${dataFormatada}</td>
+                        <td>${viagem.nomeMotorista || '-'}</td>
+                        <td>${viagem.colaborador || '-'}</td>
+                        <td>${viagem.cliente || '-'}</td>
+                        <td>${viagem.origem || '-'}</td>
+                        <td>${viagem.destino || '-'}</td>
+                        <td>${formatarValorBrasileiro(viagem.valor)}</td>
+                        <td>${viagem.observacoes || '-'}</td>
+                        <td>
+                            <div class="action-buttons">
+                                <button class="btn btn-warning action-btn" onclick="editarViagem('${viagem.id}')"><i class="fas fa-edit"></i></button>
+                                <button class="btn btn-danger action-btn" onclick="excluirViagem('${viagem.id}')"><i class="fas fa-trash"></i></button>
+                            </div>
+                        </td>
+                    </tr>`;
+                
+                if (viagem.tipo === 'ida') { 
+                    tabelaIda += linha; 
+                    temIda = true; 
+                } else { 
+                    tabelaVolta += linha; 
+                    temVolta = true; 
+                }
+            });
+
+            tabelaIda += `</tbody></table>`;
+            tabelaVolta += `</tbody></table>`;
+            
+            const nomeMotoristaExemplo = viagensPorMotorista[numeroMotorista][0].nomeMotorista || 'Nome não informado';
+            
+            motoristaCard.innerHTML = `
+                <h2 class="veiculo-title"><i class="fas fa-id-card"></i> Motorista: ${nomeMotoristaExemplo} (Nº: ${numeroMotorista})</h2>
+                ${temIda ? tabelaIda : ''}
+                ${temVolta ? tabelaVolta : ''}
+                <div class="total">Total do Motorista: ${formatarValorBrasileiro(totalFreteMotorista)}</div>`;
+            roteiroContainer.appendChild(motoristaCard);
+        }
+        
+        const totalGeral = viagensFiltradas.reduce((acc, v) => acc + (v.valor || 0), 0);
+        roteiroContainer.innerHTML += `<div class="total" style="font-size: 1.5rem; text-align: center; margin-top: 2rem;">Total Geral: ${formatarValorBrasileiro(totalGeral)}</div>`;
+    }
+
+    async function exportarParaPDF() {
+        const loadingDiv = document.createElement('div');
+        loadingDiv.className = 'pdf-loading';
+        loadingDiv.innerHTML = '<i class="fas fa-spinner fa-pulse"></i> Gerando PDF, aguarde...';
+        document.body.appendChild(loadingDiv);
+        
+        try {
+            const roteiroContainer = document.getElementById('roteiroContainer');
+            const cloneContainer = roteiroContainer.cloneNode(true);
+            const actionButtons = cloneContainer.querySelectorAll('.action-buttons, .action-btn');
+            actionButtons.forEach(btn => btn.remove());
+            
+            const iframe = document.createElement('iframe');
+            iframe.style.position = 'absolute';
+            iframe.style.width = '0';
+            iframe.style.height = '0';
+            iframe.style.border = 'none';
+            document.body.appendChild(iframe);
+            
+            const iframeDoc = iframe.contentWindow.document;
+            iframeDoc.open();
+            iframeDoc.write(`
+                <!DOCTYPE html><html><head><meta charset="UTF-8"><title>Roteiro de Viagens</title>
+                <style> body { font-family: 'Poppins', sans-serif; padding: 20px; margin: 0; background: white; } .veiculo-card { background: white; border-radius: 10px; padding: 20px; margin-bottom: 30px; border-left: 4px solid #4361ee; box-shadow: 0 2px 4px rgba(0,0,0,0.1); page-break-inside: avoid; } .veiculo-title { font-size: 1.3rem; margin-bottom: 15px; color: #1b263b; } .viagem-type { font-size: 1.1rem; margin: 20px 0 10px; border-bottom: 1px solid #adb5bd; color: #4361ee; } table { width: 100%; border-collapse: collapse; margin-bottom: 20px; } th { background-color: #4361ee; color: white; padding: 10px; text-align: left; } td { padding: 10px; border-bottom: 1px solid #eee; } .total { font-weight: 600; text-align: right; font-size: 1.1rem; margin-top: 15px; } </style>
+                </head><body><div class="header"><h1>Roteiro de Viagens - Motoristas Terceiros</h1><p>Gerado em: ${new Date().toLocaleDateString('pt-BR')}</p></div>${cloneContainer.outerHTML}</body></html>
+            `);
+            iframeDoc.close();
+            
+            setTimeout(() => {
+                iframe.contentWindow.print();
+                setTimeout(() => {
+                    document.body.removeChild(iframe);
+                    document.body.removeChild(loadingDiv);
+                }, 1000);
+            }, 500);
+        } catch (error) {
+            document.body.removeChild(loadingDiv);
+            alert("Erro ao gerar PDF: " + error.message);
+        }
+    }
+
+    function exportarParaExcel() {
+        const dadosExport = viagensFiltradas.map(v => ({
+            Data: v.data ? new Date(v.data + 'T00:00:00').toLocaleDateString('pt-BR') : '',
+            Tipo: v.tipo || '',
+            'Nº Motorista': v.numeroMotorista || '',
+            'Nome Motorista': v.nomeMotorista || '',
+            Colaborador: v.colaborador || '',
+            Cliente: v.cliente || '',
+            Origem: v.origem || '',
+            Destino: v.destino || '',
+            Valor: v.valor || 0,
+            Observações: v.observacoes || ''
+        }));
+        const ws = XLSX.utils.json_to_sheet(dadosExport);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Viagens");
+        XLSX.writeFile(wb, "roteiro_motoristas_terceiros.xlsx");
+    }
+</script>
+</body>
+</html>
