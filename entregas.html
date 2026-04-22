@@ -263,6 +263,10 @@
             background-color: #795548;
         }
         
+        .new-vendor-btn {
+            background-color: #00BCD4;
+        }
+        
         .edit-btn {
             background-color: var(--primary-color);
             padding: 6px 12px;
@@ -759,27 +763,25 @@
                 <button class="close-modal" onclick="closeUserModal()">&times;</button>
             </div>
             <p>Selecione seu nome para visualizar apenas suas entregas:</p>
-            <div class="user-selection" id="userSelection">
-                <div class="user-option" onclick="selectUser('MARIANE')">
-                    <div class="user-option-avatar">M</div>
-                    <div class="user-option-name">MARIANE</div>
-                </div>
-                <div class="user-option" onclick="selectUser('JEISE')">
-                    <div class="user-option-avatar">J</div>
-                    <div class="user-option-name">JEISE</div>
-                </div>
-                <div class="user-option" onclick="selectUser('MONICA')">
-                    <div class="user-option-avatar">M</div>
-                    <div class="user-option-name">MONICA</div>
-                </div>
-                <div class="user-option" onclick="selectUser('MARIVAL')">
-                    <div class="user-option-avatar">M</div>
-                    <div class="user-option-name">MARIVAL</div>
-                </div>
-                <div class="user-option" onclick="selectUser('TODOS')">
-                    <div class="user-option-avatar">T</div>
-                    <div class="user-option-name">TODOS</div>
-                </div>
+            <div class="user-selection" id="userSelection"></div>
+            <div class="modal-buttons">
+                <button class="cancel-btn" onclick="closeUserModal()">Fechar</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal de Novo Vendedor -->
+    <div id="newVendorModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">👔 Adicionar Novo Vendedor</h3>
+                <button class="close-modal" onclick="closeNewVendorModal()">&times;</button>
+            </div>
+            <p>Digite o nome do novo vendedor/comercial:</p>
+            <input type="text" id="newVendorName" placeholder="Ex: ARANDA, CARLOS, ROBERTA" style="width:100%; padding:12px; margin:15px 0; border:1px solid #ddd; border-radius:6px; text-transform:uppercase;">
+            <div class="modal-buttons">
+                <button class="cancel-btn" onclick="closeNewVendorModal()">Cancelar</button>
+                <button class="save-btn" onclick="adicionarNovoVendedor()">Adicionar</button>
             </div>
         </div>
     </div>
@@ -880,6 +882,7 @@
                 <div class="buttons-container">
                     <button class="filter-btn" onclick="aplicarFiltros()">🔍 Aplicar Filtros</button>
                     <button class="load-btn" onclick="limparFiltros()">🗑️ Limpar Filtros</button>
+                    <button class="new-vendor-btn" onclick="openNewVendorModal()">👔 Novo Vendedor</button>
                     <button class="export-btn" onclick="exportarExcel()">📊 Exportar Excel</button>
                     <button class="print-btn" onclick="imprimirTabela()">🖨️ Imprimir</button>
                     <button class="toggle-columns-btn" onclick="openColumnsModal()">👁️ Colunas</button>
@@ -936,12 +939,89 @@
         let charts = {};
         let currentNoteId = null;
         let currentNoteCliente = '';
+        let listaVendedores = ['MARIANE', 'JEISE', 'MONICA', 'MARIVAL'];
         
         const columnIndices = {
             'data': 0, 'vendedor': 1, 'cliente': 2, 'telefone-cliente': 3,
             'motorista': 4, 'telefone-motorista': 5, 'origem': 6, 'destino': 7,
             'frete-empresa': 8, 'frete-motorista': 9, 'status': 10, 'prazo': 11, 'observacao': 12
         };
+
+        // Carregar vendedores do localStorage
+        function carregarVendedores() {
+            const saved = localStorage.getItem('listaVendedores');
+            if (saved) {
+                listaVendedores = JSON.parse(saved);
+            }
+            atualizarSelectsVendedores();
+        }
+        
+        function salvarVendedores() {
+            localStorage.setItem('listaVendedores', JSON.stringify(listaVendedores));
+        }
+        
+        function adicionarNovoVendedor() {
+            const nome = document.getElementById('newVendorName').value.trim().toUpperCase();
+            if (!nome) {
+                alert('Por favor, digite o nome do novo vendedor');
+                return;
+            }
+            
+            if (listaVendedores.includes(nome)) {
+                alert(`O vendedor "${nome}" já existe!`);
+                return;
+            }
+            
+            listaVendedores.push(nome);
+            salvarVendedores();
+            atualizarSelectsVendedores();
+            closeNewVendorModal();
+            document.getElementById('newVendorName').value = '';
+            mostrarNotificacao(`✅ Vendedor "${nome}" adicionado com sucesso!`);
+        }
+        
+        function atualizarSelectsVendedores() {
+            // Atualizar selects de vendedor em todas as linhas editáveis
+            const selects = document.querySelectorAll('#corpoTabela select');
+            selects.forEach(select => {
+                if (select.closest('tr') && select.closest('tr').classList.contains('edit-row')) {
+                    const valorAtual = select.value;
+                    select.innerHTML = '';
+                    listaVendedores.forEach(v => {
+                        const option = document.createElement('option');
+                        option.value = v;
+                        option.textContent = v;
+                        if (valorAtual === v) option.selected = true;
+                        select.appendChild(option);
+                    });
+                }
+            });
+            
+            // Atualizar modal de usuário
+            const userSelection = document.getElementById('userSelection');
+            if (userSelection) {
+                userSelection.innerHTML = '';
+                listaVendedores.forEach(vendedor => {
+                    const div = document.createElement('div');
+                    div.className = 'user-option';
+                    div.onclick = () => selectUser(vendedor);
+                    div.innerHTML = `
+                        <div class="user-option-avatar">${vendedor.charAt(0)}</div>
+                        <div class="user-option-name">${vendedor}</div>
+                    `;
+                    userSelection.appendChild(div);
+                });
+                // Adicionar opção TODOS
+                const divTodos = document.createElement('div');
+                divTodos.className = 'user-option';
+                divTodos.onclick = () => selectUser('TODOS');
+                divTodos.innerHTML = `
+                    <div class="user-option-avatar">T</div>
+                    <div class="user-option-name">TODOS</div>
+                `;
+                userSelection.appendChild(divTodos);
+            }
+        }
 
         function mostrarNotificacao(mensagem) {
             const toast = document.getElementById('notificationToast');
@@ -970,13 +1050,21 @@
             }
         }
         
+        function openNewVendorModal() {
+            document.getElementById('newVendorModal').style.display = 'block';
+            document.getElementById('newVendorName').value = '';
+        }
+        
+        function closeNewVendorModal() {
+            document.getElementById('newVendorModal').style.display = 'none';
+        }
+        
         // Funções para anotações
         function openNotesModal(id, cliente) {
             currentNoteId = id;
             currentNoteCliente = cliente;
             document.getElementById('notesClienteNome').innerHTML = `Cliente: <strong>${cliente}</strong>`;
             
-            // Buscar anotação existente
             const entrega = todasEntregas.find(e => e.id === id);
             if (entrega && entrega.anotacoes) {
                 document.getElementById('notesTextarea').value = entrega.anotacoes;
@@ -1112,16 +1200,14 @@
             prazoDate.setDate(prazoDate.getDate() + 7);
             const prazoPadrao = `${prazoDate.getFullYear()}-${String(prazoDate.getMonth()+1).padStart(2,'0')}-${String(prazoDate.getDate()).padStart(2,'0')}`;
             
+            let vendedorOptions = '';
+            listaVendedores.forEach(v => {
+                vendedorOptions += `<option value="${v}" ${currentUser === v ? 'selected' : ''}>${v}</option>`;
+            });
+            
             newRow.innerHTML = `
                 <td><input type="date" value="${formattedDate}" style="padding: 6px; width: 100%;"></td>
-                <td>
-                    <select style="padding: 6px; width: 100%;">
-                        <option value="MARIANE" ${currentUser === 'MARIANE' ? 'selected' : ''}>MARIANE</option>
-                        <option value="JEISE" ${currentUser === 'JEISE' ? 'selected' : ''}>JEISE</option>
-                        <option value="MONICA" ${currentUser === 'MONICA' ? 'selected' : ''}>MONICA</option>
-                        <option value="MARIVAL" ${currentUser === 'MARIVAL' ? 'selected' : ''}>MARIVAL</option>
-                    </select>
-                </td>
+                <td><select style="padding: 6px; width: 100%;">${vendedorOptions}</select></td>
                 <td><input type="text" placeholder="Nome do cliente" style="padding: 6px; width: 100%;"></td>
                 <td><input type="text" placeholder="(XX) XXXXX-XXXX" style="padding: 6px; width: 100%;"></td>
                 <td><input type="text" placeholder="Nome do motorista" style="padding: 6px; width: 100%;"></td>
@@ -1221,17 +1307,15 @@
             
             const statusAtual = celulas[10].className.replace('status-', '');
             
+            let vendedorOptions = '';
+            listaVendedores.forEach(v => {
+                vendedorOptions += `<option value="${v}" ${celulas[1].textContent === v ? 'selected' : ''}>${v}</option>`;
+            });
+            
             linha.className = 'edit-row';
             linha.innerHTML = `
                 <td><input type="date" value="${dataFormatada}" style="padding: 6px; width: 100%;"></td>
-                <td>
-                    <select style="padding: 6px; width: 100%;">
-                        <option value="MARIANE" ${celulas[1].textContent === 'MARIANE' ? 'selected' : ''}>MARIANE</option>
-                        <option value="JEISE" ${celulas[1].textContent === 'JEISE' ? 'selected' : ''}>JEISE</option>
-                        <option value="MONICA" ${celulas[1].textContent === 'MONICA' ? 'selected' : ''}>MONICA</option>
-                        <option value="MARIVAL" ${celulas[1].textContent === 'MARIVAL' ? 'selected' : ''}>MARIVAL</option>
-                    </select>
-                </td>
+                <td><select style="padding: 6px; width: 100%;">${vendedorOptions}</select></td>
                 <td><input type="text" value="${celulas[2].textContent.replace(/[○●◯]/g, '').trim()}" style="padding: 6px; width: 100%;"></td>
                 <td><input type="text" value="${formatarTelefoneDisplay(celulas[3].querySelector('a')?.textContent || '')}" style="padding: 6px; width: 100%;"></td>
                 <td><input type="text" value="${celulas[4].textContent}" style="padding: 6px; width: 100%;"></td>
@@ -1501,7 +1585,10 @@
             }
         }
         
-        function openUserModal() { document.getElementById('userModal').style.display = 'block'; }
+        function openUserModal() { 
+            atualizarSelectsVendedores();
+            document.getElementById('userModal').style.display = 'block'; 
+        }
         function closeUserModal() { document.getElementById('userModal').style.display = 'none'; }
         function openColumnsModal() { document.getElementById('columnsModal').style.display = 'block'; }
         function closeColumnsModal() { document.getElementById('columnsModal').style.display = 'none'; }
@@ -1613,7 +1700,11 @@
         document.getElementById('fabAddBtn').addEventListener('click', adicionarNovaLinha);
         document.getElementById('filterToggleBtn').addEventListener('click', toggleFilters);
         
-        document.addEventListener('DOMContentLoaded', () => { loadUser(); carregarDados(); });
+        document.addEventListener('DOMContentLoaded', () => { 
+            carregarVendedores();
+            loadUser(); 
+            carregarDados(); 
+        });
     </script>
 </body>
 </html>
