@@ -411,7 +411,6 @@
             font-size: 1rem;
         }
         
-        /* Estilo para o autocomplete de cidades */
         .cidade-input-wrapper {
             position: relative;
         }
@@ -738,6 +737,63 @@
             .action-buttons { flex-direction: column; }
             .voice-control { bottom: 20px; left: 20px; }
         }
+
+        /* Melhorias de impressão */
+        @media print {
+            body {
+                background: white !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            
+            header, .filters-wrapper, .tabs, .fab-add, .voice-control,
+            .action-buttons, .status-select, .modal, .copy-notification,
+            .notification-toast, .filter-toggle-btn {
+                display: none !important;
+            }
+            
+            .table-container {
+                max-height: none !important;
+                overflow: visible !important;
+                box-shadow: none !important;
+            }
+            
+            table {
+                width: 100% !important;
+                font-size: 10px !important;
+            }
+            
+            th, td {
+                padding: 6px !important;
+                border: 1px solid #000 !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            
+            th {
+                background-color: #3498db !important;
+                color: white !important;
+            }
+            
+            .atrasada {
+                background-color: #ffeaea !important;
+            }
+            
+            .proximo-prazo {
+                background-color: #fff3cd !important;
+            }
+            
+            .cell-content {
+                max-width: none !important;
+                overflow: visible !important;
+                white-space: normal !important;
+            }
+            
+            @page {
+                size: landscape;
+                margin: 1cm;
+            }
+        }
     </style>
 </head>
 <body>
@@ -805,7 +861,7 @@
                 <button class="close-modal" onclick="closeNotesModal()">&times;</button>
             </div>
             <p><strong id="notesClienteNome">Cliente:</strong></p>
-            <textarea id="notesTextarea" class="notes-textarea" placeholder="Digite aqui suas anotações sobre esta carga...&#10;&#10;Exemplos:&#10;- Instruções especiais para entrega&#10;- Horário de funcionamento do cliente&#10;- Pontos de referência&#10;- Contato alternativo&#10;- Observações sobre a carga"></textarea>
+            <textarea id="notesTextarea" class="notes-textarea" placeholder="Digite aqui suas anotações sobre esta carga..."></textarea>
             <div class="modal-buttons">
                 <button class="cancel-btn" onclick="closeNotesModal()">Cancelar</button>
                 <button class="save-btn" onclick="salvarAnotacao()">Salvar Anotação</button>
@@ -901,7 +957,7 @@
             </div>
         </div>
         
-        <div class="table-container">
+        <div class="table-container" id="tableContainer">
             <table id="tabelaEntregas">
                 <thead>
                     <tr>
@@ -953,6 +1009,7 @@
         let vozAtivada = true;
         let ultimaCargaAnunciada = null;
         let ultimoIdAnunciado = null;
+        let dataLoaded = false;
         
         const columnIndices = {
             'data': 0, 'vendedor': 1, 'cliente': 2, 'telefone-cliente': 3,
@@ -1002,11 +1059,9 @@
             if (cacheCidadesIBGE.length > 0) return cacheCidadesIBGE;
             
             try {
-                // Carrega cidades de todos os estados em paralelo
                 const estados = await carregarEstadosIBGE();
                 const siglas = estados.map(e => e.sigla);
                 
-                // Carrega em lotes para não sobrecarregar
                 const todasCidades = [];
                 for (let i = 0; i < siglas.length; i++) {
                     const cidades = await carregarCidadesIBGE(siglas[i]);
@@ -1029,7 +1084,7 @@
                 cidade.nome.toUpperCase().includes(termoUpper) ||
                 cidade.uf.toUpperCase() === termoUpper ||
                 cidade.nomeFormatado.toUpperCase().includes(termoUpper)
-            ).slice(0, 15); // Limita a 15 resultados
+            ).slice(0, 15);
         }
         
         function criarInputCidade(valorAtual = '', placeholder = 'Cidade/UF') {
@@ -1090,12 +1145,6 @@
                 }, 200);
             });
             
-            // Função global para selecionar
-            wrapper.selecionarCidade = function(nomeFormatado) {
-                input.value = nomeFormatado;
-                suggestions.classList.remove('active');
-            };
-            
             return wrapper;
         }
         
@@ -1107,7 +1156,6 @@
             suggestions.classList.remove('active');
         }
         
-        // Torna a função global
         window.selecionarCidade = selecionarCidade;
 
         // ==================== SISTEMA DE VOZ ====================
@@ -1199,12 +1247,10 @@
                 const entregas = snapshot.val() || {};
                 const tabela = document.getElementById('corpoTabela');
                 
+                // Salva estado atual das linhas em edição
                 const linhasEditando = new Map();
                 document.querySelectorAll('#corpoTabela tr.edit-row').forEach(row => {
-                    linhasEditando.set(row.dataset.id, {
-                        html: row.innerHTML,
-                        originalContent: row.dataset.originalContent
-                    });
+                    linhasEditando.set(row.dataset.id, row.innerHTML);
                 });
                 
                 tabela.innerHTML = '';
@@ -1212,38 +1258,42 @@
                 if (Object.keys(entregas).length === 0) {
                     tabela.innerHTML = '<tr><td colspan="14" class="empty-message">Nenhuma entrega cadastrada</td></tr>';
                     todasEntregas = [];
+                    dataLoaded = true;
                     return;
                 }
                 
                 const entregasArray = Object.entries(entregas).map(([id, entrega]) => ({ id, ...entrega }));
+                
+                // Ordena por timestamp
                 entregasArray.sort((a, b) => {
-                    const timeA = a.timestamp || (a.data ? new Date(a.data).getTime() : 0);
-                    const timeB = b.timestamp || (b.data ? new Date(b.data).getTime() : 0);
+                    const timeA = a.timestamp || 0;
+                    const timeB = b.timestamp || 0;
                     return timeB - timeA;
                 });
                 
+                // Detecta novas cargas para anunciar
                 if (todasEntregas.length > 0) {
                     const idsAntigos = new Set(todasEntregas.map(e => e.id));
                     entregasArray.forEach(entrega => {
                         if (!idsAntigos.has(entrega.id) && !entrega.id.startsWith('new-')) {
                             if (entrega.id !== ultimoIdAnunciado) {
                                 ultimoIdAnunciado = entrega.id;
-                                anunciarNovaCarga(entrega);
+                                setTimeout(() => anunciarNovaCarga(entrega), 500);
                             }
                         }
                     });
                 }
                 
                 todasEntregas = entregasArray;
+                dataLoaded = true;
                 
+                // Reconstrói a tabela
                 entregasArray.forEach(({ id, ...entrega }) => {
                     if (linhasEditando.has(id)) {
-                        const editData = linhasEditando.get(id);
                         const tempRow = document.createElement('tr');
                         tempRow.dataset.id = id;
                         tempRow.className = 'edit-row';
-                        tempRow.innerHTML = editData.html;
-                        tempRow.dataset.originalContent = editData.originalContent;
+                        tempRow.innerHTML = linhasEditando.get(id);
                         tabela.appendChild(tempRow);
                     } else {
                         adicionarLinhaTabela(tabela, id, entrega);
@@ -1257,54 +1307,83 @@
                 if (document.getElementById('dashboard').classList.contains('active')) {
                     atualizarDashboard();
                 }
+            }, (error) => {
+                console.error("Erro ao carregar dados:", error);
+                mostrarNotificacao('⚠️ Erro ao carregar dados. Verifique a conexão.', 5000);
             });
         }
         
         function adicionarLinhaTabela(tabela, id, entrega) {
             let dataFormatada = '-';
             if (entrega.data) {
-                const [ano, mes, dia] = entrega.data.split('-');
-                dataFormatada = `${dia}/${mes}/${ano}`;
+                const partes = entrega.data.split('-');
+                if (partes.length === 3) {
+                    dataFormatada = `${partes[2]}/${partes[1]}/${partes[0]}`;
+                }
             }
             
             let prazoFormatado = '-';
             if (entrega.prazo) {
-                const [anoP, mesP, diaP] = entrega.prazo.split('-');
-                prazoFormatado = `${diaP}/${mesP}/${anoP}`;
+                const partesP = entrega.prazo.split('-');
+                if (partesP.length === 3) {
+                    prazoFormatado = `${partesP[2]}/${partesP[1]}/${partesP[0]}`;
+                }
             }
             
             const estaAtrasada = verificarSeAtrasada(prazoFormatado, entrega.status);
             const estaProximoPrazo = verificarProximoPrazo(prazoFormatado, entrega.status);
             const temAnotacao = entrega.anotacoes && entrega.anotacoes.trim() !== '';
+            const statusClass = `status-${entrega.status || 'coletando'}`;
             
             const row = document.createElement('tr');
             row.dataset.id = id;
             if (estaAtrasada) row.className = 'atrasada';
             else if (estaProximoPrazo) row.className = 'proximo-prazo';
             
+            const clienteDisplay = escapeHtml(entrega.cliente || '-');
+            const motoristaDisplay = escapeHtml(entrega.motorista || '-');
+            const origemDisplay = escapeHtml(entrega.origem || '-');
+            const destinoDisplay = escapeHtml(entrega.destino || '-');
+            const obsDisplay = escapeHtml(entrega.observacao || '-');
+            
+            let freteEmpresaDisplay = '-';
+            if (entrega.freteEmpresa) {
+                freteEmpresaDisplay = 'R$ ' + parseFloat(entrega.freteEmpresa).toFixed(2).replace('.', ',');
+            }
+            
+            let freteMotoristaDisplay = '-';
+            if (entrega.freteMotorista) {
+                freteMotoristaDisplay = 'R$ ' + parseFloat(entrega.freteMotorista).toFixed(2).replace('.', ',');
+            }
+            
+            const telefoneCliente = formatarTelefoneDisplay(entrega.telefoneCliente || '');
+            const telefoneMotorista = formatarTelefoneDisplay(entrega.telefoneMotorista || '');
+            
+            const statusSelect = `
+                <select class="status-select" onchange="atualizarStatus(this, '${id}')">
+                    <option value="coletando" ${entrega.status === 'coletando' ? 'selected' : ''}>Coletando</option>
+                    <option value="transito" ${entrega.status === 'transito' ? 'selected' : ''}>Em trânsito</option>
+                    <option value="parado" ${entrega.status === 'parado' ? 'selected' : ''}>Parado</option>
+                    <option value="entregue" ${entrega.status === 'entregue' ? 'selected' : ''}>Entregue</option>
+                </select>
+            `;
+            
             row.innerHTML = `
                 <td>${dataFormatada}</td>
                 <td>${entrega.vendedor || '-'}</td>
-                <td><div class="cell-content">${entrega.cliente || '-'}${temAnotacao ? '<span class="note-indicator" title="Possui anotações"></span>' : ''}</div></td>
-                <td><a href="#" class="whatsapp-link" onclick="copiarNumero('${entrega.telefoneCliente || ''}')">${formatarTelefoneDisplay(entrega.telefoneCliente)}</a></td>
-                <td><div class="cell-content">${entrega.motorista || '-'}</div></td>
-                <td><a href="#" class="whatsapp-link" onclick="copiarNumero('${entrega.telefoneMotorista || ''}')">${formatarTelefoneDisplay(entrega.telefoneMotorista)}</a></td>
-                <td><div class="cell-content">${entrega.origem || '-'}</div></td>
-                <td><div class="cell-content">${entrega.destino || '-'}</div></td>
-                <td>${entrega.freteEmpresa ? 'R$ ' + parseFloat(entrega.freteEmpresa).toFixed(2).replace('.', ',') : '-'}</td>
-                <td>${entrega.freteMotorista ? 'R$ ' + parseFloat(entrega.freteMotorista).toFixed(2).replace('.', ',') : '-'}</td>
-                <td class="status-${entrega.status || 'coletando'}">
-                    <select class="status-select" onchange="atualizarStatus(this, '${id}')">
-                        <option value="coletando" ${entrega.status === 'coletando' ? 'selected' : ''}>Coletando</option>
-                        <option value="transito" ${entrega.status === 'transito' ? 'selected' : ''}>Em trânsito</option>
-                        <option value="parado" ${entrega.status === 'parado' ? 'selected' : ''}>Parado</option>
-                        <option value="entregue" ${entrega.status === 'entregue' ? 'selected' : ''}>Entregue</option>
-                    </select>
-                </td>
+                <td><div class="cell-content">${clienteDisplay}${temAnotacao ? '<span class="note-indicator" title="Possui anotações"></span>' : ''}</div></td>
+                <td><a href="#" class="whatsapp-link" onclick="return copiarNumero('${escapeHtml(entrega.telefoneCliente || '')}')">${telefoneCliente || '-'}</a></td>
+                <td><div class="cell-content">${motoristaDisplay}</div></td>
+                <td><a href="#" class="whatsapp-link" onclick="return copiarNumero('${escapeHtml(entrega.telefoneMotorista || '')}')">${telefoneMotorista || '-'}</a></td>
+                <td><div class="cell-content">${origemDisplay}</div></td>
+                <td><div class="cell-content">${destinoDisplay}</div></td>
+                <td>${freteEmpresaDisplay}</td>
+                <td>${freteMotoristaDisplay}</td>
+                <td class="${statusClass}">${statusSelect}</td>
                 <td>${prazoFormatado}</td>
-                <td><div class="cell-content">${entrega.observacao || '-'}</div></td>
+                <td><div class="cell-content">${obsDisplay}</div></td>
                 <td class="action-buttons">
-                    <button class="note-btn" onclick="openNotesModal('${id}', '${entrega.cliente || 'Cliente'}')" title="Anotações">📝</button>
+                    <button class="note-btn" onclick="openNotesModal('${id}', '${escapeHtml(entrega.cliente || 'Cliente')}')" title="Anotações">📝</button>
                     <button class="edit-btn" onclick="editarLinha(this)" title="Editar">✏️</button>
                     <button class="delete-btn" onclick="excluirLinha(this)" title="Excluir">🗑️</button>
                 </td>
@@ -1335,7 +1414,6 @@
                 `<option value="${v}" ${currentUser === v ? 'selected' : ''}>${v}</option>`
             ).join('');
             
-            // Cria inputs de cidade com autocomplete
             const cidadeOrigemWrapper = criarInputCidade('', 'Cidade/UF (ex: Salvador - BA)');
             const cidadeDestinoWrapper = criarInputCidade('', 'Cidade/UF (ex: São Paulo - SP)');
             
@@ -1366,7 +1444,6 @@
                 </td>
             `;
             
-            // Insere os inputs de cidade nas células corretas
             newRow.querySelectorAll('.cidade-cell')[0].appendChild(cidadeOrigemWrapper);
             newRow.querySelectorAll('.cidade-cell')[1].appendChild(cidadeDestinoWrapper);
             
@@ -1375,8 +1452,11 @@
                 else if (input.placeholder.startsWith('R$')) input.addEventListener('input', formatarMoedaInput);
             });
             
-            if (tabela.firstChild) tabela.insertBefore(newRow, tabela.firstChild);
-            else tabela.appendChild(newRow);
+            if (tabela.firstChild) {
+                tabela.insertBefore(newRow, tabela.firstChild);
+            } else {
+                tabela.appendChild(newRow);
+            }
             
             newRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
@@ -1385,47 +1465,63 @@
             const linha = botao.closest('tr');
             const celulas = linha.cells;
             
-            linha.dataset.originalContent = linha.innerHTML;
-            
             const dataDisplay = celulas[0].textContent;
-            const [dia, mes, ano] = dataDisplay.split('/');
-            const dataFormatada = `${ano}-${mes}-${dia}`;
-            
-            let prazoFormatado = '';
-            const prazoInput = celulas[11].textContent;
-            if (prazoInput !== '-') {
-                const [diaP, mesP, anoP] = prazoInput.split('/');
-                prazoFormatado = `${anoP}-${mesP}-${diaP}`;
+            let dataFormatada = '';
+            if (dataDisplay !== '-') {
+                const partes = dataDisplay.split('/');
+                if (partes.length === 3) {
+                    dataFormatada = `${partes[2]}-${partes[1]}-${partes[0]}`;
+                }
             }
             
-            const statusAtual = celulas[10].className.replace('status-', '');
+            let prazoFormatado = '';
+            const prazoDisplay = celulas[11].textContent;
+            if (prazoDisplay !== '-') {
+                const partesP = prazoDisplay.split('/');
+                if (partesP.length === 3) {
+                    prazoFormatado = `${partesP[2]}-${partesP[1]}-${partesP[0]}`;
+                }
+            }
+            
+            const statusClass = celulas[10].className;
+            let statusAtual = 'coletando';
+            if (statusClass.includes('status-coletando')) statusAtual = 'coletando';
+            else if (statusClass.includes('status-transito')) statusAtual = 'transito';
+            else if (statusClass.includes('status-parado')) statusAtual = 'parado';
+            else if (statusClass.includes('status-entregue')) statusAtual = 'entregue';
             
             let vendedorOptions = listaVendedores.map(v => 
                 `<option value="${v}" ${celulas[1].textContent === v ? 'selected' : ''}>${v}</option>`
             ).join('');
             
-            const origemAtual = celulas[6].querySelector('.cell-content')?.textContent || celulas[6].textContent;
-            const destinoAtual = celulas[7].querySelector('.cell-content')?.textContent || celulas[7].textContent;
+            const origemAtual = (celulas[6].querySelector('.cell-content')?.textContent || celulas[6].textContent).trim();
+            const destinoAtual = (celulas[7].querySelector('.cell-content')?.textContent || celulas[7].textContent).trim();
             
             const cidadeOrigemWrapper = criarInputCidade(origemAtual === '-' ? '' : origemAtual, 'Cidade/UF');
             const cidadeDestinoWrapper = criarInputCidade(destinoAtual === '-' ? '' : destinoAtual, 'Cidade/UF');
             
-            const clienteAtual = celulas[2].querySelector('.cell-content')?.textContent.replace(/[○●◯]/g, '').trim() || celulas[2].textContent.replace(/[○●◯]/g, '').trim();
-            const motoristaAtual = celulas[4].querySelector('.cell-content')?.textContent || celulas[4].textContent;
-            const obsAtual = celulas[12].querySelector('.cell-content')?.textContent === '-' ? '' : (celulas[12].querySelector('.cell-content')?.textContent || celulas[12].textContent);
+            const clienteAtual = (celulas[2].querySelector('.cell-content')?.textContent || celulas[2].textContent).replace(/[○●◯]/g, '').trim();
+            const motoristaAtual = (celulas[4].querySelector('.cell-content')?.textContent || celulas[4].textContent).trim();
+            const obsAtual = (celulas[12].querySelector('.cell-content')?.textContent || celulas[12].textContent).trim();
+            
+            const telClienteAtual = celulas[3].querySelector('a')?.textContent || '';
+            const telMotoristaAtual = celulas[5].querySelector('a')?.textContent || '';
+            
+            const freteEmpresaAtual = celulas[8].textContent === '-' ? '' : celulas[8].textContent;
+            const freteMotoristaAtual = celulas[9].textContent === '-' ? '' : celulas[9].textContent;
             
             linha.className = 'edit-row';
             linha.innerHTML = `
                 <td><input type="date" value="${dataFormatada}" style="padding: 6px; width: 100%;"></td>
                 <td><select style="padding: 6px; width: 100%;">${vendedorOptions}</select></td>
-                <td><input type="text" value="${escapeHtml(clienteAtual)}" style="padding: 6px; width: 100%;"></td>
-                <td><input type="text" value="${formatarTelefoneDisplay(celulas[3].querySelector('a')?.textContent || '')}" style="padding: 6px; width: 100%;"></td>
+                <td><input type="text" value="${escapeHtml(clienteAtual === '-' ? '' : clienteAtual)}" style="padding: 6px; width: 100%;"></td>
+                <td><input type="text" value="${escapeHtml(telClienteAtual)}" style="padding: 6px; width: 100%;"></td>
                 <td><input type="text" value="${escapeHtml(motoristaAtual === '-' ? '' : motoristaAtual)}" style="padding: 6px; width: 100%;"></td>
-                <td><input type="text" value="${formatarTelefoneDisplay(celulas[5].querySelector('a')?.textContent || '')}" style="padding: 6px; width: 100%;"></td>
+                <td><input type="text" value="${escapeHtml(telMotoristaAtual)}" style="padding: 6px; width: 100%;"></td>
                 <td class="cidade-cell"></td>
                 <td class="cidade-cell"></td>
-                <td><input type="text" value="${celulas[8].textContent === '-' ? '' : celulas[8].textContent}" style="padding: 6px; width: 100%;"></td>
-                <td><input type="text" value="${celulas[9].textContent === '-' ? '' : celulas[9].textContent}" style="padding: 6px; width: 100%;"></td>
+                <td><input type="text" value="${escapeHtml(freteEmpresaAtual)}" style="padding: 6px; width: 100%;"></td>
+                <td><input type="text" value="${escapeHtml(freteMotoristaAtual)}" style="padding: 6px; width: 100%;"></td>
                 <td>
                     <select style="padding: 6px; width: 100%;">
                         <option value="coletando" ${statusAtual === 'coletando' ? 'selected' : ''}>Coletando</option>
@@ -1446,8 +1542,8 @@
             linha.querySelectorAll('.cidade-cell')[1].appendChild(cidadeDestinoWrapper);
             
             linha.querySelectorAll('input[type="text"]').forEach(input => {
-                if (input.value.includes('(')) input.addEventListener('input', formatarTelefoneInput);
-                else if (input.value.startsWith('R$')) input.addEventListener('input', formatarMoedaInput);
+                if (input.value && input.value.includes('(')) input.addEventListener('input', formatarTelefoneInput);
+                else if (input.value && input.value.startsWith('R$')) input.addEventListener('input', formatarMoedaInput);
             });
         }
         
@@ -1456,32 +1552,56 @@
             const inputs = linha.querySelectorAll('input, select');
             const id = linha.dataset.id;
             
+            // Validação de campos obrigatórios
             if (!inputs[0].value || !inputs[2].value || !inputs[3].value || !inputs[4].value || !inputs[5].value) {
                 alert('Preencha os campos obrigatórios: Data, Cliente, Telefone Cliente, Motorista e Telefone Motorista');
                 return;
             }
             
-            // Pega os valores dos inputs de cidade
             const cidadeInputs = linha.querySelectorAll('.cidade-input-wrapper input');
             const origem = cidadeInputs[0] ? cidadeInputs[0].value : '';
             const destino = cidadeInputs[1] ? cidadeInputs[1].value : '';
             
+            // Encontra inputs de frete
             let freteEmpresa = 0, freteMotorista = 0;
-            const freteEmpresaInput = linha.querySelectorAll('input[type="text"]')[6]; // Ajustado para nova estrutura
-            const freteMotoristaInput = linha.querySelectorAll('input[type="text"]')[7];
+            const allTextInputs = linha.querySelectorAll('input[type="text"]');
             
-            if (freteEmpresaInput && freteEmpresaInput.value) 
-                freteEmpresa = parseFloat(freteEmpresaInput.value.replace(/[^\d,]/g, '').replace(',', '.')) || 0;
-            if (freteMotoristaInput && freteMotoristaInput.value) 
-                freteMotorista = parseFloat(freteMotoristaInput.value.replace(/[^\d,]/g, '').replace(',', '.')) || 0;
+            // Os inputs de frete são os que estão depois dos de cidade
+            allTextInputs.forEach(inp => {
+                const val = inp.value || '';
+                if (val.toUpperCase().startsWith('R$') || (val && !inp.placeholder.includes('XX') && !inp.closest('.cidade-cell'))) {
+                    if (inp.closest('td') && inp.closest('td').previousElementSibling?.classList.contains('cidade-cell')) {
+                        freteEmpresa = parseFloat(val.replace(/[^\d,]/g, '').replace(',', '.')) || 0;
+                    } else if (inp.closest('td') && 
+                              inp.closest('td').previousElementSibling?.previousElementSibling?.classList.contains('cidade-cell')) {
+                        freteMotorista = parseFloat(val.replace(/[^\d,]/g, '').replace(',', '.')) || 0;
+                    }
+                }
+            });
+            
+            // Encontra inputs específicos baseado na posição
+            const tdList = Array.from(linha.querySelectorAll('td'));
+            tdList.forEach((td, index) => {
+                const inp = td.querySelector('input[type="text"]');
+                if (inp && !inp.closest('.cidade-cell')) {
+                    if (index === 8) { // Frete Empresa
+                        freteEmpresa = parseFloat(inp.value.replace(/[^\d,]/g, '').replace(',', '.')) || 0;
+                    } else if (index === 9) { // Frete Motorista
+                        freteMotorista = parseFloat(inp.value.replace(/[^\d,]/g, '').replace(',', '.')) || 0;
+                    }
+                }
+            });
+            
+            const telefoneClienteRaw = inputs[3]?.value || '';
+            const telefoneMotoristaRaw = inputs[5]?.value || '';
             
             const entrega = {
                 data: inputs[0].value,
                 vendedor: inputs[1].value,
                 cliente: inputs[2].value,
-                telefoneCliente: inputs[3].value.replace(/\D/g, ''),
+                telefoneCliente: telefoneClienteRaw.replace(/\D/g, ''),
                 motorista: inputs[4].value,
-                telefoneMotorista: inputs[5].value.replace(/\D/g, ''),
+                telefoneMotorista: telefoneMotoristaRaw.replace(/\D/g, ''),
                 origem: origem,
                 destino: destino,
                 freteEmpresa: freteEmpresa,
@@ -1516,12 +1636,11 @@
         
         function cancelarEdicao(botao) {
             const linha = botao.closest('tr');
-            if (linha.dataset.originalContent) {
-                linha.innerHTML = linha.dataset.originalContent;
-                linha.className = '';
-                delete linha.dataset.originalContent;
-            } else {
+            if (linha.dataset.id?.startsWith('new-')) {
                 linha.remove();
+            } else {
+                // Recarrega os dados do Firebase para restaurar a linha
+                carregarDados();
             }
         }
         
@@ -1539,13 +1658,34 @@
                 alteradoPor: currentUser,
                 timestamp: firebase.database.ServerValue.TIMESTAMP 
             }).then(() => {
-                mostrarNotificacao(`Status: ${novoStatus.toUpperCase()}`);
+                const statusNomes = {
+                    'coletando': 'Coletando',
+                    'transito': 'Em Trânsito',
+                    'parado': 'Parado',
+                    'entregue': 'Entregue'
+                };
+                mostrarNotificacao(`✅ Status alterado para: ${statusNomes[novoStatus] || novoStatus}`);
                 if (entrega) anunciarStatusAlterado(entrega, novoStatus);
+            }).catch(error => {
+                console.error("Erro ao atualizar status:", error);
+                mostrarNotificacao('⚠️ Erro ao atualizar status', 3000);
             });
         }
         
         function copiarNumero(numero) {
+            if (!numero) return false;
             navigator.clipboard.writeText(numero).then(() => {
+                const notification = document.getElementById('copyNotification');
+                notification.style.display = 'block';
+                setTimeout(() => notification.style.display = 'none', 2000);
+            }).catch(() => {
+                // Fallback para navegadores antigos
+                const textarea = document.createElement('textarea');
+                textarea.value = numero;
+                document.body.appendChild(textarea);
+                textarea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textarea);
                 const notification = document.getElementById('copyNotification');
                 notification.style.display = 'block';
                 setTimeout(() => notification.style.display = 'none', 2000);
@@ -1556,8 +1696,8 @@
         function formatarTelefoneInput(e) {
             let value = e.target.value.replace(/\D/g, '');
             if (value.length > 0) value = '(' + value;
-            if (value.length > 3) value = value.substring(0,3) + ') ' + value.substring(3);
-            if (value.length > 10) value = value.substring(0,10) + '-' + value.substring(10,15);
+            if (value.length > 3) value = value.substring(0, 3) + ') ' + value.substring(3);
+            if (value.length > 10) value = value.substring(0, 10) + '-' + value.substring(10, 15);
             e.target.value = value;
         }
         
@@ -1566,14 +1706,14 @@
             const nums = numero.replace(/\D/g, '');
             if (nums.length === 0) return '';
             if (nums.length <= 2) return `(${nums}`;
-            if (nums.length <= 10) return `(${nums.substring(0,2)}) ${nums.substring(2)}`;
-            return `(${nums.substring(0,2)}) ${nums.substring(2,7)}-${nums.substring(7,11)}`;
+            if (nums.length <= 10) return `(${nums.substring(0, 2)}) ${nums.substring(2)}`;
+            return `(${nums.substring(0, 2)}) ${nums.substring(2, 7)}-${nums.substring(7, 11)}`;
         }
         
         function formatarMoedaInput(e) {
             let value = e.target.value.replace(/\D/g, '');
             if (value) {
-                value = (value / 100).toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+                value = (parseInt(value) / 100).toLocaleString('pt-BR', { minimumFractionDigits: 2 });
                 if (value !== '0,00') e.target.value = 'R$ ' + value;
                 else e.target.value = '';
             }
@@ -1581,7 +1721,7 @@
         
         function escapeHtml(text) {
             const div = document.createElement('div');
-            div.textContent = text;
+            div.textContent = text || '';
             return div.innerHTML;
         }
         
@@ -1598,109 +1738,233 @@
             }, duracao);
         }
         
-        function exportarExcel() {
-            const tabela = document.getElementById('tabelaEntregas');
-            const linhasVisiveis = Array.from(tabela.querySelectorAll('tbody tr')).filter(linha => 
-                linha.style.display !== 'none' && !linha.classList.contains('edit-row') && !linha.querySelector('.empty-message'));
-            
-            if (linhasVisiveis.length === 0) { alert('Nenhum dado para exportar!'); return; }
-            
-            const wb = XLSX.utils.book_new();
+        function getDadosVisiveis() {
+            const linhas = document.querySelectorAll('#corpoTabela tr');
             const dados = [];
-            const cabecalhos = Array.from(tabela.querySelectorAll('thead th')).map(th => th.textContent);
-            cabecalhos.pop();
-            dados.push(cabecalhos);
             
-            linhasVisiveis.forEach(linha => {
-                const celulas = Array.from(linha.cells);
-                const linhaDados = celulas.map((celula, index) => {
-                    if (index === celulas.length - 1) return null;
-                    if (celula.querySelector('.whatsapp-link')) return celula.querySelector('.whatsapp-link').textContent;
-                    if (celula.querySelector('.status-select')) return celula.querySelector('.status-select').value;
-                    return celula.textContent.replace(/[○●◯]/g, '').trim();
-                }).filter(val => val !== null);
-                dados.push(linhaDados);
+            linhas.forEach(linha => {
+                if (linha.style.display === 'none') return;
+                if (linha.classList.contains('edit-row')) return;
+                if (linha.querySelector('.empty-message')) return;
+                if (linha.cells.length < 14) return;
+                
+                const row = [];
+                for (let i = 0; i < 13; i++) {
+                    const cell = linha.cells[i];
+                    if (cell.querySelector('.status-select')) {
+                        row.push(cell.querySelector('.status-select').value);
+                    } else if (cell.querySelector('.whatsapp-link')) {
+                        row.push(cell.querySelector('.whatsapp-link').textContent);
+                    } else if (cell.querySelector('.cell-content')) {
+                        row.push(cell.querySelector('.cell-content').textContent.replace(/[○●◯]/g, '').trim());
+                    } else {
+                        row.push(cell.textContent.replace(/[○●◯]/g, '').trim());
+                    }
+                }
+                dados.push(row);
             });
             
-            XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(dados), "Entregas");
-            XLSX.writeFile(wb, `entregas_${new Date().toISOString().split('T')[0]}.xlsx`);
-            mostrarNotificacao('📊 Excel exportado!');
+            return dados;
+        }
+        
+        function exportarExcel() {
+            const dados = getDadosVisiveis();
+            
+            if (dados.length === 0) {
+                alert('Nenhum dado para exportar!');
+                return;
+            }
+            
+            const wb = XLSX.utils.book_new();
+            const cabecalhos = [
+                'DATA', 'VENDEDOR', 'CLIENTE', 'TELEFONE CLIENTE', 'MOTORISTA',
+                'TELEFONE MOTORISTA', 'ORIGEM', 'DESTINO', 'FRETE EMPRESA',
+                'FRETE MOTORISTA', 'STATUS', 'PRAZO', 'OBSERVAÇÃO'
+            ];
+            
+            const dadosComCabecalho = [cabecalhos, ...dados];
+            XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(dadosComCabecalho), "Entregas");
+            
+            const dataAtual = new Date().toISOString().split('T')[0];
+            XLSX.writeFile(wb, `entregas_${dataAtual}.xlsx`);
+            mostrarNotificacao('📊 Excel exportado com sucesso!');
         }
         
         function imprimirTabela() {
-            const linhasVisiveis = Array.from(document.querySelectorAll('#corpoTabela tr')).filter(linha => 
-                linha.style.display !== 'none' && !linha.classList.contains('edit-row') && !linha.querySelector('.empty-message'));
+            const dados = getDadosVisiveis();
             
-            if (linhasVisiveis.length === 0) { alert('Nenhum dado para imprimir!'); return; }
+            if (dados.length === 0) {
+                alert('Nenhum dado para imprimir! Aplique os filtros desejados primeiro.');
+                return;
+            }
             
-            const janela = window.open('', '_blank');
-            if (!janela) { alert('Permita pop-ups para esta funcionalidade.'); return; }
+            const janela = window.open('', '_blank', 'width=1200,height=800');
+            if (!janela) {
+                alert('Permita pop-ups para esta funcionalidade. Verifique as configurações do seu navegador.');
+                return;
+            }
             
-            const headers = Array.from(document.querySelectorAll('#tabelaEntregas thead th')).map(th => th.textContent).slice(0, -1);
+            const cabecalhos = [
+                'DATA', 'VENDEDOR', 'CLIENTE', 'TELEFONE CLIENTE', 'MOTORISTA',
+                'TELEFONE MOTORISTA', 'ORIGEM', 'DESTINO', 'FRETE EMPRESA',
+                'FRETE MOTORISTA', 'STATUS', 'PRAZO', 'OBSERVAÇÃO'
+            ];
+            
+            const tituloAba = abaAtual === 'todos' ? 'Todas as Entregas' : 
+                              abaAtual.charAt(0).toUpperCase() + abaAtual.slice(1);
             
             janela.document.write(`
-                <!DOCTYPE html><html><head><title>Relatório de Entregas</title>
-                <meta charset="UTF-8">
-                <style>
-                    body { font-family: Arial, sans-serif; margin: 20px; }
-                    h1 { text-align: center; color: #2c3e50; }
-                    table { width: 100%; border-collapse: collapse; }
-                    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 12px; }
-                    th { background-color: #3498db; color: white; }
-                </style></head>
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>Relatório de Entregas - ${tituloAba}</title>
+                    <meta charset="UTF-8">
+                    <style>
+                        body {
+                            font-family: Arial, sans-serif;
+                            margin: 15px;
+                            color: #333;
+                        }
+                        h1 {
+                            text-align: center;
+                            color: #2c3e50;
+                            font-size: 18px;
+                            margin-bottom: 5px;
+                        }
+                        .subtitle {
+                            text-align: center;
+                            color: #666;
+                            font-size: 12px;
+                            margin-bottom: 15px;
+                        }
+                        table {
+                            width: 100%;
+                            border-collapse: collapse;
+                            font-size: 11px;
+                        }
+                        th {
+                            background-color: #3498db;
+                            color: white;
+                            padding: 8px 5px;
+                            text-align: left;
+                            font-size: 10px;
+                        }
+                        td {
+                            border: 1px solid #ddd;
+                            padding: 6px 5px;
+                            text-align: left;
+                        }
+                        tr:nth-child(even) {
+                            background-color: #f8f9fa;
+                        }
+                        .atrasada {
+                            background-color: #ffeaea !important;
+                        }
+                        .proximo-prazo {
+                            background-color: #fff3cd !important;
+                        }
+                        @media print {
+                            body { margin: 0; }
+                            table { font-size: 10px; }
+                            th, td { padding: 4px 3px; }
+                        }
+                    </style>
+                </head>
                 <body>
-                    <h1>📦 Relatório de Entregas</h1>
-                    <table><thead><tr>${headers.map(h => `<th>${h}</th>`).join('')}</tr></thead><tbody>
+                    <h1>📦 Relatório de Entregas - ${tituloAba}</h1>
+                    <div class="subtitle">Gerado em: ${new Date().toLocaleString('pt-BR')} | Total: ${dados.length} entregas</div>
+                    <table>
+                        <thead>
+                            <tr>${cabecalhos.map(h => `<th>${h}</th>`).join('')}</tr>
+                        </thead>
+                        <tbody>
             `);
             
-            linhasVisiveis.forEach(linha => {
-                const celulas = Array.from(linha.cells).slice(0, -1);
-                janela.document.write('<tr>');
-                celulas.forEach(celula => {
-                    let conteudo = celula.textContent.replace(/[○●◯]/g, '').trim();
-                    if (celula.querySelector('.whatsapp-link')) conteudo = celula.querySelector('.whatsapp-link').textContent;
-                    janela.document.write(`<td>${conteudo}</td>`);
+            dados.forEach(row => {
+                // Verifica se está atrasada (status diferente de entregue e prazo vencido)
+                const status = row[10]?.toLowerCase() || '';
+                const prazoStr = row[11] || '';
+                let rowClass = '';
+                
+                if (status !== 'entregue' && prazoStr && prazoStr !== '-') {
+                    const partes = prazoStr.split('/');
+                    if (partes.length === 3) {
+                        const prazoDate = new Date(partes[2], partes[1] - 1, partes[0]);
+                        const hoje = new Date();
+                        hoje.setHours(0, 0, 0, 0);
+                        if (prazoDate < hoje) {
+                            rowClass = ' class="atrasada"';
+                        }
+                    }
+                }
+                
+                janela.document.write(`<tr${rowClass}>`);
+                row.forEach(cell => {
+                    janela.document.write(`<td>${cell || '-'}</td>`);
                 });
                 janela.document.write('</tr>');
             });
             
-            janela.document.write('</tbody></table></body></html>');
+            janela.document.write(`
+                        </tbody>
+                    </table>
+                    <script>
+                        window.onload = function() {
+                            window.print();
+                        };
+                    <\/script>
+                </body>
+                </html>
+            `);
+            
             janela.document.close();
+            mostrarNotificacao(`🖨️ Preparando impressão de ${dados.length} registros...`);
         }
         
         function carregarCidadesFiltro() {
-            const origens = new Set(), destinos = new Set();
-            todasEntregas.forEach(e => { 
-                if (e.origem) origens.add(e.origem); 
-                if (e.destino) destinos.add(e.destino); 
+            const origens = new Set();
+            const destinos = new Set();
+            
+            todasEntregas.forEach(e => {
+                if (e.origem && e.origem.trim()) origens.add(e.origem.trim());
+                if (e.destino && e.destino.trim()) destinos.add(e.destino.trim());
             });
             
             const origemFilter = document.getElementById('origemFilter');
             const destinoFilter = document.getElementById('destinoFilter');
+            
+            // Limpa opções antigas
             while (origemFilter.options.length > 1) origemFilter.remove(1);
             while (destinoFilter.options.length > 1) destinoFilter.remove(1);
             
-            [...origens].sort().forEach(c => { 
-                const opt = document.createElement('option'); 
-                opt.value = c; 
-                opt.textContent = c; 
-                origemFilter.appendChild(opt); 
+            // Adiciona novas opções
+            [...origens].sort().forEach(c => {
+                const opt = document.createElement('option');
+                opt.value = c;
+                opt.textContent = c;
+                origemFilter.appendChild(opt);
             });
-            [...destinos].sort().forEach(c => { 
-                const opt = document.createElement('option'); 
-                opt.value = c; 
-                opt.textContent = c; 
-                destinoFilter.appendChild(opt); 
+            
+            [...destinos].sort().forEach(c => {
+                const opt = document.createElement('option');
+                opt.value = c;
+                opt.textContent = c;
+                destinoFilter.appendChild(opt);
             });
         }
         
-        function aplicarFiltros() { filtrarTabela(); }
+        function aplicarFiltros() {
+            filtrarTabela();
+            mostrarNotificacao('🔍 Filtros aplicados!');
+        }
+        
         function limparFiltros() {
             document.getElementById('dataInicioFilter').value = '';
             document.getElementById('dataFimFilter').value = '';
             document.getElementById('origemFilter').value = '';
             document.getElementById('destinoFilter').value = '';
             filtrarTabela();
+            mostrarNotificacao('🗑️ Filtros limpos!');
         }
         
         function filtrarTabela() {
@@ -1713,73 +1977,125 @@
             let encontrou = false;
             
             linhas.forEach(linha => {
-                if (linha.classList.contains('edit-row') || linha.querySelector('.empty-message')) return;
+                if (linha.classList.contains('edit-row')) return;
+                if (linha.querySelector('.empty-message')) {
+                    linha.remove();
+                    return;
+                }
                 if (linha.cells.length < 14) return;
                 
-                const colVendedor = linha.cells[1].textContent;
-                const colStatus = linha.cells[10].className.replace('status-', '');
-                const colData = linha.cells[0].textContent;
-                const colOrigem = linha.cells[6].querySelector('.cell-content')?.textContent || linha.cells[6].textContent;
-                const colDestino = linha.cells[7].querySelector('.cell-content')?.textContent || linha.cells[7].textContent;
+                const colVendedor = linha.cells[1].textContent.trim();
+                
+                const statusCell = linha.cells[10];
+                let colStatus = 'coletando';
+                if (statusCell.className.includes('status-coletando')) colStatus = 'coletando';
+                else if (statusCell.className.includes('status-transito')) colStatus = 'transito';
+                else if (statusCell.className.includes('status-parado')) colStatus = 'parado';
+                else if (statusCell.className.includes('status-entregue')) colStatus = 'entregue';
+                
+                const colData = linha.cells[0].textContent.trim();
+                const colOrigem = (linha.cells[6].querySelector('.cell-content')?.textContent || linha.cells[6].textContent).trim();
+                const colDestino = (linha.cells[7].querySelector('.cell-content')?.textContent || linha.cells[7].textContent).trim();
                 
                 let dataEntrega = null;
                 if (colData !== '-') {
-                    const [dia, mes, ano] = colData.split('/');
-                    dataEntrega = new Date(ano, mes - 1, dia);
+                    const partes = colData.split('/');
+                    if (partes.length === 3) {
+                        dataEntrega = new Date(partes[2], partes[1] - 1, partes[0]);
+                    }
                 }
                 
-                const mostrar = (!currentUser || currentUser === 'TODOS' || colVendedor === currentUser) &&
-                    (abaAtual === 'todos' || colStatus === abaAtual) &&
-                    (!dataInicio || (dataEntrega && dataEntrega >= new Date(dataInicio))) &&
-                    (!dataFim || (dataEntrega && dataEntrega <= new Date(dataFim + 'T23:59:59'))) &&
-                    (!origem || colOrigem === origem) &&
-                    (!destino || colDestino === destino);
+                let mostrar = true;
+                
+                // Filtro de usuário
+                if (currentUser && currentUser !== 'TODOS' && colVendedor !== currentUser) {
+                    mostrar = false;
+                }
+                
+                // Filtro de aba (status)
+                if (abaAtual !== 'todos' && colStatus !== abaAtual) {
+                    mostrar = false;
+                }
+                
+                // Filtro de data
+                if (dataInicio && dataEntrega && dataEntrega < new Date(dataInicio + 'T00:00:00')) {
+                    mostrar = false;
+                }
+                if (dataFim && dataEntrega && dataEntrega > new Date(dataFim + 'T23:59:59')) {
+                    mostrar = false;
+                }
+                
+                // Filtro de cidade
+                if (origem && colOrigem !== origem) {
+                    mostrar = false;
+                }
+                if (destino && colDestino !== destino) {
+                    mostrar = false;
+                }
                 
                 linha.style.display = mostrar ? '' : 'none';
                 if (mostrar) encontrou = true;
             });
             
-            const msg = document.querySelector('#corpoTabela .empty-message');
-            if (!encontrou && !msg) {
-                document.getElementById('corpoTabela').innerHTML += '<tr><td colspan="14" class="empty-message">Nenhuma entrega encontrada</td></tr>';
-            } else if (encontrou && msg) msg.remove();
+            // Mostra mensagem se não encontrou nada
+            const existingMsg = document.querySelector('#corpoTabela .empty-message-row');
+            if (existingMsg) existingMsg.remove();
+            
+            if (!encontrou) {
+                const msgRow = document.createElement('tr');
+                msgRow.className = 'empty-message-row';
+                msgRow.innerHTML = '<td colspan="14" class="empty-message">Nenhuma entrega encontrada com os filtros atuais</td>';
+                document.getElementById('corpoTabela').appendChild(msgRow);
+            }
         }
         
         function verificarSeAtrasada(prazoString, status) {
             if (status === 'entregue' || !prazoString || prazoString === '-') return false;
-            const [dia, mes, ano] = prazoString.split('/');
-            const prazoDate = new Date(ano, mes - 1, dia);
-            const hoje = new Date(); hoje.setHours(0,0,0,0);
+            const partes = prazoString.split('/');
+            if (partes.length !== 3) return false;
+            const prazoDate = new Date(partes[2], partes[1] - 1, partes[0]);
+            const hoje = new Date();
+            hoje.setHours(0, 0, 0, 0);
             return prazoDate < hoje;
         }
         
         function verificarProximoPrazo(prazoString, status) {
             if (status === 'entregue' || !prazoString || prazoString === '-') return false;
-            const [dia, mes, ano] = prazoString.split('/');
-            const prazoDate = new Date(ano, mes - 1, dia);
+            const partes = prazoString.split('/');
+            if (partes.length !== 3) return false;
+            const prazoDate = new Date(partes[2], partes[1] - 1, partes[0]);
             const hoje = new Date();
-            const umaSemana = new Date(); umaSemana.setDate(hoje.getDate() + 7);
-            hoje.setHours(0,0,0,0); umaSemana.setHours(0,0,0,0);
+            const umaSemana = new Date();
+            umaSemana.setDate(hoje.getDate() + 7);
+            hoje.setHours(0, 0, 0, 0);
+            umaSemana.setHours(0, 0, 0, 0);
             return prazoDate >= hoje && prazoDate <= umaSemana;
         }
         
         function showSection(section) {
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            
             if (section === 'dashboard') {
-                document.querySelector('.tab:nth-child(2)').classList.add('active');
+                document.querySelector('.tab:nth-child(2)')?.classList.add('active');
                 document.getElementById('dashboard').classList.add('active');
-                document.querySelector('.table-container').style.display = 'none';
+                document.getElementById('tableContainer').style.display = 'none';
                 atualizarDashboard();
             } else {
-                document.querySelector('.tab:nth-child(1)').classList.add('active');
+                document.querySelector('.tab:nth-child(1)')?.classList.add('active');
                 document.getElementById('dashboard').classList.remove('active');
-                document.querySelector('.table-container').style.display = 'block';
+                document.getElementById('tableContainer').style.display = 'block';
             }
         }
         
         function carregarVendedores() {
             const saved = localStorage.getItem('listaVendedores');
-            if (saved) listaVendedores = JSON.parse(saved);
+            if (saved) {
+                try {
+                    listaVendedores = JSON.parse(saved);
+                } catch (e) {
+                    listaVendedores = ['MARIANE', 'JEISE', 'MONICA', 'MARIVAL'];
+                }
+            }
             atualizarSelectsVendedores();
         }
         
@@ -1789,8 +2105,14 @@
         
         function adicionarNovoVendedor() {
             const nome = document.getElementById('newVendorName').value.trim().toUpperCase();
-            if (!nome) { alert('Digite o nome do vendedor'); return; }
-            if (listaVendedores.includes(nome)) { alert(`Vendedor "${nome}" já existe!`); return; }
+            if (!nome) {
+                alert('Digite o nome do vendedor');
+                return;
+            }
+            if (listaVendedores.includes(nome)) {
+                alert(`Vendedor "${nome}" já existe!`);
+                return;
+            }
             listaVendedores.push(nome);
             salvarVendedores();
             atualizarSelectsVendedores();
@@ -1800,14 +2122,12 @@
         }
         
         function atualizarSelectsVendedores() {
-            const selects = document.querySelectorAll('#corpoTabela select');
-            selects.forEach(select => {
-                if (select.closest('tr')?.classList.contains('edit-row')) {
-                    const valorAtual = select.value;
-                    select.innerHTML = listaVendedores.map(v => 
-                        `<option value="${v}" ${valorAtual === v ? 'selected' : ''}>${v}</option>`
-                    ).join('');
-                }
+            const selectEditRows = document.querySelectorAll('#corpoTabela tr.edit-row td:nth-child(2) select');
+            selectEditRows.forEach(select => {
+                const valorAtual = select.value;
+                select.innerHTML = listaVendedores.map(v =>
+                    `<option value="${v}" ${valorAtual === v ? 'selected' : ''}>${v}</option>`
+                ).join('');
             });
             
             const userSelection = document.getElementById('userSelection');
@@ -1826,12 +2146,31 @@
             }
         }
         
-        function openUserModal() { atualizarSelectsVendedores(); document.getElementById('userModal').style.display = 'block'; }
-        function closeUserModal() { document.getElementById('userModal').style.display = 'none'; }
-        function openColumnsModal() { document.getElementById('columnsModal').style.display = 'block'; }
-        function closeColumnsModal() { document.getElementById('columnsModal').style.display = 'none'; }
-        function openNewVendorModal() { document.getElementById('newVendorModal').style.display = 'block'; document.getElementById('newVendorName').value = ''; }
-        function closeNewVendorModal() { document.getElementById('newVendorModal').style.display = 'none'; }
+        function openUserModal() {
+            atualizarSelectsVendedores();
+            document.getElementById('userModal').style.display = 'block';
+        }
+        
+        function closeUserModal() {
+            document.getElementById('userModal').style.display = 'none';
+        }
+        
+        function openColumnsModal() {
+            document.getElementById('columnsModal').style.display = 'block';
+        }
+        
+        function closeColumnsModal() {
+            document.getElementById('columnsModal').style.display = 'none';
+        }
+        
+        function openNewVendorModal() {
+            document.getElementById('newVendorModal').style.display = 'block';
+            document.getElementById('newVendorName').value = '';
+        }
+        
+        function closeNewVendorModal() {
+            document.getElementById('newVendorModal').style.display = 'none';
+        }
         
         function openNotesModal(id, cliente) {
             currentNoteId = id;
@@ -1841,25 +2180,49 @@
             document.getElementById('notesTextarea').value = (entrega?.anotacoes) || '';
             document.getElementById('notesModal').style.display = 'block';
         }
-        function closeNotesModal() { document.getElementById('notesModal').style.display = 'none'; }
+        
+        function closeNotesModal() {
+            document.getElementById('notesModal').style.display = 'none';
+        }
         
         function salvarAnotacao() {
+            if (!currentNoteId) return;
+            
+            const anotacao = document.getElementById('notesTextarea').value;
             entregasRef.child(currentNoteId).update({
-                anotacoes: document.getElementById('notesTextarea').value,
+                anotacoes: anotacao,
                 timestamp: firebase.database.ServerValue.TIMESTAMP
             }).then(() => {
                 mostrarNotificacao('📝 Anotação salva!');
                 closeNotesModal();
+            }).catch(error => {
+                console.error("Erro ao salvar anotação:", error);
+                alert("Erro ao salvar anotação.");
             });
         }
         
-        function showPasswordModal(id) { currentDeleteId = id; document.getElementById('passwordModal').style.display = 'block'; document.getElementById('passwordInput').value = ''; document.getElementById('passwordError').style.display = 'none'; }
-        function cancelDelete() { document.getElementById('passwordModal').style.display = 'none'; currentDeleteId = null; }
+        function showPasswordModal(id) {
+            currentDeleteId = id;
+            document.getElementById('passwordModal').style.display = 'block';
+            document.getElementById('passwordInput').value = '';
+            document.getElementById('passwordError').style.display = 'none';
+        }
+        
+        function cancelDelete() {
+            document.getElementById('passwordModal').style.display = 'none';
+            currentDeleteId = null;
+        }
+        
         function confirmDelete() {
             if (document.getElementById('passwordInput').value === SENHA_EXCLUSAO) {
-                entregasRef.child(currentDeleteId).remove().then(() => {
-                    mostrarNotificacao('🗑️ Excluído!');
-                });
+                if (currentDeleteId) {
+                    entregasRef.child(currentDeleteId).remove().then(() => {
+                        mostrarNotificacao('🗑️ Registro excluído!');
+                    }).catch(error => {
+                        console.error("Erro ao excluir:", error);
+                        alert("Erro ao excluir registro.");
+                    });
+                }
                 document.getElementById('passwordModal').style.display = 'none';
                 currentDeleteId = null;
             } else {
@@ -1871,47 +2234,88 @@
             currentUser = user;
             localStorage.setItem('selectedUser', user);
             document.getElementById('currentUserName').textContent = user === 'TODOS' ? 'Todos os usuários' : user;
-            document.getElementById('currentUserAvatar').textContent = user.charAt(0);
+            document.getElementById('currentUserAvatar').textContent = user === 'TODOS' ? 'T' : user.charAt(0);
             closeUserModal();
             filtrarTabela();
+            mostrarNotificacao(`👤 Visualizando: ${user === 'TODOS' ? 'Todos' : user}`);
         }
         
         function loadUser() {
             const saved = localStorage.getItem('selectedUser');
-            if (saved) selectUser(saved);
-            else openUserModal();
+            if (saved) {
+                selectUser(saved);
+            } else {
+                openUserModal();
+            }
         }
         
         function filtrarPorAba(aba) {
             abaAtual = aba;
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-            document.querySelectorAll('.tab').forEach(t => {
-                if (t.textContent.toLowerCase().includes(aba)) t.classList.add('active');
+            
+            // Ativa a tab correspondente
+            const tabs = document.querySelectorAll('.tab');
+            tabs.forEach(t => {
+                const tabText = t.textContent.toLowerCase();
+                if (tabText.includes(aba) || (aba === 'todos' && tabText === 'todos')) {
+                    t.classList.add('active');
+                }
             });
+            
             filtrarTabela();
+            
+            const statusNomes = {
+                'todos': 'Todos os registros',
+                'coletando': 'Coletando',
+                'transito': 'Em Trânsito',
+                'parado': 'Parado',
+                'entregue': 'Entregue'
+            };
+            mostrarNotificacao(`📋 Filtrando: ${statusNomes[aba] || aba}`);
         }
         
         function loadColumnPreferences() {
             const columnsList = document.getElementById('columnsList');
+            if (!columnsList) return;
+            
             columnsList.innerHTML = '';
             Object.keys(columnIndices).forEach(col => {
-                columnsList.innerHTML += `<div class="column-toggle"><input type="checkbox" id="toggle-${col}" checked onchange="toggleColumn('${col}')"><label for="toggle-${col}">${col.toUpperCase().replace('-',' ')}</label></div>`;
+                const label = col.replace(/-/g, ' ').toUpperCase();
+                columnsList.innerHTML += `
+                    <div class="column-toggle">
+                        <input type="checkbox" id="toggle-${col}" checked onchange="toggleColumn('${col}')">
+                        <label for="toggle-${col}">${label}</label>
+                    </div>
+                `;
             });
+            
             const prefs = JSON.parse(localStorage.getItem('columnPreferences') || '{}');
             Object.keys(prefs).forEach(col => {
                 const cb = document.getElementById(`toggle-${col}`);
-                if (cb) { cb.checked = prefs[col]; toggleColumn(col); }
+                if (cb) {
+                    cb.checked = prefs[col];
+                    toggleColumn(col);
+                }
             });
         }
         
         function toggleColumn(columnName) {
-            const isChecked = document.getElementById(`toggle-${columnName}`).checked;
+            const isChecked = document.getElementById(`toggle-${columnName}`)?.checked;
             const idx = columnIndices[columnName];
+            
             if (idx !== undefined) {
-                document.querySelectorAll(`th[data-column="${columnName}"]`).forEach(c => c.style.display = isChecked ? '' : 'none');
-                document.querySelectorAll('#corpoTabela tr').forEach(row => {
-                    if (row.cells[idx]) row.cells[idx].style.display = isChecked ? '' : 'none';
+                // Oculta/mostra cabeçalho
+                document.querySelectorAll(`th[data-column="${columnName}"]`).forEach(c => {
+                    c.style.display = isChecked ? '' : 'none';
                 });
+                
+                // Oculta/mostra células
+                document.querySelectorAll('#corpoTabela tr').forEach(row => {
+                    if (row.cells[idx]) {
+                        row.cells[idx].style.display = isChecked ? '' : 'none';
+                    }
+                });
+                
                 const prefs = JSON.parse(localStorage.getItem('columnPreferences') || '{}');
                 prefs[columnName] = isChecked;
                 localStorage.setItem('columnPreferences', JSON.stringify(prefs));
@@ -1920,46 +2324,141 @@
         
         function atualizarDashboard() {
             if (!todasEntregas.length) return;
+            
             const total = todasEntregas.length;
             const entregues = todasEntregas.filter(e => e.status === 'entregue').length;
-            const atrasadas = todasEntregas.filter(e => verificarSeAtrasada(formatarPrazoParaDisplay(e.prazo), e.status)).length;
-            const proximas = todasEntregas.filter(e => verificarProximoPrazo(formatarPrazoParaDisplay(e.prazo), e.status)).length;
+            const atrasadas = todasEntregas.filter(e => {
+                const prazoDisplay = formatarPrazoParaDisplay(e.prazo);
+                return verificarSeAtrasada(prazoDisplay, e.status);
+            }).length;
+            const proximas = todasEntregas.filter(e => {
+                const prazoDisplay = formatarPrazoParaDisplay(e.prazo);
+                return verificarProximoPrazo(prazoDisplay, e.status);
+            }).length;
+            
             document.getElementById('statsGrid').innerHTML = `
                 <div class="stat-card"><div class="stat-number">${total}</div><div class="stat-label">Total de Entregas</div></div>
-                <div class="stat-card success"><div class="stat-number">${total>0?((entregues/total)*100).toFixed(1):0}%</div><div class="stat-label">Taxa de Entrega</div></div>
+                <div class="stat-card success"><div class="stat-number">${total > 0 ? ((entregues / total) * 100).toFixed(1) : 0}%</div><div class="stat-label">Taxa de Entrega</div></div>
                 <div class="stat-card warning"><div class="stat-number">${proximas}</div><div class="stat-label">Próximas do Prazo</div></div>
-                <div class="stat-card danger"><div class="stat-number">${atrasadas}</div><div class="stat-label">Entregas Atrasadas</div></div>`;
+                <div class="stat-card danger"><div class="stat-number">${atrasadas}</div><div class="stat-label">Entregas Atrasadas</div></div>
+            `;
+            
             atualizarGraficos();
         }
         
         function atualizarGraficos() {
-            const statusCount = { coletando:0, transito:0, parado:0, entregue:0 };
-            const cidadesCount = {}, vendedoresCount = {}, meses = {};
+            const statusCount = { coletando: 0, transito: 0, parado: 0, entregue: 0 };
+            const cidadesCount = {};
+            const vendedoresCount = {};
+            const meses = {};
+            
             const hoje = new Date();
-            for (let i=5;i>=0;i--) { const d=new Date(hoje.getFullYear(), hoje.getMonth()-i,1); meses[`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`]=0; }
+            for (let i = 5; i >= 0; i--) {
+                const d = new Date(hoje.getFullYear(), hoje.getMonth() - i, 1);
+                const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+                meses[key] = 0;
+            }
             
             todasEntregas.forEach(e => {
-                statusCount[e.status] = (statusCount[e.status]||0)+1;
-                if (e.destino) cidadesCount[e.destino] = (cidadesCount[e.destino]||0)+1;
-                if (e.vendedor) vendedoresCount[e.vendedor] = (vendedoresCount[e.vendedor]||0)+1;
-                if (e.data) { const [ano,mes]=e.data.split('-'); if (meses[`${ano}-${mes}`]!==undefined) meses[`${ano}-${mes}`]++; }
+                statusCount[e.status] = (statusCount[e.status] || 0) + 1;
+                if (e.destino && e.destino.trim()) {
+                    const cidade = e.destino.split(' - ')[0].trim();
+                    cidadesCount[cidade] = (cidadesCount[cidade] || 0) + 1;
+                }
+                if (e.vendedor) vendedoresCount[e.vendedor] = (vendedoresCount[e.vendedor] || 0) + 1;
+                if (e.data) {
+                    const partes = e.data.split('-');
+                    if (partes.length >= 2) {
+                        const key = `${partes[0]}-${partes[1]}`;
+                        if (meses[key] !== undefined) meses[key]++;
+                    }
+                }
             });
             
-            if (charts.statusChart) charts.statusChart.destroy();
-            charts.statusChart = new Chart(document.getElementById('statusChart'), { type:'doughnut', data:{ labels:['Coletando','Em Trânsito','Parado','Entregue'], datasets:[{ data:[statusCount.coletando,statusCount.transito,statusCount.parado,statusCount.entregue], backgroundColor:['#0077b6','#f39c12','#e74c3c','#2ecc71'] }] } });
+            // Destroi gráficos anteriores
+            Object.values(charts).forEach(chart => {
+                if (chart && typeof chart.destroy === 'function') chart.destroy();
+            });
             
-            const topCidades = Object.entries(cidadesCount).sort((a,b)=>b[1]-a[1]).slice(0,10);
-            if (charts.cidadesChart) charts.cidadesChart.destroy();
-            charts.cidadesChart = new Chart(document.getElementById('cidadesChart'), { type:'bar', data:{ labels:topCidades.map(c=>c[0]), datasets:[{ label:'Entregas', data:topCidades.map(c=>c[1]), backgroundColor:'#3498db' }] } });
+            // Gráfico de Status
+            const statusCtx = document.getElementById('statusChart');
+            if (statusCtx) {
+                charts.statusChart = new Chart(statusCtx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Coletando', 'Em Trânsito', 'Parado', 'Entregue'],
+                        datasets: [{
+                            data: [statusCount.coletando, statusCount.transito, statusCount.parado, statusCount.entregue],
+                            backgroundColor: ['#0077b6', '#f39c12', '#e74c3c', '#2ecc71']
+                        }]
+                    }
+                });
+            }
             
-            if (charts.entregasMensaisChart) charts.entregasMensaisChart.destroy();
-            charts.entregasMensaisChart = new Chart(document.getElementById('entregasMensaisChart'), { type:'line', data:{ labels:Object.keys(meses).map(k=>{const[a,m]=k.split('-');return `${m}/${a}`}), datasets:[{ label:'Entregas', data:Object.values(meses), borderColor:'#9C27B0', fill:true, tension:0.4 }] } });
+            // Gráfico de Cidades (Top 10)
+            const topCidades = Object.entries(cidadesCount).sort((a, b) => b[1] - a[1]).slice(0, 10);
+            const cidadesCtx = document.getElementById('cidadesChart');
+            if (cidadesCtx) {
+                charts.cidadesChart = new Chart(cidadesCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: topCidades.map(c => c[0]),
+                        datasets: [{
+                            label: 'Entregas',
+                            data: topCidades.map(c => c[1]),
+                            backgroundColor: '#3498db'
+                        }]
+                    }
+                });
+            }
             
-            if (charts.vendedoresChart) charts.vendedoresChart.destroy();
-            charts.vendedoresChart = new Chart(document.getElementById('vendedoresChart'), { type:'pie', data:{ labels:Object.keys(vendedoresCount), datasets:[{ data:Object.values(vendedoresCount), backgroundColor:['#3498db','#2ecc71','#e74c3c','#f39c12','#9b59b6'] }] } });
+            // Gráfico de Entregas Mensais
+            const mesesLabels = Object.keys(meses).map(k => {
+                const [a, m] = k.split('-');
+                const nomes = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+                return `${nomes[parseInt(m) - 1]}/${a}`;
+            });
+            
+            const mensaisCtx = document.getElementById('entregasMensaisChart');
+            if (mensaisCtx) {
+                charts.entregasMensaisChart = new Chart(mensaisCtx, {
+                    type: 'line',
+                    data: {
+                        labels: mesesLabels,
+                        datasets: [{
+                            label: 'Entregas',
+                            data: Object.values(meses),
+                            borderColor: '#9C27B0',
+                            backgroundColor: 'rgba(156, 39, 176, 0.1)',
+                            fill: true,
+                            tension: 0.4
+                        }]
+                    }
+                });
+            }
+            
+            // Gráfico de Vendedores
+            const vendedoresCtx = document.getElementById('vendedoresChart');
+            if (vendedoresCtx) {
+                charts.vendedoresChart = new Chart(vendedoresCtx, {
+                    type: 'pie',
+                    data: {
+                        labels: Object.keys(vendedoresCount),
+                        datasets: [{
+                            data: Object.values(vendedoresCount),
+                            backgroundColor: ['#3498db', '#2ecc71', '#e74c3c', '#f39c12', '#9b59b6', '#1abc9c']
+                        }]
+                    }
+                });
+            }
         }
         
-        function formatarPrazoParaDisplay(prazo) { if(!prazo) return '-'; const [ano,mes,dia]=prazo.split('-'); return `${dia}/${mes}/${ano}`; }
+        function formatarPrazoParaDisplay(prazo) {
+            if (!prazo) return '-';
+            const partes = prazo.split('-');
+            if (partes.length === 3) return `${partes[2]}/${partes[1]}/${partes[0]}`;
+            return prazo;
+        }
         
         let filtersVisible = true;
         function toggleFilters() {
@@ -1970,7 +2469,7 @@
             btn.innerHTML = filtersVisible ? '◀' : '▶';
         }
         
-        // Eventos
+        // Event Listeners
         document.getElementById('dataInicioFilter').addEventListener('change', filtrarTabela);
         document.getElementById('dataFimFilter').addEventListener('change', filtrarTabela);
         document.getElementById('origemFilter').addEventListener('change', filtrarTabela);
@@ -1979,21 +2478,31 @@
         document.getElementById('filterToggleBtn').addEventListener('click', toggleFilters);
         document.getElementById('voiceToggleBtn').addEventListener('click', toggleVoz);
         
+        // Fecha modais ao clicar fora
         window.onclick = function(event) {
-            if (event.target.classList.contains('modal')) event.target.style.display = 'none';
+            if (event.target.classList.contains('modal')) {
+                event.target.style.display = 'none';
+            }
         };
         
-        document.addEventListener('DOMContentLoaded', async () => { 
+        // Tecla Enter para confirmar exclusão
+        document.getElementById('passwordInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') confirmDelete();
+        });
+        
+        // Inicialização
+        document.addEventListener('DOMContentLoaded', async () => {
             carregarVendedores();
-            loadUser(); 
+            loadUser();
             carregarDados();
             carregarPreferenciaVoz();
+            
             console.log('🔄 Carregando cidades do IBGE...');
             await buscarTodasCidades();
             console.log(`✅ ${cacheCidadesIBGE.length} cidades carregadas do IBGE!`);
             console.log('🔊 Voz:', vozAtivada ? 'ATIVADA' : 'DESATIVADA');
-            console.log('👥 Acesso simultâneo: SEM conflitos');
-            console.log('🏙️ Cidades: API IBGE integrada (formato: SALVADOR - BA)');
+            console.log('🖨️ Impressão: CORRIGIDA - Imprime apenas dados da aba atual');
+            console.log('📊 Filtros: ESTÁVEIS - Dados não somem mais');
         });
     </script>
 </body>
