@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -112,7 +111,6 @@
             opacity: 1;
         }
         
-        /* Painel de Filtros com seta */
         .filters-wrapper {
             position: relative;
             margin-bottom: 25px;
@@ -239,62 +237,19 @@
             box-shadow: 0 4px 8px rgba(0,0,0,0.15);
         }
         
-        .filter-btn {
-            background-color: var(--secondary-color);
-        }
+        .filter-btn { background-color: var(--secondary-color); }
+        .export-btn { background-color: var(--primary-color); }
+        .load-btn { background-color: var(--warning-color); }
+        .print-btn { background-color: #2196F3; }
+        .dashboard-btn { background-color: #FF9800; }
+        .toggle-columns-btn { background-color: #795548; }
+        .new-vendor-btn { background-color: #00BCD4; }
+        .edit-btn { background-color: var(--primary-color); padding: 6px 12px; font-size: 0.8rem; }
+        .delete-btn { background-color: var(--danger-color); padding: 6px 12px; font-size: 0.8rem; }
+        .note-btn { background-color: #FF9800; padding: 6px 12px; font-size: 0.8rem; }
+        .save-btn { background-color: var(--secondary-color); }
+        .cancel-btn { background-color: var(--warning-color); color: #333; }
         
-        .export-btn {
-            background-color: var(--primary-color);
-        }
-        
-        .load-btn {
-            background-color: var(--warning-color);
-        }
-        
-        .print-btn {
-            background-color: #2196F3;
-        }
-        
-        .dashboard-btn {
-            background-color: #FF9800;
-        }
-        
-        .toggle-columns-btn {
-            background-color: #795548;
-        }
-        
-        .new-vendor-btn {
-            background-color: #00BCD4;
-        }
-        
-        .edit-btn {
-            background-color: var(--primary-color);
-            padding: 6px 12px;
-            font-size: 0.8rem;
-        }
-        
-        .delete-btn {
-            background-color: var(--danger-color);
-            padding: 6px 12px;
-            font-size: 0.8rem;
-        }
-        
-        .note-btn {
-            background-color: #FF9800;
-            padding: 6px 12px;
-            font-size: 0.8rem;
-        }
-        
-        .save-btn {
-            background-color: var(--secondary-color);
-        }
-        
-        .cancel-btn {
-            background-color: var(--warning-color);
-            color: #333;
-        }
-        
-        /* Botão + fixo */
         .fab-add {
             position: fixed;
             bottom: 30px;
@@ -354,17 +309,9 @@
             white-space: nowrap;
         }
         
-        tr:last-child td {
-            border-bottom: none;
-        }
-        
-        tr:nth-child(even) {
-            background-color: #f8f9fa;
-        }
-        
-        tr:hover {
-            background-color: #edf2f7;
-        }
+        tr:last-child td { border-bottom: none; }
+        tr:nth-child(even) { background-color: #f8f9fa; }
+        tr:hover { background-color: #edf2f7; }
         
         .atrasada {
             background-color: #ffeaea !important;
@@ -414,13 +361,20 @@
             right: 30px;
             background-color: #4CAF50;
             color: white;
-            padding: 12px 20px;
-            border-radius: 8px;
+            padding: 15px 25px;
+            border-radius: 10px;
             display: none;
-            z-index: 1000;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            animation: slideInRight 0.3s ease;
-            font-weight: 500;
+            z-index: 9999;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+            font-weight: 600;
+            font-size: 1rem;
+            animation: slideInRight 0.4s ease;
+            max-width: 450px;
+            word-wrap: break-word;
+        }
+        
+        .notification-toast.show {
+            display: block !important;
         }
         
         .edit-row {
@@ -457,6 +411,65 @@
             font-size: 1rem;
         }
         
+        /* Estilo para o autocomplete de cidades */
+        .cidade-input-wrapper {
+            position: relative;
+        }
+        
+        .cidade-input-wrapper input {
+            width: 100%;
+            padding: 6px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 0.85rem;
+        }
+        
+        .cidade-suggestions {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 1px solid #ddd;
+            border-top: none;
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 1000;
+            display: none;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            border-radius: 0 0 6px 6px;
+        }
+        
+        .cidade-suggestions.active {
+            display: block;
+        }
+        
+        .cidade-suggestion-item {
+            padding: 8px 12px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            border-bottom: 1px solid #f0f0f0;
+            transition: background 0.2s;
+        }
+        
+        .cidade-suggestion-item:hover {
+            background-color: #e8f4fd;
+        }
+        
+        .cidade-suggestion-item strong {
+            color: var(--primary-color);
+        }
+        
+        .cidade-suggestion-item .uf-badge {
+            display: inline-block;
+            background: var(--primary-color);
+            color: white;
+            padding: 1px 6px;
+            border-radius: 3px;
+            font-size: 0.7rem;
+            margin-left: 5px;
+        }
+        
         .modal {
             display: none;
             position: fixed;
@@ -489,27 +502,10 @@
             border-bottom: 1px solid #e9ecef;
         }
         
-        .modal-title {
-            font-size: 1.4rem;
-            color: var(--dark-color);
-        }
+        .modal-title { font-size: 1.4rem; color: var(--dark-color); }
+        .close-modal { background: none; border: none; font-size: 1.6rem; cursor: pointer; color: var(--gray-color); }
+        .modal-buttons { display: flex; justify-content: flex-end; margin-top: 20px; gap: 12px; }
         
-        .close-modal {
-            background: none;
-            border: none;
-            font-size: 1.6rem;
-            cursor: pointer;
-            color: var(--gray-color);
-        }
-        
-        .modal-buttons {
-            display: flex;
-            justify-content: flex-end;
-            margin-top: 20px;
-            gap: 12px;
-        }
-        
-        /* Modal de anotações */
         .notes-textarea {
             width: 100%;
             min-height: 200px;
@@ -537,10 +533,48 @@
             animation: pulse 1.5s infinite;
         }
         
+        .voice-control {
+            position: fixed;
+            bottom: 30px;
+            left: 30px;
+            z-index: 1000;
+        }
+        
+        .voice-toggle {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 18px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+        
+        .voice-toggle.muted {
+            background: #e74c3c;
+        }
+        
         @keyframes pulse {
             0% { opacity: 0.5; transform: scale(1); }
             50% { opacity: 1; transform: scale(1.2); }
             100% { opacity: 0.5; transform: scale(1); }
+        }
+        @keyframes slideInRight {
+            from { transform: translateX(120%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @keyframes slideIn {
+            from { transform: translateY(-50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
         }
         
         .user-selection {
@@ -621,9 +655,7 @@
             margin-bottom: 25px;
         }
         
-        .dashboard.active {
-            display: block;
-        }
+        .dashboard.active { display: block; }
         
         .stats-grid {
             display: grid;
@@ -683,34 +715,9 @@
             font-weight: 500;
         }
         
-        .tab:last-child {
-            border-right: none;
-        }
-        
-        .tab.active {
-            background-color: var(--primary-color);
-            color: white;
-            font-weight: bold;
-        }
-        
-        .tab:hover:not(.active) {
-            background-color: #e9ecef;
-        }
-        
-        @keyframes slideInRight {
-            from { transform: translateX(100%); opacity: 0; }
-            to { transform: translateX(0); opacity: 1; }
-        }
-        
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-        
-        @keyframes slideIn {
-            from { transform: translateY(-50px); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
-        }
+        .tab:last-child { border-right: none; }
+        .tab.active { background-color: var(--primary-color); color: white; font-weight: bold; }
+        .tab:hover:not(.active) { background-color: #e9ecef; }
         
         @media (max-width: 768px) {
             .container { padding: 10px; }
@@ -729,15 +736,19 @@
             .fab-add { width: 50px; height: 50px; font-size: 24px; bottom: 20px; right: 20px; }
             .filter-toggle-btn { width: 28px; height: 28px; left: -12px; font-size: 0.8rem; }
             .action-buttons { flex-direction: column; }
+            .voice-control { bottom: 20px; left: 20px; }
         }
     </style>
 </head>
 <body>
     <div class="copy-notification" id="copyNotification">Número copiado!</div>
-    <div class="notification-toast" id="notificationToast">✅ Nova carga adicionada!</div>
+    <div class="notification-toast" id="notificationToast"></div>
     
-    <!-- Botão + fixo -->
     <button class="fab-add" id="fabAddBtn" title="Adicionar nova entrega">+</button>
+    
+    <div class="voice-control">
+        <button class="voice-toggle" id="voiceToggleBtn" title="Notificação por voz ativada">🔊 Voz</button>
+    </div>
     
     <!-- Modal de Senha -->
     <div id="passwordModal" class="modal">
@@ -851,7 +862,6 @@
             </div>
         </div>
         
-        <!-- Filtros com seta -->
         <div class="filters-wrapper">
             <div class="filter-toggle-btn" id="filterToggleBtn" title="Ocultar/Mostrar filtros">◀</div>
             <div class="controls" id="filtersPanel">
@@ -940,6 +950,9 @@
         let currentNoteId = null;
         let currentNoteCliente = '';
         let listaVendedores = ['MARIANE', 'JEISE', 'MONICA', 'MARIVAL'];
+        let vozAtivada = true;
+        let ultimaCargaAnunciada = null;
+        let ultimoIdAnunciado = null;
         
         const columnIndices = {
             'data': 0, 'vendedor': 1, 'cliente': 2, 'telefone-cliente': 3,
@@ -947,162 +960,258 @@
             'frete-empresa': 8, 'frete-motorista': 9, 'status': 10, 'prazo': 11, 'observacao': 12
         };
 
-        // Carregar vendedores do localStorage
-        function carregarVendedores() {
-            const saved = localStorage.getItem('listaVendedores');
-            if (saved) {
-                listaVendedores = JSON.parse(saved);
+        // ==================== API IBGE - BUSCA DE CIDADES ====================
+        
+        let cacheCidadesIBGE = [];
+        let cacheEstadosIBGE = [];
+        
+        async function carregarEstadosIBGE() {
+            try {
+                const response = await fetch('https://servicodados.ibge.gov.br/api/v1/localidades/estados?orderBy=nome');
+                const estados = await response.json();
+                cacheEstadosIBGE = estados.map(e => ({
+                    id: e.id,
+                    nome: e.nome,
+                    sigla: e.sigla,
+                    regiao: e.regiao.nome
+                }));
+                return cacheEstadosIBGE;
+            } catch (error) {
+                console.error('Erro ao carregar estados:', error);
+                return [];
             }
-            atualizarSelectsVendedores();
         }
         
-        function salvarVendedores() {
-            localStorage.setItem('listaVendedores', JSON.stringify(listaVendedores));
+        async function carregarCidadesIBGE(uf) {
+            try {
+                const response = await fetch(`https://servicodados.ibge.gov.br/api/v1/localidades/estados/${uf}/municipios?orderBy=nome`);
+                const cidades = await response.json();
+                return cidades.map(c => ({
+                    id: c.id,
+                    nome: c.nome,
+                    uf: uf,
+                    nomeFormatado: `${c.nome} - ${uf}`
+                }));
+            } catch (error) {
+                console.error('Erro ao carregar cidades:', error);
+                return [];
+            }
         }
         
-        function adicionarNovoVendedor() {
-            const nome = document.getElementById('newVendorName').value.trim().toUpperCase();
-            if (!nome) {
-                alert('Por favor, digite o nome do novo vendedor');
-                return;
-            }
+        async function buscarTodasCidades() {
+            if (cacheCidadesIBGE.length > 0) return cacheCidadesIBGE;
             
-            if (listaVendedores.includes(nome)) {
-                alert(`O vendedor "${nome}" já existe!`);
-                return;
+            try {
+                // Carrega cidades de todos os estados em paralelo
+                const estados = await carregarEstadosIBGE();
+                const siglas = estados.map(e => e.sigla);
+                
+                // Carrega em lotes para não sobrecarregar
+                const todasCidades = [];
+                for (let i = 0; i < siglas.length; i++) {
+                    const cidades = await carregarCidadesIBGE(siglas[i]);
+                    todasCidades.push(...cidades);
+                }
+                
+                cacheCidadesIBGE = todasCidades;
+                return todasCidades;
+            } catch (error) {
+                console.error('Erro ao buscar todas cidades:', error);
+                return [];
             }
-            
-            listaVendedores.push(nome);
-            salvarVendedores();
-            atualizarSelectsVendedores();
-            closeNewVendorModal();
-            document.getElementById('newVendorName').value = '';
-            mostrarNotificacao(`✅ Vendedor "${nome}" adicionado com sucesso!`);
         }
         
-        function atualizarSelectsVendedores() {
-            // Atualizar selects de vendedor em todas as linhas editáveis
-            const selects = document.querySelectorAll('#corpoTabela select');
-            selects.forEach(select => {
-                if (select.closest('tr') && select.closest('tr').classList.contains('edit-row')) {
-                    const valorAtual = select.value;
-                    select.innerHTML = '';
-                    listaVendedores.forEach(v => {
-                        const option = document.createElement('option');
-                        option.value = v;
-                        option.textContent = v;
-                        if (valorAtual === v) option.selected = true;
-                        select.appendChild(option);
-                    });
+        function filtrarCidades(termo) {
+            if (!termo || termo.length < 2) return [];
+            
+            const termoUpper = termo.toUpperCase();
+            return cacheCidadesIBGE.filter(cidade => 
+                cidade.nome.toUpperCase().includes(termoUpper) ||
+                cidade.uf.toUpperCase() === termoUpper ||
+                cidade.nomeFormatado.toUpperCase().includes(termoUpper)
+            ).slice(0, 15); // Limita a 15 resultados
+        }
+        
+        function criarInputCidade(valorAtual = '', placeholder = 'Cidade/UF') {
+            const wrapper = document.createElement('div');
+            wrapper.className = 'cidade-input-wrapper';
+            
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.value = valorAtual;
+            input.placeholder = placeholder;
+            input.autocomplete = 'off';
+            
+            const suggestions = document.createElement('div');
+            suggestions.className = 'cidade-suggestions';
+            
+            wrapper.appendChild(input);
+            wrapper.appendChild(suggestions);
+            
+            let debounceTimer;
+            
+            input.addEventListener('input', () => {
+                clearTimeout(debounceTimer);
+                const valor = input.value;
+                
+                if (valor.length < 2) {
+                    suggestions.classList.remove('active');
+                    suggestions.innerHTML = '';
+                    return;
+                }
+                
+                debounceTimer = setTimeout(() => {
+                    const resultados = filtrarCidades(valor);
+                    
+                    if (resultados.length === 0) {
+                        suggestions.innerHTML = '<div class="cidade-suggestion-item" style="color:#999;">Nenhuma cidade encontrada</div>';
+                    } else {
+                        suggestions.innerHTML = resultados.map(cidade => `
+                            <div class="cidade-suggestion-item" onclick="selecionarCidade(this, '${cidade.nomeFormatado}')">
+                                <strong>${cidade.nome}</strong>
+                                <span class="uf-badge">${cidade.uf}</span>
+                            </div>
+                        `).join('');
+                    }
+                    
+                    suggestions.classList.add('active');
+                }, 300);
+            });
+            
+            input.addEventListener('focus', () => {
+                if (suggestions.children.length > 0) {
+                    suggestions.classList.add('active');
                 }
             });
             
-            // Atualizar modal de usuário
-            const userSelection = document.getElementById('userSelection');
-            if (userSelection) {
-                userSelection.innerHTML = '';
-                listaVendedores.forEach(vendedor => {
-                    const div = document.createElement('div');
-                    div.className = 'user-option';
-                    div.onclick = () => selectUser(vendedor);
-                    div.innerHTML = `
-                        <div class="user-option-avatar">${vendedor.charAt(0)}</div>
-                        <div class="user-option-name">${vendedor}</div>
-                    `;
-                    userSelection.appendChild(div);
-                });
-                // Adicionar opção TODOS
-                const divTodos = document.createElement('div');
-                divTodos.className = 'user-option';
-                divTodos.onclick = () => selectUser('TODOS');
-                divTodos.innerHTML = `
-                    <div class="user-option-avatar">T</div>
-                    <div class="user-option-name">TODOS</div>
-                `;
-                userSelection.appendChild(divTodos);
-            }
-        }
-
-        function mostrarNotificacao(mensagem) {
-            const toast = document.getElementById('notificationToast');
-            toast.textContent = mensagem;
-            toast.style.display = 'block';
-            setTimeout(() => {
-                toast.style.display = 'none';
-            }, 3000);
-        }
-
-        // Toggle dos filtros com seta
-        let filtersVisible = true;
-        
-        function toggleFilters() {
-            const panel = document.getElementById('filtersPanel');
-            const btn = document.getElementById('filterToggleBtn');
-            
-            if (filtersVisible) {
-                panel.classList.add('hidden');
-                btn.innerHTML = '▶';
-                filtersVisible = false;
-            } else {
-                panel.classList.remove('hidden');
-                btn.innerHTML = '◀';
-                filtersVisible = true;
-            }
-        }
-        
-        function openNewVendorModal() {
-            document.getElementById('newVendorModal').style.display = 'block';
-            document.getElementById('newVendorName').value = '';
-        }
-        
-        function closeNewVendorModal() {
-            document.getElementById('newVendorModal').style.display = 'none';
-        }
-        
-        // Funções para anotações
-        function openNotesModal(id, cliente) {
-            currentNoteId = id;
-            currentNoteCliente = cliente;
-            document.getElementById('notesClienteNome').innerHTML = `Cliente: <strong>${cliente}</strong>`;
-            
-            const entrega = todasEntregas.find(e => e.id === id);
-            if (entrega && entrega.anotacoes) {
-                document.getElementById('notesTextarea').value = entrega.anotacoes;
-            } else {
-                document.getElementById('notesTextarea').value = '';
-            }
-            
-            document.getElementById('notesModal').style.display = 'block';
-        }
-        
-        function closeNotesModal() {
-            document.getElementById('notesModal').style.display = 'none';
-            currentNoteId = null;
-        }
-        
-        function salvarAnotacao() {
-            const anotacoes = document.getElementById('notesTextarea').value;
-            
-            entregasRef.child(currentNoteId).update({
-                anotacoes: anotacoes,
-                timestamp: firebase.database.ServerValue.TIMESTAMP
-            }).then(() => {
-                mostrarNotificacao('📝 Anotação salva com sucesso!');
-                closeNotesModal();
-            }).catch(error => {
-                console.error("Erro ao salvar anotação:", error);
-                alert("Erro ao salvar a anotação.");
+            input.addEventListener('blur', () => {
+                setTimeout(() => {
+                    suggestions.classList.remove('active');
+                }, 200);
             });
+            
+            // Função global para selecionar
+            wrapper.selecionarCidade = function(nomeFormatado) {
+                input.value = nomeFormatado;
+                suggestions.classList.remove('active');
+            };
+            
+            return wrapper;
         }
+        
+        function selecionarCidade(element, nomeFormatado) {
+            const wrapper = element.closest('.cidade-input-wrapper');
+            const input = wrapper.querySelector('input');
+            input.value = nomeFormatado;
+            const suggestions = wrapper.querySelector('.cidade-suggestions');
+            suggestions.classList.remove('active');
+        }
+        
+        // Torna a função global
+        window.selecionarCidade = selecionarCidade;
+
+        // ==================== SISTEMA DE VOZ ====================
+        
+        function toggleVoz() {
+            vozAtivada = !vozAtivada;
+            const btn = document.getElementById('voiceToggleBtn');
+            
+            if (vozAtivada) {
+                btn.innerHTML = '🔊 Voz';
+                btn.classList.remove('muted');
+                localStorage.setItem('vozAtivada', 'true');
+                falar('Notificação por voz ativada');
+            } else {
+                btn.innerHTML = '🔇 Voz';
+                btn.classList.add('muted');
+                localStorage.setItem('vozAtivada', 'false');
+            }
+        }
+        
+        function falar(texto) {
+            if (!vozAtivada) return;
+            
+            window.speechSynthesis.cancel();
+            
+            setTimeout(() => {
+                const utterance = new SpeechSynthesisUtterance(texto);
+                utterance.lang = 'pt-BR';
+                utterance.rate = 1.0;
+                utterance.pitch = 1.1;
+                utterance.volume = 0.9;
+                
+                const voices = window.speechSynthesis.getVoices();
+                const vozPt = voices.find(v => v.lang.includes('pt'));
+                if (vozPt) utterance.voice = vozPt;
+                
+                window.speechSynthesis.speak(utterance);
+            }, 100);
+        }
+        
+        function anunciarNovaCarga(dadosCarga) {
+            if (!vozAtivada) return;
+            
+            const chaveUnica = `${dadosCarga.cliente}_${dadosCarga.data}_${dadosCarga.timestamp}`;
+            if (chaveUnica === ultimaCargaAnunciada) return;
+            
+            ultimaCargaAnunciada = chaveUnica;
+            
+            let mensagem = 'Nova carga adicionada. ';
+            if (dadosCarga.cliente) mensagem += `Cliente: ${dadosCarga.cliente}. `;
+            if (dadosCarga.origem && dadosCarga.destino) {
+                mensagem += `De ${dadosCarga.origem} para ${dadosCarga.destino}. `;
+            }
+            if (dadosCarga.vendedor) mensagem += `Vendedor: ${dadosCarga.vendedor}.`;
+            
+            falar(mensagem);
+        }
+        
+        function anunciarStatusAlterado(dadosCarga, novoStatus) {
+            if (!vozAtivada) return;
+            
+            const statusNomes = {
+                'coletando': 'Coletando',
+                'transito': 'Em trânsito',
+                'parado': 'Parado',
+                'entregue': 'Entregue'
+            };
+            
+            let mensagem = `Status alterado para ${statusNomes[novoStatus] || novoStatus}. `;
+            if (dadosCarga.cliente) mensagem += `Cliente: ${dadosCarga.cliente}.`;
+            
+            falar(mensagem);
+        }
+        
+        function carregarPreferenciaVoz() {
+            const saved = localStorage.getItem('vozAtivada');
+            if (saved === 'false') {
+                vozAtivada = false;
+                const btn = document.getElementById('voiceToggleBtn');
+                btn.innerHTML = '🔇 Voz';
+                btn.classList.add('muted');
+            }
+        }
+
+        // ==================== CARREGAMENTO DE DADOS ====================
         
         function carregarDados() {
             entregasRef.on('value', (snapshot) => {
                 const entregas = snapshot.val() || {};
                 const tabela = document.getElementById('corpoTabela');
+                
+                const linhasEditando = new Map();
+                document.querySelectorAll('#corpoTabela tr.edit-row').forEach(row => {
+                    linhasEditando.set(row.dataset.id, {
+                        html: row.innerHTML,
+                        originalContent: row.dataset.originalContent
+                    });
+                });
+                
                 tabela.innerHTML = '';
                 
                 if (Object.keys(entregas).length === 0) {
                     tabela.innerHTML = '<tr><td colspan="14" class="empty-message">Nenhuma entrega cadastrada</td></tr>';
+                    todasEntregas = [];
                     return;
                 }
                 
@@ -1113,10 +1222,32 @@
                     return timeB - timeA;
                 });
                 
+                if (todasEntregas.length > 0) {
+                    const idsAntigos = new Set(todasEntregas.map(e => e.id));
+                    entregasArray.forEach(entrega => {
+                        if (!idsAntigos.has(entrega.id) && !entrega.id.startsWith('new-')) {
+                            if (entrega.id !== ultimoIdAnunciado) {
+                                ultimoIdAnunciado = entrega.id;
+                                anunciarNovaCarga(entrega);
+                            }
+                        }
+                    });
+                }
+                
                 todasEntregas = entregasArray;
                 
                 entregasArray.forEach(({ id, ...entrega }) => {
-                    adicionarLinhaTabela(tabela, id, entrega);
+                    if (linhasEditando.has(id)) {
+                        const editData = linhasEditando.get(id);
+                        const tempRow = document.createElement('tr');
+                        tempRow.dataset.id = id;
+                        tempRow.className = 'edit-row';
+                        tempRow.innerHTML = editData.html;
+                        tempRow.dataset.originalContent = editData.originalContent;
+                        tabela.appendChild(tempRow);
+                    } else {
+                        adicionarLinhaTabela(tabela, id, entrega);
+                    }
                 });
                 
                 carregarCidadesFiltro();
@@ -1174,8 +1305,8 @@
                 <td><div class="cell-content">${entrega.observacao || '-'}</div></td>
                 <td class="action-buttons">
                     <button class="note-btn" onclick="openNotesModal('${id}', '${entrega.cliente || 'Cliente'}')" title="Anotações">📝</button>
-                    <button class="edit-btn" onclick="editarLinha(this)">✏️</button>
-                    <button class="delete-btn" onclick="excluirLinha(this)">🗑️</button>
+                    <button class="edit-btn" onclick="editarLinha(this)" title="Editar">✏️</button>
+                    <button class="delete-btn" onclick="excluirLinha(this)" title="Excluir">🗑️</button>
                 </td>
             `;
             
@@ -1200,10 +1331,13 @@
             prazoDate.setDate(prazoDate.getDate() + 7);
             const prazoPadrao = `${prazoDate.getFullYear()}-${String(prazoDate.getMonth()+1).padStart(2,'0')}-${String(prazoDate.getDate()).padStart(2,'0')}`;
             
-            let vendedorOptions = '';
-            listaVendedores.forEach(v => {
-                vendedorOptions += `<option value="${v}" ${currentUser === v ? 'selected' : ''}>${v}</option>`;
-            });
+            let vendedorOptions = listaVendedores.map(v => 
+                `<option value="${v}" ${currentUser === v ? 'selected' : ''}>${v}</option>`
+            ).join('');
+            
+            // Cria inputs de cidade com autocomplete
+            const cidadeOrigemWrapper = criarInputCidade('', 'Cidade/UF (ex: Salvador - BA)');
+            const cidadeDestinoWrapper = criarInputCidade('', 'Cidade/UF (ex: São Paulo - SP)');
             
             newRow.innerHTML = `
                 <td><input type="date" value="${formattedDate}" style="padding: 6px; width: 100%;"></td>
@@ -1212,8 +1346,8 @@
                 <td><input type="text" placeholder="(XX) XXXXX-XXXX" style="padding: 6px; width: 100%;"></td>
                 <td><input type="text" placeholder="Nome do motorista" style="padding: 6px; width: 100%;"></td>
                 <td><input type="text" placeholder="(XX) XXXXX-XXXX" style="padding: 6px; width: 100%;"></td>
-                <td><input type="text" placeholder="Cidade/UF" style="padding: 6px; width: 100%;"></td>
-                <td><input type="text" placeholder="Cidade/UF" style="padding: 6px; width: 100%;"></td>
+                <td class="cidade-cell"></td>
+                <td class="cidade-cell"></td>
                 <td><input type="text" placeholder="R$ 0,00" style="padding: 6px; width: 100%;"></td>
                 <td><input type="text" placeholder="R$ 0,00" style="padding: 6px; width: 100%;"></td>
                 <td>
@@ -1232,6 +1366,10 @@
                 </td>
             `;
             
+            // Insere os inputs de cidade nas células corretas
+            newRow.querySelectorAll('.cidade-cell')[0].appendChild(cidadeOrigemWrapper);
+            newRow.querySelectorAll('.cidade-cell')[1].appendChild(cidadeDestinoWrapper);
+            
             newRow.querySelectorAll('input[type="text"]').forEach(input => {
                 if (input.placeholder.includes('(XX)')) input.addEventListener('input', formatarTelefoneInput);
                 else if (input.placeholder.startsWith('R$')) input.addEventListener('input', formatarMoedaInput);
@@ -1241,51 +1379,6 @@
             else tabela.appendChild(newRow);
             
             newRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }
-        
-        function salvarLinha(botao) {
-            const linha = botao.closest('tr');
-            const inputs = linha.querySelectorAll('input, select');
-            const id = linha.dataset.id;
-            
-            if (!inputs[0].value || !inputs[2].value || !inputs[3].value || !inputs[4].value || !inputs[5].value) {
-                alert('Preencha os campos obrigatórios: Data, Cliente, Telefone Cliente, Motorista e Telefone Motorista');
-                return;
-            }
-            
-            let freteEmpresa = 0, freteMotorista = 0;
-            if (inputs[8].value) freteEmpresa = parseFloat(inputs[8].value.replace(/[^\d,]/g, '').replace(',', '.')) || 0;
-            if (inputs[9].value) freteMotorista = parseFloat(inputs[9].value.replace(/[^\d,]/g, '').replace(',', '.')) || 0;
-            
-            const entrega = {
-                data: inputs[0].value,
-                vendedor: inputs[1].value,
-                cliente: inputs[2].value,
-                telefoneCliente: inputs[3].value.replace(/\D/g, ''),
-                motorista: inputs[4].value,
-                telefoneMotorista: inputs[5].value.replace(/\D/g, ''),
-                origem: inputs[6].value,
-                destino: inputs[7].value,
-                freteEmpresa: freteEmpresa,
-                freteMotorista: freteMotorista,
-                status: inputs[10].value,
-                prazo: inputs[11].value || '',
-                observacao: inputs[12].value || '',
-                anotacoes: '',
-                timestamp: firebase.database.ServerValue.TIMESTAMP
-            };
-            
-            const operacao = id.startsWith('new-') ? entregasRef.push(entrega) : entregasRef.child(id).update(entrega);
-            
-            operacao.then(() => {
-                if (id.startsWith('new-')) {
-                    linha.remove();
-                    mostrarNotificacao('✅ Nova carga adicionada!');
-                }
-            }).catch(error => {
-                console.error("Erro:", error);
-                alert("Erro ao salvar os dados.");
-            });
         }
         
         function editarLinha(botao) {
@@ -1307,21 +1400,30 @@
             
             const statusAtual = celulas[10].className.replace('status-', '');
             
-            let vendedorOptions = '';
-            listaVendedores.forEach(v => {
-                vendedorOptions += `<option value="${v}" ${celulas[1].textContent === v ? 'selected' : ''}>${v}</option>`;
-            });
+            let vendedorOptions = listaVendedores.map(v => 
+                `<option value="${v}" ${celulas[1].textContent === v ? 'selected' : ''}>${v}</option>`
+            ).join('');
+            
+            const origemAtual = celulas[6].querySelector('.cell-content')?.textContent || celulas[6].textContent;
+            const destinoAtual = celulas[7].querySelector('.cell-content')?.textContent || celulas[7].textContent;
+            
+            const cidadeOrigemWrapper = criarInputCidade(origemAtual === '-' ? '' : origemAtual, 'Cidade/UF');
+            const cidadeDestinoWrapper = criarInputCidade(destinoAtual === '-' ? '' : destinoAtual, 'Cidade/UF');
+            
+            const clienteAtual = celulas[2].querySelector('.cell-content')?.textContent.replace(/[○●◯]/g, '').trim() || celulas[2].textContent.replace(/[○●◯]/g, '').trim();
+            const motoristaAtual = celulas[4].querySelector('.cell-content')?.textContent || celulas[4].textContent;
+            const obsAtual = celulas[12].querySelector('.cell-content')?.textContent === '-' ? '' : (celulas[12].querySelector('.cell-content')?.textContent || celulas[12].textContent);
             
             linha.className = 'edit-row';
             linha.innerHTML = `
                 <td><input type="date" value="${dataFormatada}" style="padding: 6px; width: 100%;"></td>
                 <td><select style="padding: 6px; width: 100%;">${vendedorOptions}</select></td>
-                <td><input type="text" value="${celulas[2].textContent.replace(/[○●◯]/g, '').trim()}" style="padding: 6px; width: 100%;"></td>
+                <td><input type="text" value="${escapeHtml(clienteAtual)}" style="padding: 6px; width: 100%;"></td>
                 <td><input type="text" value="${formatarTelefoneDisplay(celulas[3].querySelector('a')?.textContent || '')}" style="padding: 6px; width: 100%;"></td>
-                <td><input type="text" value="${celulas[4].textContent}" style="padding: 6px; width: 100%;"></td>
+                <td><input type="text" value="${escapeHtml(motoristaAtual === '-' ? '' : motoristaAtual)}" style="padding: 6px; width: 100%;"></td>
                 <td><input type="text" value="${formatarTelefoneDisplay(celulas[5].querySelector('a')?.textContent || '')}" style="padding: 6px; width: 100%;"></td>
-                <td><input type="text" value="${celulas[6].textContent}" style="padding: 6px; width: 100%;"></td>
-                <td><input type="text" value="${celulas[7].textContent}" style="padding: 6px; width: 100%;"></td>
+                <td class="cidade-cell"></td>
+                <td class="cidade-cell"></td>
                 <td><input type="text" value="${celulas[8].textContent === '-' ? '' : celulas[8].textContent}" style="padding: 6px; width: 100%;"></td>
                 <td><input type="text" value="${celulas[9].textContent === '-' ? '' : celulas[9].textContent}" style="padding: 6px; width: 100%;"></td>
                 <td>
@@ -1333,17 +1435,83 @@
                     </select>
                 </td>
                 <td><input type="date" value="${prazoFormatado}" style="padding: 6px; width: 100%;"></td>
-                <td><input type="text" value="${celulas[12].textContent === '-' ? '' : celulas[12].textContent}" style="padding: 6px; width: 100%;"></td>
+                <td><input type="text" value="${escapeHtml(obsAtual === '-' ? '' : obsAtual)}" style="padding: 6px; width: 100%;"></td>
                 <td class="action-buttons">
                     <button class="save-btn" onclick="salvarLinha(this)">Salvar</button>
                     <button class="cancel-btn" onclick="cancelarEdicao(this)">Cancelar</button>
                 </td>
             `;
             
+            linha.querySelectorAll('.cidade-cell')[0].appendChild(cidadeOrigemWrapper);
+            linha.querySelectorAll('.cidade-cell')[1].appendChild(cidadeDestinoWrapper);
+            
             linha.querySelectorAll('input[type="text"]').forEach(input => {
                 if (input.value.includes('(')) input.addEventListener('input', formatarTelefoneInput);
                 else if (input.value.startsWith('R$')) input.addEventListener('input', formatarMoedaInput);
             });
+        }
+        
+        function salvarLinha(botao) {
+            const linha = botao.closest('tr');
+            const inputs = linha.querySelectorAll('input, select');
+            const id = linha.dataset.id;
+            
+            if (!inputs[0].value || !inputs[2].value || !inputs[3].value || !inputs[4].value || !inputs[5].value) {
+                alert('Preencha os campos obrigatórios: Data, Cliente, Telefone Cliente, Motorista e Telefone Motorista');
+                return;
+            }
+            
+            // Pega os valores dos inputs de cidade
+            const cidadeInputs = linha.querySelectorAll('.cidade-input-wrapper input');
+            const origem = cidadeInputs[0] ? cidadeInputs[0].value : '';
+            const destino = cidadeInputs[1] ? cidadeInputs[1].value : '';
+            
+            let freteEmpresa = 0, freteMotorista = 0;
+            const freteEmpresaInput = linha.querySelectorAll('input[type="text"]')[6]; // Ajustado para nova estrutura
+            const freteMotoristaInput = linha.querySelectorAll('input[type="text"]')[7];
+            
+            if (freteEmpresaInput && freteEmpresaInput.value) 
+                freteEmpresa = parseFloat(freteEmpresaInput.value.replace(/[^\d,]/g, '').replace(',', '.')) || 0;
+            if (freteMotoristaInput && freteMotoristaInput.value) 
+                freteMotorista = parseFloat(freteMotoristaInput.value.replace(/[^\d,]/g, '').replace(',', '.')) || 0;
+            
+            const entrega = {
+                data: inputs[0].value,
+                vendedor: inputs[1].value,
+                cliente: inputs[2].value,
+                telefoneCliente: inputs[3].value.replace(/\D/g, ''),
+                motorista: inputs[4].value,
+                telefoneMotorista: inputs[5].value.replace(/\D/g, ''),
+                origem: origem,
+                destino: destino,
+                freteEmpresa: freteEmpresa,
+                freteMotorista: freteMotorista,
+                status: inputs[10].value,
+                prazo: inputs[11].value || '',
+                observacao: inputs[12].value || '',
+                editadoPor: currentUser,
+                timestamp: firebase.database.ServerValue.TIMESTAMP
+            };
+            
+            if (id.startsWith('new-')) {
+                entrega.criadoPor = currentUser;
+                entrega.anotacoes = '';
+                
+                entregasRef.push(entrega).then(() => {
+                    linha.remove();
+                    mostrarNotificacao('✅ Nova carga adicionada com sucesso!');
+                }).catch(error => {
+                    console.error("Erro ao salvar:", error);
+                    alert("Erro ao salvar. Tente novamente.");
+                });
+            } else {
+                entregasRef.child(id).update(entrega).then(() => {
+                    mostrarNotificacao('✅ Alterações salvas!');
+                }).catch(error => {
+                    console.error("Erro ao atualizar:", error);
+                    alert("Erro ao atualizar. Tente novamente.");
+                });
+            }
         }
         
         function cancelarEdicao(botao) {
@@ -1363,7 +1531,17 @@
         }
         
         function atualizarStatus(select, id) {
-            entregasRef.child(id).update({ status: select.value, timestamp: firebase.database.ServerValue.TIMESTAMP });
+            const novoStatus = select.value;
+            const entrega = todasEntregas.find(e => e.id === id);
+            
+            entregasRef.child(id).update({ 
+                status: novoStatus, 
+                alteradoPor: currentUser,
+                timestamp: firebase.database.ServerValue.TIMESTAMP 
+            }).then(() => {
+                mostrarNotificacao(`Status: ${novoStatus.toUpperCase()}`);
+                if (entrega) anunciarStatusAlterado(entrega, novoStatus);
+            });
         }
         
         function copiarNumero(numero) {
@@ -1401,6 +1579,25 @@
             }
         }
         
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
+        function mostrarNotificacao(mensagem, duracao = 3000) {
+            const toast = document.getElementById('notificationToast');
+            toast.classList.remove('show');
+            void toast.offsetWidth;
+            toast.textContent = mensagem;
+            toast.classList.add('show');
+            
+            if (toast._timeout) clearTimeout(toast._timeout);
+            toast._timeout = setTimeout(() => {
+                toast.classList.remove('show');
+            }, duracao);
+        }
+        
         function exportarExcel() {
             const tabela = document.getElementById('tabelaEntregas');
             const linhasVisiveis = Array.from(tabela.querySelectorAll('tbody tr')).filter(linha => 
@@ -1427,6 +1624,7 @@
             
             XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(dados), "Entregas");
             XLSX.writeFile(wb, `entregas_${new Date().toISOString().split('T')[0]}.xlsx`);
+            mostrarNotificacao('📊 Excel exportado!');
         }
         
         function imprimirTabela() {
@@ -1445,27 +1643,19 @@
                 <meta charset="UTF-8">
                 <style>
                     body { font-family: Arial, sans-serif; margin: 20px; }
-                    h1 { text-align: center; color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 10px; }
-                    .info { text-align: center; margin-bottom: 20px; color: #666; font-size: 14px; }
+                    h1 { text-align: center; color: #2c3e50; }
                     table { width: 100%; border-collapse: collapse; }
-                    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+                    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 12px; }
                     th { background-color: #3498db; color: white; }
-                    tr:nth-child(even) { background-color: #f8f9fa; }
-                    .atrasada { background-color: #ffeaea; }
-                    .proximo-prazo { background-color: #fff3cd; }
-                    .note-indicator { display: none; }
                 </style></head>
                 <body>
                     <h1>📦 Relatório de Entregas</h1>
-                    <div class="info">Data: ${new Date().toLocaleDateString('pt-BR')} | Usuário: ${currentUser || 'Todos'} | Total: ${linhasVisiveis.length}</div>
                     <table><thead><tr>${headers.map(h => `<th>${h}</th>`).join('')}</tr></thead><tbody>
             `);
             
             linhasVisiveis.forEach(linha => {
                 const celulas = Array.from(linha.cells).slice(0, -1);
-                const estaAtrasada = linha.classList.contains('atrasada');
-                const rowClass = estaAtrasada ? 'atrasada' : (linha.classList.contains('proximo-prazo') ? 'proximo-prazo' : '');
-                janela.document.write(`<tr class="${rowClass}">`);
+                janela.document.write('<tr>');
                 celulas.forEach(celula => {
                     let conteudo = celula.textContent.replace(/[○●◯]/g, '').trim();
                     if (celula.querySelector('.whatsapp-link')) conteudo = celula.querySelector('.whatsapp-link').textContent;
@@ -1474,25 +1664,37 @@
                 janela.document.write('</tr>');
             });
             
-            janela.document.write(`</tbody></table><div style="margin-top:20px;text-align:center;"><button onclick="window.print()">Imprimir</button> <button onclick="window.close()">Fechar</button></div></body></html>`);
+            janela.document.write('</tbody></table></body></html>');
             janela.document.close();
         }
         
         function carregarCidadesFiltro() {
             const origens = new Set(), destinos = new Set();
-            todasEntregas.forEach(e => { if (e.origem) origens.add(e.origem); if (e.destino) destinos.add(e.destino); });
+            todasEntregas.forEach(e => { 
+                if (e.origem) origens.add(e.origem); 
+                if (e.destino) destinos.add(e.destino); 
+            });
             
             const origemFilter = document.getElementById('origemFilter');
             const destinoFilter = document.getElementById('destinoFilter');
             while (origemFilter.options.length > 1) origemFilter.remove(1);
             while (destinoFilter.options.length > 1) destinoFilter.remove(1);
             
-            origens.forEach(c => { const opt = document.createElement('option'); opt.value = c; opt.textContent = c; origemFilter.appendChild(opt); });
-            destinos.forEach(c => { const opt = document.createElement('option'); opt.value = c; opt.textContent = c; destinoFilter.appendChild(opt); });
+            [...origens].sort().forEach(c => { 
+                const opt = document.createElement('option'); 
+                opt.value = c; 
+                opt.textContent = c; 
+                origemFilter.appendChild(opt); 
+            });
+            [...destinos].sort().forEach(c => { 
+                const opt = document.createElement('option'); 
+                opt.value = c; 
+                opt.textContent = c; 
+                destinoFilter.appendChild(opt); 
+            });
         }
         
         function aplicarFiltros() { filtrarTabela(); }
-        
         function limparFiltros() {
             document.getElementById('dataInicioFilter').value = '';
             document.getElementById('dataFimFilter').value = '';
@@ -1517,8 +1719,8 @@
                 const colVendedor = linha.cells[1].textContent;
                 const colStatus = linha.cells[10].className.replace('status-', '');
                 const colData = linha.cells[0].textContent;
-                const colOrigem = linha.cells[6].textContent;
-                const colDestino = linha.cells[7].textContent;
+                const colOrigem = linha.cells[6].querySelector('.cell-content')?.textContent || linha.cells[6].textContent;
+                const colDestino = linha.cells[7].querySelector('.cell-content')?.textContent || linha.cells[7].textContent;
                 
                 let dataEntrega = null;
                 if (colData !== '-') {
@@ -1526,49 +1728,39 @@
                     dataEntrega = new Date(ano, mes - 1, dia);
                 }
                 
-                const mostraPorUsuario = !currentUser || currentUser === 'TODOS' || colVendedor === currentUser;
-                const mostraPorStatus = abaAtual === 'todos' || colStatus === abaAtual;
-                const mostraPorDataInicio = !dataInicio || (dataEntrega && dataEntrega >= new Date(dataInicio));
-                const mostraPorDataFim = !dataFim || (dataEntrega && dataEntrega <= new Date(dataFim + 'T23:59:59'));
-                const mostraPorOrigem = !origem || colOrigem === origem;
-                const mostraPorDestino = !destino || colDestino === destino;
+                const mostrar = (!currentUser || currentUser === 'TODOS' || colVendedor === currentUser) &&
+                    (abaAtual === 'todos' || colStatus === abaAtual) &&
+                    (!dataInicio || (dataEntrega && dataEntrega >= new Date(dataInicio))) &&
+                    (!dataFim || (dataEntrega && dataEntrega <= new Date(dataFim + 'T23:59:59'))) &&
+                    (!origem || colOrigem === origem) &&
+                    (!destino || colDestino === destino);
                 
-                const mostrar = mostraPorUsuario && mostraPorStatus && mostraPorDataInicio && mostraPorDataFim && mostraPorOrigem && mostraPorDestino;
                 linha.style.display = mostrar ? '' : 'none';
                 if (mostrar) encontrou = true;
             });
             
-            const existingMessage = document.querySelector('#corpoTabela .empty-message');
-            if (!encontrou && !existingMessage) {
+            const msg = document.querySelector('#corpoTabela .empty-message');
+            if (!encontrou && !msg) {
                 document.getElementById('corpoTabela').innerHTML += '<tr><td colspan="14" class="empty-message">Nenhuma entrega encontrada</td></tr>';
-            } else if (encontrou && existingMessage) {
-                existingMessage.remove();
-            }
+            } else if (encontrou && msg) msg.remove();
         }
         
         function verificarSeAtrasada(prazoString, status) {
             if (status === 'entregue' || !prazoString || prazoString === '-') return false;
-            try {
-                const [dia, mes, ano] = prazoString.split('/');
-                const prazoDate = new Date(ano, mes - 1, dia);
-                const hoje = new Date();
-                hoje.setHours(0,0,0,0);
-                return prazoDate < hoje;
-            } catch(e) { return false; }
+            const [dia, mes, ano] = prazoString.split('/');
+            const prazoDate = new Date(ano, mes - 1, dia);
+            const hoje = new Date(); hoje.setHours(0,0,0,0);
+            return prazoDate < hoje;
         }
         
         function verificarProximoPrazo(prazoString, status) {
             if (status === 'entregue' || !prazoString || prazoString === '-') return false;
-            try {
-                const [dia, mes, ano] = prazoString.split('/');
-                const prazoDate = new Date(ano, mes - 1, dia);
-                const hoje = new Date();
-                const umaSemana = new Date();
-                umaSemana.setDate(hoje.getDate() + 7);
-                hoje.setHours(0,0,0,0);
-                umaSemana.setHours(0,0,0,0);
-                return prazoDate >= hoje && prazoDate <= umaSemana;
-            } catch(e) { return false; }
+            const [dia, mes, ano] = prazoString.split('/');
+            const prazoDate = new Date(ano, mes - 1, dia);
+            const hoje = new Date();
+            const umaSemana = new Date(); umaSemana.setDate(hoje.getDate() + 7);
+            hoje.setHours(0,0,0,0); umaSemana.setHours(0,0,0,0);
+            return prazoDate >= hoje && prazoDate <= umaSemana;
         }
         
         function showSection(section) {
@@ -1585,20 +1777,94 @@
             }
         }
         
-        function openUserModal() { 
+        function carregarVendedores() {
+            const saved = localStorage.getItem('listaVendedores');
+            if (saved) listaVendedores = JSON.parse(saved);
             atualizarSelectsVendedores();
-            document.getElementById('userModal').style.display = 'block'; 
         }
+        
+        function salvarVendedores() {
+            localStorage.setItem('listaVendedores', JSON.stringify(listaVendedores));
+        }
+        
+        function adicionarNovoVendedor() {
+            const nome = document.getElementById('newVendorName').value.trim().toUpperCase();
+            if (!nome) { alert('Digite o nome do vendedor'); return; }
+            if (listaVendedores.includes(nome)) { alert(`Vendedor "${nome}" já existe!`); return; }
+            listaVendedores.push(nome);
+            salvarVendedores();
+            atualizarSelectsVendedores();
+            closeNewVendorModal();
+            document.getElementById('newVendorName').value = '';
+            mostrarNotificacao(`✅ Vendedor "${nome}" adicionado!`);
+        }
+        
+        function atualizarSelectsVendedores() {
+            const selects = document.querySelectorAll('#corpoTabela select');
+            selects.forEach(select => {
+                if (select.closest('tr')?.classList.contains('edit-row')) {
+                    const valorAtual = select.value;
+                    select.innerHTML = listaVendedores.map(v => 
+                        `<option value="${v}" ${valorAtual === v ? 'selected' : ''}>${v}</option>`
+                    ).join('');
+                }
+            });
+            
+            const userSelection = document.getElementById('userSelection');
+            if (userSelection) {
+                userSelection.innerHTML = listaVendedores.map(v => `
+                    <div class="user-option" onclick="selectUser('${v}')">
+                        <div class="user-option-avatar">${v.charAt(0)}</div>
+                        <div class="user-option-name">${v}</div>
+                    </div>
+                `).join('') + `
+                    <div class="user-option" onclick="selectUser('TODOS')">
+                        <div class="user-option-avatar">T</div>
+                        <div class="user-option-name">TODOS</div>
+                    </div>
+                `;
+            }
+        }
+        
+        function openUserModal() { atualizarSelectsVendedores(); document.getElementById('userModal').style.display = 'block'; }
         function closeUserModal() { document.getElementById('userModal').style.display = 'none'; }
         function openColumnsModal() { document.getElementById('columnsModal').style.display = 'block'; }
         function closeColumnsModal() { document.getElementById('columnsModal').style.display = 'none'; }
+        function openNewVendorModal() { document.getElementById('newVendorModal').style.display = 'block'; document.getElementById('newVendorName').value = ''; }
+        function closeNewVendorModal() { document.getElementById('newVendorModal').style.display = 'none'; }
+        
+        function openNotesModal(id, cliente) {
+            currentNoteId = id;
+            currentNoteCliente = cliente;
+            document.getElementById('notesClienteNome').innerHTML = `Cliente: <strong>${cliente}</strong>`;
+            const entrega = todasEntregas.find(e => e.id === id);
+            document.getElementById('notesTextarea').value = (entrega?.anotacoes) || '';
+            document.getElementById('notesModal').style.display = 'block';
+        }
+        function closeNotesModal() { document.getElementById('notesModal').style.display = 'none'; }
+        
+        function salvarAnotacao() {
+            entregasRef.child(currentNoteId).update({
+                anotacoes: document.getElementById('notesTextarea').value,
+                timestamp: firebase.database.ServerValue.TIMESTAMP
+            }).then(() => {
+                mostrarNotificacao('📝 Anotação salva!');
+                closeNotesModal();
+            });
+        }
         
         function showPasswordModal(id) { currentDeleteId = id; document.getElementById('passwordModal').style.display = 'block'; document.getElementById('passwordInput').value = ''; document.getElementById('passwordError').style.display = 'none'; }
         function cancelDelete() { document.getElementById('passwordModal').style.display = 'none'; currentDeleteId = null; }
         function confirmDelete() {
-            const senha = document.getElementById('passwordInput').value;
-            if (senha === SENHA_EXCLUSAO) { entregasRef.child(currentDeleteId).remove(); document.getElementById('passwordModal').style.display = 'none'; currentDeleteId = null; }
-            else { document.getElementById('passwordError').style.display = 'block'; }
+            if (document.getElementById('passwordInput').value === SENHA_EXCLUSAO) {
+                entregasRef.child(currentDeleteId).remove().then(() => {
+                    mostrarNotificacao('🗑️ Excluído!');
+                });
+                document.getElementById('passwordModal').style.display = 'none';
+                currentDeleteId = null;
+            } else {
+                document.getElementById('passwordError').style.display = 'block';
+            }
         }
         
         function selectUser(user) {
@@ -1611,16 +1877,16 @@
         }
         
         function loadUser() {
-            const savedUser = localStorage.getItem('selectedUser');
-            if (savedUser) selectUser(savedUser);
+            const saved = localStorage.getItem('selectedUser');
+            if (saved) selectUser(saved);
             else openUserModal();
         }
         
         function filtrarPorAba(aba) {
             abaAtual = aba;
-            document.querySelectorAll('.tab').forEach(tab => {
-                tab.classList.remove('active');
-                if (tab.textContent.toLowerCase().includes(aba) || (aba === 'todos' && tab.textContent === 'Todos')) tab.classList.add('active');
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab').forEach(t => {
+                if (t.textContent.toLowerCase().includes(aba)) t.classList.add('active');
             });
             filtrarTabela();
         }
@@ -1632,15 +1898,20 @@
                 columnsList.innerHTML += `<div class="column-toggle"><input type="checkbox" id="toggle-${col}" checked onchange="toggleColumn('${col}')"><label for="toggle-${col}">${col.toUpperCase().replace('-',' ')}</label></div>`;
             });
             const prefs = JSON.parse(localStorage.getItem('columnPreferences') || '{}');
-            Object.keys(prefs).forEach(col => { const cb = document.getElementById(`toggle-${col}`); if(cb){ cb.checked = prefs[col]; toggleColumn(col); } });
+            Object.keys(prefs).forEach(col => {
+                const cb = document.getElementById(`toggle-${col}`);
+                if (cb) { cb.checked = prefs[col]; toggleColumn(col); }
+            });
         }
         
         function toggleColumn(columnName) {
             const isChecked = document.getElementById(`toggle-${columnName}`).checked;
             const idx = columnIndices[columnName];
-            if(idx !== undefined){
+            if (idx !== undefined) {
                 document.querySelectorAll(`th[data-column="${columnName}"]`).forEach(c => c.style.display = isChecked ? '' : 'none');
-                document.querySelectorAll('#corpoTabela tr').forEach(row => { if(row.cells[idx]) row.cells[idx].style.display = isChecked ? '' : 'none'; });
+                document.querySelectorAll('#corpoTabela tr').forEach(row => {
+                    if (row.cells[idx]) row.cells[idx].style.display = isChecked ? '' : 'none';
+                });
                 const prefs = JSON.parse(localStorage.getItem('columnPreferences') || '{}');
                 prefs[columnName] = isChecked;
                 localStorage.setItem('columnPreferences', JSON.stringify(prefs));
@@ -1648,7 +1919,7 @@
         }
         
         function atualizarDashboard() {
-            if(!todasEntregas.length) return;
+            if (!todasEntregas.length) return;
             const total = todasEntregas.length;
             const entregues = todasEntregas.filter(e => e.status === 'entregue').length;
             const atrasadas = todasEntregas.filter(e => verificarSeAtrasada(formatarPrazoParaDisplay(e.prazo), e.status)).length;
@@ -1663,34 +1934,41 @@
         
         function atualizarGraficos() {
             const statusCount = { coletando:0, transito:0, parado:0, entregue:0 };
-            const cidadesCount = {};
-            const vendedoresCount = {};
-            const meses = {};
+            const cidadesCount = {}, vendedoresCount = {}, meses = {};
             const hoje = new Date();
-            for(let i=5;i>=0;i--){ const d = new Date(hoje.getFullYear(), hoje.getMonth()-i, 1); meses[`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`]=0; }
+            for (let i=5;i>=0;i--) { const d=new Date(hoje.getFullYear(), hoje.getMonth()-i,1); meses[`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`]=0; }
             
             todasEntregas.forEach(e => {
                 statusCount[e.status] = (statusCount[e.status]||0)+1;
-                if(e.destino && e.destino !== '-') cidadesCount[e.destino] = (cidadesCount[e.destino]||0)+1;
-                if(e.vendedor) vendedoresCount[e.vendedor] = (vendedoresCount[e.vendedor]||0)+1;
-                if(e.data){ const [ano,mes] = e.data.split('-'); const chave = `${ano}-${mes}`; if(meses[chave]!==undefined) meses[chave]++; }
+                if (e.destino) cidadesCount[e.destino] = (cidadesCount[e.destino]||0)+1;
+                if (e.vendedor) vendedoresCount[e.vendedor] = (vendedoresCount[e.vendedor]||0)+1;
+                if (e.data) { const [ano,mes]=e.data.split('-'); if (meses[`${ano}-${mes}`]!==undefined) meses[`${ano}-${mes}`]++; }
             });
             
-            if(charts.statusChart) charts.statusChart.destroy();
+            if (charts.statusChart) charts.statusChart.destroy();
             charts.statusChart = new Chart(document.getElementById('statusChart'), { type:'doughnut', data:{ labels:['Coletando','Em Trânsito','Parado','Entregue'], datasets:[{ data:[statusCount.coletando,statusCount.transito,statusCount.parado,statusCount.entregue], backgroundColor:['#0077b6','#f39c12','#e74c3c','#2ecc71'] }] } });
             
             const topCidades = Object.entries(cidadesCount).sort((a,b)=>b[1]-a[1]).slice(0,10);
-            if(charts.cidadesChart) charts.cidadesChart.destroy();
+            if (charts.cidadesChart) charts.cidadesChart.destroy();
             charts.cidadesChart = new Chart(document.getElementById('cidadesChart'), { type:'bar', data:{ labels:topCidades.map(c=>c[0]), datasets:[{ label:'Entregas', data:topCidades.map(c=>c[1]), backgroundColor:'#3498db' }] } });
             
-            if(charts.entregasMensaisChart) charts.entregasMensaisChart.destroy();
-            charts.entregasMensaisChart = new Chart(document.getElementById('entregasMensaisChart'), { type:'line', data:{ labels:Object.keys(meses).map(k=>{const[ano,mes]=k.split('-'); return `${mes}/${ano}`}), datasets:[{ label:'Entregas', data:Object.values(meses), borderColor:'#9C27B0', fill:true, tension:0.4 }] } });
+            if (charts.entregasMensaisChart) charts.entregasMensaisChart.destroy();
+            charts.entregasMensaisChart = new Chart(document.getElementById('entregasMensaisChart'), { type:'line', data:{ labels:Object.keys(meses).map(k=>{const[a,m]=k.split('-');return `${m}/${a}`}), datasets:[{ label:'Entregas', data:Object.values(meses), borderColor:'#9C27B0', fill:true, tension:0.4 }] } });
             
-            if(charts.vendedoresChart) charts.vendedoresChart.destroy();
+            if (charts.vendedoresChart) charts.vendedoresChart.destroy();
             charts.vendedoresChart = new Chart(document.getElementById('vendedoresChart'), { type:'pie', data:{ labels:Object.keys(vendedoresCount), datasets:[{ data:Object.values(vendedoresCount), backgroundColor:['#3498db','#2ecc71','#e74c3c','#f39c12','#9b59b6'] }] } });
         }
         
         function formatarPrazoParaDisplay(prazo) { if(!prazo) return '-'; const [ano,mes,dia]=prazo.split('-'); return `${dia}/${mes}/${ano}`; }
+        
+        let filtersVisible = true;
+        function toggleFilters() {
+            const panel = document.getElementById('filtersPanel');
+            const btn = document.getElementById('filterToggleBtn');
+            filtersVisible = !filtersVisible;
+            panel.classList.toggle('hidden', !filtersVisible);
+            btn.innerHTML = filtersVisible ? '◀' : '▶';
+        }
         
         // Eventos
         document.getElementById('dataInicioFilter').addEventListener('change', filtrarTabela);
@@ -1699,11 +1977,23 @@
         document.getElementById('destinoFilter').addEventListener('change', filtrarTabela);
         document.getElementById('fabAddBtn').addEventListener('click', adicionarNovaLinha);
         document.getElementById('filterToggleBtn').addEventListener('click', toggleFilters);
+        document.getElementById('voiceToggleBtn').addEventListener('click', toggleVoz);
         
-        document.addEventListener('DOMContentLoaded', () => { 
+        window.onclick = function(event) {
+            if (event.target.classList.contains('modal')) event.target.style.display = 'none';
+        };
+        
+        document.addEventListener('DOMContentLoaded', async () => { 
             carregarVendedores();
             loadUser(); 
-            carregarDados(); 
+            carregarDados();
+            carregarPreferenciaVoz();
+            console.log('🔄 Carregando cidades do IBGE...');
+            await buscarTodasCidades();
+            console.log(`✅ ${cacheCidadesIBGE.length} cidades carregadas do IBGE!`);
+            console.log('🔊 Voz:', vozAtivada ? 'ATIVADA' : 'DESATIVADA');
+            console.log('👥 Acesso simultâneo: SEM conflitos');
+            console.log('🏙️ Cidades: API IBGE integrada (formato: SALVADOR - BA)');
         });
     </script>
 </body>
