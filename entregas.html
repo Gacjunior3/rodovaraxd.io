@@ -1118,7 +1118,10 @@
         let todasEntregas = [];
         let abaAtual = 'todos';
         let currentNoteId = null;
-        let listaVendedores = ['MARIANE', 'JEISE', 'MONICA', 'MARIVAL'];
+        
+        // ✅ LISTA DE VENDEDORES CORRIGIDA - INCLUINDO RAISA E ARANDA
+        let listaVendedores = ['MARIANE', 'JEISE', 'MONICA', 'MARIVAL', 'RAISA', 'ARANDA'];
+        
         let filtersVisible = true;
         let linhasModificadas = {};
         let linhasCount = 0;
@@ -1465,7 +1468,7 @@
                         }
                         updates.push({ id, dados });
                     } else {
-                        mostrarNotificacao(`⚠️ Cliente e Motorista são obrigatórios para ${dados?.cliente || 'nova entrega'}`, 'warning');
+                        mostrarNotificacao(`⚠️ Cliente e Motorista são obrigatórios`, 'warning');
                         erros++;
                     }
                 } catch (e) {
@@ -2296,7 +2299,11 @@
             if (salvos) {
                 try {
                     const parsed = JSON.parse(salvos);
-                    if (Array.isArray(parsed) && parsed.length > 0) listaVendedores = parsed;
+                    if (Array.isArray(parsed) && parsed.length > 0) {
+                        // Mescla vendedores salvos com os padrão, sem duplicatas
+                        const combinados = [...listaVendedores, ...parsed];
+                        listaVendedores = [...new Set(combinados)];
+                    }
                 } catch (e) {}
             }
         }
@@ -2400,7 +2407,9 @@
 
         document.addEventListener('DOMContentLoaded', async () => {
             console.log('🚀 Iniciando sistema...');
+            console.log('📋 Vendedores disponíveis:', listaVendedores);
             carregarVendedoresSalvos();
+            console.log('📋 Vendedores após carregar salvos:', listaVendedores);
             setupEventos();
             carregarUsuarioSalvo();
             
