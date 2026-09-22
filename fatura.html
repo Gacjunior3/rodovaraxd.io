@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
-  <title>Fatura AXD LOG</title>
+  <title>Fatura AXD LOG / VL TRANSPORTES</title>
   <style>
   * { box-sizing: border-box; }
   body {
@@ -42,6 +42,8 @@
   .logo img {
     height: 100px;
     display: block;
+    max-width: 200px; /* Limita largura da logo */
+    object-fit: contain;
   }
   .empresa-info {
     text-align: right;
@@ -185,6 +187,7 @@
         <select id="selecionar-empresa" style="margin-bottom: 10px;">
           <option value="axd">AXD LOG</option>
           <option value="rodovar">RODOVAR</option>
+          <option value="vl">VL TRANSPORTES</option> <!-- NOVA OPÇÃO AQUI -->
         </select>
         <span id="cnpj">CNPJ: 59.352.973/0001-32</span><br>
         Inscr. Estadual: 228.253.729 ME<br>
@@ -559,6 +562,20 @@
         document.getElementById('pix').value = '49.908.710/0001-03';
         document.querySelector('.logo img').src = 'logo_rodovar.png';
         document.querySelector('.logo img').alt = 'RODOVAR';
+      } else if (empresaSelecionada === 'vl') {
+        // Dados VL TRANSPORTES (Conforme imagem enviada)
+        document.getElementById('cnpj').innerText = 'CNPJ: 54.506.363/0001-22';
+        document.getElementById('endereco-empresa').innerHTML = 'R JUBIABA, 292 - LUIS EDUARDO MAGALHAES<br>SIMOES FILHO / BA';
+        
+        // Como a VL compartilha o endereço, mantive os dados bancários da AXD. 
+        // Altere abaixo se os dados bancários da VL forem diferentes.
+        document.getElementById('banco').value = '0260'; 
+        document.getElementById('conta').value = 'AG:0001 CONTA: 129139513-3';
+        document.getElementById('pix').value = '54.506.363/0001-22'; // PIX deve ser o CNPJ da VL
+        
+        // Certifique-se de ter o arquivo 'logo_vl.png' na pasta
+        document.querySelector('.logo img').src = 'logo_vl.png';
+        document.querySelector('.logo img').alt = 'VL TRANSPORTES';
       }
     }
 
